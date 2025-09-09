@@ -132,6 +132,7 @@ export const ROLE_NAVIGATION = {
     { name: "Tickets", path: "/maintenance/tickets", icon: "Wrench" },
     { name: "Assets", path: "/maintenance/assets", icon: "HardDrive" },
     { name: "Schedule", path: "/maintenance/schedule", icon: "Calendar" },
+    { name: "User", path: "/maintenance/user", icon: "User" },
   ],
   [ROLES.TRANSPORT]: [
     { name: "Dashboard", path: "/transport", icon: "LayoutDashboard" },

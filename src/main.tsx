@@ -24,6 +24,23 @@ import TransportDashboard from "@/pages/TransportDashboard.tsx";
 import InventoryDashboard from "@/pages/InventoryDashboard.tsx";
 import GuestDashboard from "@/pages/GuestDashboard.tsx";
 
+import AdminReservations from "@/pages/admin/AdminReservations.tsx";
+import AdminGuests from "@/pages/admin/AdminGuests.tsx";
+import AdminRooms from "@/pages/admin/AdminRooms.tsx";
+import AdminStaff from "@/pages/admin/AdminStaff.tsx";
+import AdminReports from "@/pages/admin/AdminReports.tsx";
+import AdminSettings from "@/pages/admin/AdminSettings.tsx";
+
+import FrontDeskReservations from "@/pages/frontdesk/FrontDeskReservations.tsx";
+import FrontDeskCheckIn from "@/pages/frontdesk/FrontDeskCheckIn.tsx";
+import FrontDeskGuests from "@/pages/frontdesk/FrontDeskGuests.tsx";
+import FrontDeskRooms from "@/pages/frontdesk/FrontDeskRooms.tsx";
+
+import MaintenanceTickets from "@/pages/maintenance/MaintenanceTickets.tsx";
+import MaintenanceAssets from "@/pages/maintenance/MaintenanceAssets.tsx";
+import MaintenanceSchedule from "@/pages/maintenance/MaintenanceSchedule.tsx";
+import MaintenanceUser from "@/pages/maintenance/MaintenanceUser.tsx";
+
 const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
 
 function RouteSyncer() {
@@ -67,6 +84,56 @@ createRoot(document.getElementById("root")!).render(
               element={
                 <ProtectedRoute>
                   <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Admin sub-routes */}
+            <Route 
+              path="/admin/reservations" 
+              element={
+                <ProtectedRoute>
+                  <AdminReservations />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/guests" 
+              element={
+                <ProtectedRoute>
+                  <AdminGuests />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/rooms" 
+              element={
+                <ProtectedRoute>
+                  <AdminRooms />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/staff" 
+              element={
+                <ProtectedRoute>
+                  <AdminStaff />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/reports" 
+              element={
+                <ProtectedRoute>
+                  <AdminReports />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/settings" 
+              element={
+                <ProtectedRoute>
+                  <AdminSettings />
                 </ProtectedRoute>
               } 
             />
@@ -133,6 +200,74 @@ createRoot(document.getElementById("root")!).render(
               element={
                 <ProtectedRoute>
                   <GuestDashboard />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Front Desk sub-routes */}
+            <Route 
+              path="/front-desk/reservations" 
+              element={
+                <ProtectedRoute>
+                  <FrontDeskReservations />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/front-desk/checkin" 
+              element={
+                <ProtectedRoute>
+                  <FrontDeskCheckIn />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/front-desk/guests" 
+              element={
+                <ProtectedRoute>
+                  <FrontDeskGuests />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/front-desk/rooms" 
+              element={
+                <ProtectedRoute>
+                  <FrontDeskRooms />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Maintenance sub-routes */}
+            <Route 
+              path="/maintenance/tickets" 
+              element={
+                <ProtectedRoute>
+                  <MaintenanceTickets />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/maintenance/assets" 
+              element={
+                <ProtectedRoute>
+                  <MaintenanceAssets />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/maintenance/schedule" 
+              element={
+                <ProtectedRoute>
+                  <MaintenanceSchedule />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/maintenance/user" 
+              element={
+                <ProtectedRoute>
+                  <MaintenanceUser />
                 </ProtectedRoute>
               } 
             />
