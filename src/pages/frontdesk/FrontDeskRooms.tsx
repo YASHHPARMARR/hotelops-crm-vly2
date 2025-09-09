@@ -29,6 +29,8 @@ export default function FrontDeskRooms() {
                   { label: "OOO", value: "OOO" },
                 ], required: true },
                 { key: "guest", label: "Guest", input: "text" },
+                { key: "rate", label: "Rate ($)", input: "number", required: true, widthClass: "w-[120px]" },
+                { key: "lastCleaned", label: "Last Cleaned", input: "date", widthClass: "w-[160px]" },
               ]}
               seed={[
                 { id: "rm1", number: "205", type: "Deluxe King", status: "Occupied", guest: "Ana Garcia", rate: 220, lastCleaned: "2025-09-09" },
