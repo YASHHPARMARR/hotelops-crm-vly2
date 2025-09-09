@@ -29,6 +29,9 @@ import { Badge } from "@/components/ui/badge";
 import type { ReactNode } from "react";
 import { Role, ROLES } from "@/convex/schema";
 
+import { useEffect } from "react";
+import { applyThemeToDocument, getTheme } from "@/lib/theme";
+
 interface AdminShellProps {
   children: ReactNode;
 }
@@ -45,6 +48,20 @@ export function AdminShell({ children }: AdminShellProps) {
   const effectiveRole: Role | undefined = (user?.role as Role | undefined) || (demoRoleString as Role | undefined);
 
   const navigationItems = effectiveRole ? ROLE_NAVIGATION[effectiveRole] || [] : [];
+
+  // Initialize and react to theme changes
+  useEffect(() => {
+    const initial = getTheme();
+    applyThemeToDocument(initial);
+
+    const onTheme = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { theme?: string } | undefined;
+      const t = (detail?.theme as any) ?? getTheme();
+      applyThemeToDocument(t);
+    };
+    window.addEventListener("app:theme-changed", onTheme);
+    return () => window.removeEventListener("app:theme-changed", onTheme);
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
