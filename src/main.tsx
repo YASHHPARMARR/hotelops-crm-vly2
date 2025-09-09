@@ -41,6 +41,25 @@ import MaintenanceAssets from "@/pages/maintenance/MaintenanceAssets.tsx";
 import MaintenanceSchedule from "@/pages/maintenance/MaintenanceSchedule.tsx";
 import MaintenanceUser from "@/pages/maintenance/MaintenanceUser.tsx";
 
+import HousekeepingTasks from "@/pages/housekeeping/HousekeepingTasks.tsx";
+import HousekeepingRooms from "@/pages/housekeeping/HousekeepingRooms.tsx";
+import HousekeepingInventory from "@/pages/housekeeping/HousekeepingInventory.tsx";
+import RestaurantOrders from "@/pages/restaurant/RestaurantOrders.tsx";
+import RestaurantMenu from "@/pages/restaurant/RestaurantMenu.tsx";
+import RestaurantTables from "@/pages/restaurant/RestaurantTables.tsx";
+import SecurityIncidents from "@/pages/security/SecurityIncidents.tsx";
+import SecurityBadges from "@/pages/security/SecurityBadges.tsx";
+import SecurityReports from "@/pages/security/SecurityReports.tsx";
+import TransportTrips from "@/pages/transport/TransportTrips.tsx";
+import TransportVehicles from "@/pages/transport/TransportVehicles.tsx";
+import TransportSchedule from "@/pages/transport/TransportSchedule.tsx";
+import InventoryItems from "@/pages/inventory/InventoryItems.tsx";
+import InventorySuppliers from "@/pages/inventory/InventorySuppliers.tsx";
+import InventoryOrders from "@/pages/inventory/InventoryOrders.tsx";
+import GuestServices from "@/pages/guest/GuestServices.tsx";
+import GuestDining from "@/pages/guest/GuestDining.tsx";
+import GuestBills from "@/pages/guest/GuestBills.tsx";
+
 const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
 
 function RouteSyncer() {
@@ -268,6 +287,156 @@ createRoot(document.getElementById("root")!).render(
               element={
                 <ProtectedRoute>
                   <MaintenanceUser />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/housekeeping/tasks" 
+              element={
+                <ProtectedRoute>
+                  <HousekeepingTasks />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/housekeeping/rooms" 
+              element={
+                <ProtectedRoute>
+                  <HousekeepingRooms />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/housekeeping/inventory" 
+              element={
+                <ProtectedRoute>
+                  <HousekeepingInventory />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/restaurant/orders" 
+              element={
+                <ProtectedRoute>
+                  <RestaurantOrders />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/restaurant/menu" 
+              element={
+                <ProtectedRoute>
+                  <RestaurantMenu />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/restaurant/tables" 
+              element={
+                <ProtectedRoute>
+                  <RestaurantTables />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/security/incidents" 
+              element={
+                <ProtectedRoute>
+                  <SecurityIncidents />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/security/badges" 
+              element={
+                <ProtectedRoute>
+                  <SecurityBadges />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/security/reports" 
+              element={
+                <ProtectedRoute>
+                  <SecurityReports />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/transport/trips" 
+              element={
+                <ProtectedRoute>
+                  <TransportTrips />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/transport/vehicles" 
+              element={
+                <ProtectedRoute>
+                  <TransportVehicles />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/transport/schedule" 
+              element={
+                <ProtectedRoute>
+                  <TransportSchedule />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/inventory/items" 
+              element={
+                <ProtectedRoute>
+                  <InventoryItems />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/inventory/suppliers" 
+              element={
+                <ProtectedRoute>
+                  <InventorySuppliers />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/inventory/orders" 
+              element={
+                <ProtectedRoute>
+                  <InventoryOrders />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/guest/services" 
+              element={
+                <ProtectedRoute>
+                  <GuestServices />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/guest/dining" 
+              element={
+                <ProtectedRoute>
+                  <GuestDining />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/guest/bills" 
+              element={
+                <ProtectedRoute>
+                  <GuestBills />
                 </ProtectedRoute>
               } 
             />
