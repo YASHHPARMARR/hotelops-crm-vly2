@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase, getSupabase } from "@/lib/supabaseClient";
 
 type Column = {
   key: string;
@@ -103,10 +103,13 @@ export function CrudPage(props: CrudPageProps) {
 
   useEffect(() => {
     let unsubscribed = false;
-    if (backend !== "supabase" || !supabase || !table) return;
+    if (backend !== "supabase" || !table) return;
 
-    // Initial fetch (no ordering to avoid requiring a created_at column)
-    supabase
+    const s = getSupabase();
+    if (!s) return;
+
+    // Initial fetch
+    s
       .from(table)
       .select("*")
       .then(async ({ data, error }: { data: any; error: any }) => {
@@ -127,11 +130,10 @@ export function CrudPage(props: CrudPageProps) {
           ) {
             try {
               hasSeededRef.current = true;
-              // Ensure each row has an id
               const payload = seed.map((r) =>
                 r.id ? r : { id: crypto.randomUUID(), ...r }
               );
-              const { error: insertErr } = await supabase.from(table).insert(payload);
+              const { error: insertErr } = await s.from(table).insert(payload);
               if (insertErr) {
                 console.error("Supabase seed insert error:", insertErr);
               } else {
@@ -146,7 +148,7 @@ export function CrudPage(props: CrudPageProps) {
       });
 
     // Realtime subscription
-    const channel = supabase
+    const channel = s
       .channel(`public:${table}`)
       .on(
         "postgres_changes",
@@ -176,7 +178,7 @@ export function CrudPage(props: CrudPageProps) {
 
     return () => {
       unsubscribed = true;
-      supabase.removeChannel(channel);
+      getSupabase()?.removeChannel(channel);
     };
   }, [backend, table, seed]);
 
@@ -225,15 +227,16 @@ export function CrudPage(props: CrudPageProps) {
 
   async function remove(idx: number) {
     const record = rows[idx];
-    if (backend === "supabase" && supabase && table) {
+    if (backend === "supabase" && table) {
+      const s = getSupabase();
+      if (!s) return;
       try {
         if (record?.id === undefined || record?.id === null) {
           toast.error("Cannot delete: missing id");
           return;
         }
-        const { error } = await supabase.from(table).delete().eq("id", record.id);
+        const { error } = await s.from(table).delete().eq("id", record.id);
         if (error) throw error;
-        // Optimistic update; realtime will also update
         setRows((prev) => prev.filter((_, i) => i !== idx));
         toast.success("Deleted");
       } catch (e) {
@@ -264,16 +267,17 @@ export function CrudPage(props: CrudPageProps) {
       return;
     }
 
-    if (backend === "supabase" && supabase && table) {
+    if (backend === "supabase" && table) {
+      const s = getSupabase();
+      if (!s) return;
       try {
         const payload = { ...form };
-        // Ensure id exists for deterministic updates
         if (!payload.id) {
           payload.id = crypto.randomUUID();
         }
 
         if (editingIndex === null) {
-          const { data, error } = await supabase.from(table).insert(payload).select().single();
+          const { error } = await s.from(table).insert(payload);
           if (error) throw error;
         } else {
           const current = rows[editingIndex];
@@ -281,10 +285,9 @@ export function CrudPage(props: CrudPageProps) {
             toast.error("Cannot update: missing id");
             return;
           }
-          const { error } = await supabase.from(table).update(payload).eq("id", current.id);
+          const { error } = await s.from(table).update(payload).eq("id", current.id);
           if (error) throw error;
         }
-        // Optimistic: local mutation; realtime will also sync
         setOpen(false);
         setEditingIndex(null);
         setForm({});
