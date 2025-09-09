@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -98,6 +98,8 @@ export function CrudPage(props: CrudPageProps) {
     [columns],
   );
   const [filters, setFilters] = useState<Record<string, string>>({});
+  // Track if we've already attempted seeding to avoid duplicates
+  const hasSeededRef = useRef(false);
 
   useEffect(() => {
     let unsubscribed = false;
@@ -107,13 +109,40 @@ export function CrudPage(props: CrudPageProps) {
     supabase
       .from(table)
       .select("*")
-      .then(({ data, error }: { data: any; error: any }) => {
+      .then(async ({ data, error }: { data: any; error: any }) => {
         if (unsubscribed) return;
         if (error) {
           console.error("Supabase fetch error:", error);
           return;
         }
-        if (Array.isArray(data)) setRows(data);
+        if (Array.isArray(data)) {
+          setRows(data);
+
+          // Auto-seed if table is empty and we have seed rows
+          if (
+            data.length === 0 &&
+            Array.isArray(seed) &&
+            seed.length > 0 &&
+            !hasSeededRef.current
+          ) {
+            try {
+              hasSeededRef.current = true;
+              // Ensure each row has an id
+              const payload = seed.map((r) =>
+                r.id ? r : { id: crypto.randomUUID(), ...r }
+              );
+              const { error: insertErr } = await supabase.from(table).insert(payload);
+              if (insertErr) {
+                console.error("Supabase seed insert error:", insertErr);
+              } else {
+                setRows(payload);
+                toast.success("Sample data added");
+              }
+            } catch (e) {
+              console.error("Seeding failed:", e);
+            }
+          }
+        }
       });
 
     // Realtime subscription
@@ -149,7 +178,7 @@ export function CrudPage(props: CrudPageProps) {
       unsubscribed = true;
       supabase.removeChannel(channel);
     };
-  }, [backend, table]);
+  }, [backend, table, seed]);
 
   useEffect(() => {
     if (backend === "local") {
