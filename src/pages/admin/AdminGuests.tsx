@@ -41,6 +41,8 @@ export default function AdminGuests() {
                 { id: "g2", name: "Luis Fernandez", email: "luis@example.com", phone: "+1 555-0101", address: "55 Palm St, Miami, FL", loyalty: "Silver", vip: "No", notes: "" },
                 { id: "g3", name: "Maya Lee", email: "maya@example.com", phone: "+1 555-0104", address: "88 Beach Rd, Miami, FL", loyalty: "Platinum", vip: "Yes", notes: "Allergies: peanuts" },
               ]}
+              backend="supabase"
+              table="guests"
             />
           </CardContent>
         </Card>

@@ -34,6 +34,8 @@ export default function FrontDeskGuests() {
                 { id: "g2", name: "Luis Fernandez", email: "luis@example.com", phone: "+1 555-0101", vip: "No", notes: "" },
                 { id: "g3", name: "Maya Lee", email: "maya@example.com", phone: "+1 555-0104", vip: "Yes", notes: "Allergies: peanuts" },
               ]}
+              backend="supabase"
+              table="guests"
             />
           </CardContent>
         </Card>

@@ -37,6 +37,8 @@ export default function AdminRooms() {
                 { id: "rm2", number: "214", type: "Standard Queen", status: "Vacant Clean", guest: "", rate: 150, lastCleaned: "2025-09-09" },
                 { id: "rm3", number: "118", type: "Standard Twin", status: "Occupied", guest: "Ivy Chen", rate: 160, lastCleaned: "2025-09-08" },
               ]}
+              backend="supabase"
+              table="rooms"
             />
           </CardContent>
         </Card>
