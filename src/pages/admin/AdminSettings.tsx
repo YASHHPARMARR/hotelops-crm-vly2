@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { applyThemeToDocument, cycleTheme, getTheme, setTheme, type AppTheme } from "@/lib/theme";
 import { useEffect, useState } from "react";
+import { getSupabase } from "@/lib/supabaseClient";
 
 type PalettePreview = {
   key: AppTheme;
@@ -53,6 +54,234 @@ export default function AdminSettings() {
   const handleCycle = () => {
     const next = cycleTheme(theme);
     applyTheme(next);
+  };
+
+  // Add: SQL DDL for all required tables
+  const setupSql = `
+-- Reservations
+create table if not exists reservations (
+  id text primary key,
+  guestName text,
+  confirmation text,
+  roomType text,
+  roomNumber text,
+  arrival date,
+  departure date,
+  status text,
+  balance numeric,
+  source text,
+  notes text,
+  created_at timestamptz default now()
+);
+
+-- Guests
+create table if not exists guests (
+  id text primary key,
+  name text,
+  email text,
+  phone text,
+  address text,
+  loyalty text,
+  vip text,
+  notes text,
+  created_at timestamptz default now()
+);
+
+-- Rooms
+create table if not exists rooms (
+  id text primary key,
+  number text,
+  type text,
+  status text,
+  guest text,
+  rate numeric,
+  lastCleaned date,
+  created_at timestamptz default now()
+);
+
+-- Housekeeping tasks
+create table if not exists hk_tasks (
+  id text primary key,
+  task text,
+  room text,
+  priority text,
+  status text,
+  assignedTo text,
+  created_at timestamptz default now()
+);
+
+-- Housekeeping inventory
+create table if not exists hk_inventory (
+  id text primary key,
+  item text,
+  stock numeric,
+  min numeric,
+  created_at timestamptz default now()
+);
+
+-- Restaurant menu
+create table if not exists restaurant_menu (
+  id text primary key,
+  name text,
+  category text,
+  price numeric,
+  available text,
+  created_at timestamptz default now()
+);
+
+-- Restaurant orders
+create table if not exists restaurant_orders (
+  id text primary key,
+  table text,
+  items text,
+  total numeric,
+  status text,
+  created_at timestamptz default now()
+);
+
+-- Guest dining orders
+create table if not exists dining_orders (
+  id text primary key,
+  order text,
+  total numeric,
+  status text,
+  created_at timestamptz default now()
+);
+
+-- Guest charges
+create table if not exists charges (
+  id text primary key,
+  date date,
+  item text,
+  room text,
+  category text,
+  amount numeric,
+  created_at timestamptz default now()
+);
+
+-- Guest payments
+create table if not exists payments (
+  id text primary key,
+  date date,
+  method text,
+  ref text,
+  amount numeric,
+  created_at timestamptz default now()
+);
+
+-- Transport trips
+create table if not exists transport_trips (
+  id text primary key,
+  tripNo text,
+  guest text,
+  pickupTime text,
+  status text,
+  created_at timestamptz default now()
+);
+
+-- Transport vehicles
+create table if not exists transport_vehicles (
+  id text primary key,
+  plate text,
+  model text,
+  capacity numeric,
+  status text,
+  created_at timestamptz default now()
+);
+`.trim();
+
+  // Add: Copy SQL to clipboard
+  const copySql = async () => {
+    try {
+      await navigator.clipboard.writeText(setupSql);
+      toast.success("SQL copied to clipboard");
+    } catch {
+      toast.error("Failed to copy SQL");
+    }
+  };
+
+  // Add: Seed all tables with sample data if empty
+  const seedAll = async () => {
+    const s = getSupabase();
+    if (!s) {
+      toast.error("Supabase not initialized. Ensure env vars are set and page reloaded.");
+      return;
+    }
+    toast("Seeding started…");
+
+    try {
+      const seeds: Record<string, Array<Record<string, any>>> = {
+        reservations: [
+          { id: crypto.randomUUID(), guestName: "Ana Garcia", confirmation: "CNF-1001", roomType: "Deluxe King", roomNumber: "205", arrival: "2025-09-09", departure: "2025-09-11", status: "Booked", balance: 220, source: "Direct", notes: "High floor" },
+          { id: crypto.randomUUID(), guestName: "Luis Fernandez", confirmation: "CNF-1002", roomType: "Standard Queen", roomNumber: "214", arrival: "2025-09-08", departure: "2025-09-10", status: "CheckedIn", balance: 0, source: "OTA", notes: "" },
+        ],
+        guests: [
+          { id: crypto.randomUUID(), name: "Ana Garcia", email: "ana@example.com", phone: "+1 555-0100", address: "100 Ocean Ave, Miami, FL", loyalty: "Gold", vip: "Yes", notes: "High floor" },
+          { id: crypto.randomUUID(), name: "Luis Fernandez", email: "luis@example.com", phone: "+1 555-0101", address: "55 Palm St, Miami, FL", loyalty: "Silver", vip: "No", notes: "" },
+        ],
+        rooms: [
+          { id: crypto.randomUUID(), number: "205", type: "Deluxe King", status: "Occupied", guest: "Ana Garcia", rate: 220, lastCleaned: "2025-09-09" },
+          { id: crypto.randomUUID(), number: "214", type: "Standard Queen", status: "Vacant Clean", guest: "", rate: 150, lastCleaned: "2025-09-09" },
+        ],
+        hk_tasks: [
+          { id: crypto.randomUUID(), task: "Make bed", room: "205", priority: "Low", status: "Open", assignedTo: "Ana" },
+          { id: crypto.randomUUID(), task: "Deep clean bath", room: "118", priority: "High", status: "In Progress", assignedTo: "Maya" },
+        ],
+        hk_inventory: [
+          { id: crypto.randomUUID(), item: "Towels", stock: 120, min: 150 },
+          { id: crypto.randomUUID(), item: "Soap", stock: 240, min: 300 },
+        ],
+        restaurant_menu: [
+          { id: crypto.randomUUID(), name: "Cheeseburger", category: "Mains", price: 12.5, available: "Yes" },
+          { id: crypto.randomUUID(), name: "Caesar Salad", category: "Starters", price: 9.0, available: "Yes" },
+        ],
+        restaurant_orders: [
+          { id: crypto.randomUUID(), table: "T-5", items: "Burger x2, Fries", total: 28.5, status: "Preparing" },
+        ],
+        dining_orders: [
+          { id: crypto.randomUUID(), order: "Club Sandwich, Juice", total: 18.5, status: "Preparing" },
+        ],
+        charges: [
+          { id: crypto.randomUUID(), date: "2025-08-28", item: "Room Night 1", room: "1208", category: "Room Night", amount: 245.0 },
+          { id: crypto.randomUUID(), date: "2025-08-28", item: "Room Service - Club Sandwich", room: "1208", category: "Dining", amount: 16.0 },
+        ],
+        payments: [
+          { id: crypto.randomUUID(), date: "2025-08-28", method: "Visa", ref: "•••• 4242", amount: 100.0 },
+        ],
+        transport_trips: [
+          { id: crypto.randomUUID(), tripNo: "TR-001", guest: "Ana Garcia", pickupTime: "09:00", status: "Scheduled" },
+        ],
+        transport_vehicles: [
+          { id: crypto.randomUUID(), plate: "XYZ-101", model: "Sprinter", capacity: 10, status: "Available" },
+        ],
+      };
+
+      // For each table: if empty, insert seed
+      for (const [table, data] of Object.entries(seeds)) {
+        const { data: existing, error: qErr } = await s.from(table).select("id").limit(1);
+        if (qErr) {
+          console.error(`Query failed for ${table}:`, qErr);
+          toast.error(`Failed checking ${table}`);
+          continue;
+        }
+        if (Array.isArray(existing) && existing.length > 0) {
+          // already has data
+          continue;
+        }
+        const { error: insErr } = await s.from(table).insert(data);
+        if (insErr) {
+          console.error(`Insert failed for ${table}:`, insErr);
+          toast.error(`Seeding failed: ${table}`);
+        } else {
+          toast.success(`Seeded: ${table}`);
+        }
+      }
+
+      toast.success("Seeding completed");
+    } catch (e) {
+      console.error(e);
+      toast.error("Seeding encountered an error");
+    }
   };
 
   return (
@@ -131,6 +360,28 @@ export default function AdminSettings() {
             </div>
             <div className="text-xs text-muted-foreground">
               Tip: Use the One-click Theme Toggle to quickly switch between palettes anywhere.
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="gradient-card">
+          <CardHeader>
+            <CardTitle>Supabase Setup</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="text-sm text-muted-foreground">
+              Use these tools to initialize your database and sample data for all dashboards.
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={copySql} className="neon-glow" size="sm">
+                Copy SQL (create tables)
+              </Button>
+              <Button onClick={seedAll} variant="outline" size="sm">
+                Seed Sample Data (if empty)
+              </Button>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              1) In Supabase → SQL editor, paste and run the copied SQL. 2) Turn on Realtime for all tables. 3) Click Seed Sample Data.
             </div>
           </CardContent>
         </Card>
