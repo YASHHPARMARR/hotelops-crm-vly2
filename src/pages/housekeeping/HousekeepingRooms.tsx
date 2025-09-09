@@ -20,12 +20,11 @@ export default function HousekeepingRooms() {
               storageKey="rooms"
               description="Housekeeping status per room in sync with Front Desk and Admin."
               columns={[
-                { key: "room", label: "Room", input: "text", required: true },
+                { key: "number", label: "Room #", input: "text", required: true },
                 { key: "status", label: "Status", input: "select", options: [
                   { label: "Vacant Clean", value: "Vacant Clean" },
                   { label: "Vacant Dirty", value: "Vacant Dirty" },
-                  { label: "Occupied Clean", value: "Occupied Clean" },
-                  { label: "Occupied Dirty", value: "Occupied Dirty" },
+                  { label: "Occupied", value: "Occupied" },
                   { label: "OOO", value: "OOO" },
                 ], required: true },
                 { key: "lastCleaned", label: "Last Cleaned", input: "date" },
