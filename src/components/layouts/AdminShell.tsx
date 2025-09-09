@@ -27,6 +27,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 import type { ReactNode } from "react";
+import { Role, ROLES } from "@/convex/schema";
 
 interface AdminShellProps {
   children: ReactNode;
@@ -39,7 +40,11 @@ export function AdminShell({ children }: AdminShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const navigationItems = user?.role ? ROLE_NAVIGATION[user.role] || [] : [];
+  // Add: fallback to demoRole if user.role is undefined
+  const demoRoleString = typeof window !== "undefined" ? localStorage.getItem("demoRole") : null;
+  const effectiveRole: Role | undefined = (user?.role as Role | undefined) || (demoRoleString as Role | undefined);
+
+  const navigationItems = effectiveRole ? ROLE_NAVIGATION[effectiveRole] || [] : [];
 
   const handleSignOut = async () => {
     await signOut();
@@ -130,7 +135,7 @@ export function AdminShell({ children }: AdminShellProps) {
                       <div className="flex-1 text-left">
                         <div className="text-sm font-medium">{user?.name || "User"}</div>
                         <div className="text-xs text-muted-foreground capitalize">
-                          {user?.role?.replace("_", " ")}
+                          {(effectiveRole || "").replace("_", " ")}
                         </div>
                       </div>
                       <ChevronDown className="h-4 w-4" />

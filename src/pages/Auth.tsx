@@ -30,6 +30,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showRolePicker, setShowRolePicker] = useState(false);
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
@@ -37,6 +38,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       navigate(redirect);
     }
   }, [authLoading, isAuthenticated, navigate, redirectAfterAuth]);
+
   const handleEmailSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
@@ -92,6 +94,32 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       console.error("Guest login error:", error);
       console.error("Error details:", JSON.stringify(error, null, 2));
       setError(`Failed to sign in as guest: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setIsLoading(false);
+    }
+  };
+
+  const roleToPath: Record<string, string> = {
+    admin: "/admin",
+    front_desk: "/front-desk",
+    housekeeping: "/housekeeping",
+    restaurant: "/restaurant",
+    security: "/security",
+    maintenance: "/maintenance",
+    transport: "/transport",
+    inventory: "/inventory",
+    guest: "/guest",
+  };
+
+  const handleGuestLoginWithRole = async (role: keyof typeof roleToPath) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await signIn("anonymous");
+      localStorage.setItem("demoRole", role);
+      navigate(roleToPath[role] || "/");
+    } catch (error) {
+      console.error("Guest login error:", error);
+      setError(`Failed to sign in as guest: ${error instanceof Error ? error.message : "Unknown error"}`);
       setIsLoading(false);
     }
   };
@@ -166,16 +194,42 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
                       </div>
                     </div>
                     
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full mt-4"
-                      onClick={handleGuestLogin}
-                      disabled={isLoading}
-                    >
-                      <UserX className="mr-2 h-4 w-4" />
-                      Continue as Guest
-                    </Button>
+                    {!showRolePicker ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full mt-4"
+                        onClick={() => setShowRolePicker(true)}
+                        disabled={isLoading}
+                      >
+                        <UserX className="mr-2 h-4 w-4" />
+                        Continue as Guest (Choose Role)
+                      </Button>
+                    ) : (
+                      <div className="mt-4 space-y-2">
+                        <div className="text-xs text-muted-foreground mb-2">Select a role to explore:</div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button variant="secondary" onClick={() => handleGuestLoginWithRole("admin")} disabled={isLoading}>Admin</Button>
+                          <Button variant="secondary" onClick={() => handleGuestLoginWithRole("front_desk")} disabled={isLoading}>Front Desk</Button>
+                          <Button variant="secondary" onClick={() => handleGuestLoginWithRole("housekeeping")} disabled={isLoading}>Housekeeping</Button>
+                          <Button variant="secondary" onClick={() => handleGuestLoginWithRole("restaurant")} disabled={isLoading}>Restaurant</Button>
+                          <Button variant="secondary" onClick={() => handleGuestLoginWithRole("security")} disabled={isLoading}>Security</Button>
+                          <Button variant="secondary" onClick={() => handleGuestLoginWithRole("maintenance")} disabled={isLoading}>Maintenance</Button>
+                          <Button variant="secondary" onClick={() => handleGuestLoginWithRole("transport")} disabled={isLoading}>Transport</Button>
+                          <Button variant="secondary" onClick={() => handleGuestLoginWithRole("inventory")} disabled={isLoading}>Inventory</Button>
+                          <Button variant="secondary" onClick={() => handleGuestLoginWithRole("guest")} disabled={isLoading} className="col-span-2">Guest</Button>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="w-full"
+                          onClick={() => setShowRolePicker(false)}
+                          disabled={isLoading}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </form>
