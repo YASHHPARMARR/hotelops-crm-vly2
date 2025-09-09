@@ -17,8 +17,8 @@ export default function FrontDeskRooms() {
           <CardContent>
             <CrudPage
               title="Rooms"
-              storageKey="fd_rooms"
-              description="Track room statuses and assignments."
+              storageKey="rooms" // unified with Admin + HK
+              description="Track room statuses and assignments reflected across modules."
               columns={[
                 { key: "number", label: "Room #", input: "text", required: true },
                 { key: "type", label: "Type", input: "text" },
@@ -31,8 +31,9 @@ export default function FrontDeskRooms() {
                 { key: "guest", label: "Guest", input: "text" },
               ]}
               seed={[
-                { id: "frm1", number: "312", type: "Deluxe King", status: "Vacant Clean", guest: "" },
-                { id: "frm2", number: "118", type: "Standard Twin", status: "Occupied", guest: "Ivy Chen" },
+                { id: "rm1", number: "205", type: "Deluxe King", status: "Occupied", guest: "Ana Garcia", rate: 220, lastCleaned: "2025-09-09" },
+                { id: "rm2", number: "214", type: "Standard Queen", status: "Vacant Clean", guest: "", rate: 150, lastCleaned: "2025-09-09" },
+                { id: "rm3", number: "118", type: "Standard Twin", status: "Occupied", guest: "Ivy Chen", rate: 160, lastCleaned: "2025-09-08" },
               ]}
             />
           </CardContent>

@@ -17,8 +17,8 @@ export default function AdminRooms() {
           <CardContent>
             <CrudPage
               title="Rooms"
-              storageKey="admin_rooms"
-              description="Configure rooms, types, status, and rates."
+              storageKey="rooms"
+              description="Configure rooms, types, housekeeping and live status, rates, and assignments."
               columns={[
                 { key: "number", label: "Room #", input: "text", required: true },
                 { key: "type", label: "Type", input: "text", required: true },
@@ -28,11 +28,14 @@ export default function AdminRooms() {
                   { label: "Occupied", value: "Occupied" },
                   { label: "OOO", value: "OOO" },
                 ], required: true },
-                { key: "rate", label: "Rate", input: "number", required: true },
+                { key: "guest", label: "Guest", input: "text" },
+                { key: "rate", label: "Rate ($)", input: "number", required: true },
+                { key: "lastCleaned", label: "Last Cleaned", input: "date" },
               ]}
               seed={[
-                { id: "r101", number: "205", type: "Deluxe King", status: "Occupied", rate: 220 },
-                { id: "r102", number: "214", type: "Standard Queen", status: "Vacant Clean", rate: 150 },
+                { id: "rm1", number: "205", type: "Deluxe King", status: "Occupied", guest: "Ana Garcia", rate: 220, lastCleaned: "2025-09-09" },
+                { id: "rm2", number: "214", type: "Standard Queen", status: "Vacant Clean", guest: "", rate: 150, lastCleaned: "2025-09-09" },
+                { id: "rm3", number: "118", type: "Standard Twin", status: "Occupied", guest: "Ivy Chen", rate: 160, lastCleaned: "2025-09-08" },
               ]}
             />
           </CardContent>

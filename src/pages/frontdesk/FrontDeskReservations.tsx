@@ -17,23 +17,33 @@ export default function FrontDeskReservations() {
           <CardContent>
             <CrudPage
               title="Reservations"
-              storageKey="fd_reservations"
-              description="Front Desk reservations for quick actions."
+              storageKey="reservations"
+              description="Front Desk reservations with room assignment and status transitions."
               columns={[
                 { key: "guestName", label: "Guest", input: "text", required: true },
                 { key: "confirmation", label: "Confirmation", input: "text", required: true },
                 { key: "roomType", label: "Room Type", input: "text" },
+                { key: "roomNumber", label: "Room #", input: "text" },
                 { key: "arrival", label: "Arrival", input: "date" },
                 { key: "departure", label: "Departure", input: "date" },
                 { key: "status", label: "Status", input: "select", options: [
                   { label: "Booked", value: "Booked" },
                   { label: "CheckedIn", value: "CheckedIn" },
                   { label: "CheckedOut", value: "CheckedOut" },
+                  { label: "Cancelled", value: "Cancelled" },
                 ], required: true },
+                { key: "balance", label: "Balance ($)", input: "number" },
+                { key: "source", label: "Source", input: "select", options: [
+                  { label: "Direct", value: "Direct" },
+                  { label: "OTA", value: "OTA" },
+                  { label: "Corporate", value: "Corporate" },
+                ]},
+                { key: "notes", label: "Notes", input: "textarea" },
               ]}
               seed={[
-                { id: "fr1", guestName: "Maya Lee", confirmation: "CNF-83243", roomType: "Suite", arrival: "2025-09-09", departure: "2025-09-12", status: "Booked" },
-                { id: "fr2", guestName: "Ivy Chen", confirmation: "CNF-83244", roomType: "Standard Twin", arrival: "2025-09-09", departure: "2025-09-11", status: "CheckedIn" },
+                { id: "r1", guestName: "Ana Garcia", confirmation: "CNF-1001", roomType: "Deluxe King", roomNumber: "205", arrival: "2025-09-09", departure: "2025-09-11", status: "Booked", balance: 220, source: "Direct", notes: "High floor" },
+                { id: "r2", guestName: "Luis Fernandez", confirmation: "CNF-1002", roomType: "Standard Queen", roomNumber: "214", arrival: "2025-09-08", departure: "2025-09-10", status: "CheckedIn", balance: 0, source: "OTA", notes: "" },
+                { id: "r3", guestName: "Maya Lee", confirmation: "CNF-1003", roomType: "Suite", roomNumber: "", arrival: "2025-09-12", departure: "2025-09-15", status: "Booked", balance: 650, source: "Corporate", notes: "Late arrival" },
               ]}
             />
           </CardContent>

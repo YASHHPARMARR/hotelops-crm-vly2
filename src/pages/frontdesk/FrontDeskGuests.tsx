@@ -17,8 +17,8 @@ export default function FrontDeskGuests() {
           <CardContent>
             <CrudPage
               title="Guests"
-              storageKey="fd_guests"
-              description="Find and maintain guest information."
+              storageKey="guests"
+              description="Find and maintain guest information used across Front Desk and Admin."
               columns={[
                 { key: "name", label: "Name", input: "text", required: true },
                 { key: "email", label: "Email", input: "text" },
@@ -30,8 +30,9 @@ export default function FrontDeskGuests() {
                 { key: "notes", label: "Notes", input: "textarea" },
               ]}
               seed={[
-                { id: "fg1", name: "Ana Garcia", email: "ana@example.com", phone: "+1 555-0100", vip: "Yes", notes: "High floor" },
-                { id: "fg2", name: "Peter Johnson", email: "peter@example.com", phone: "+1 555-0103", vip: "No", notes: "" },
+                { id: "g1", name: "Ana Garcia", email: "ana@example.com", phone: "+1 555-0100", vip: "Yes", notes: "High floor" },
+                { id: "g2", name: "Luis Fernandez", email: "luis@example.com", phone: "+1 555-0101", vip: "No", notes: "" },
+                { id: "g3", name: "Maya Lee", email: "maya@example.com", phone: "+1 555-0104", vip: "Yes", notes: "Allergies: peanuts" },
               ]}
             />
           </CardContent>

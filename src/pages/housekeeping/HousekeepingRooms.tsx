@@ -17,8 +17,8 @@ export default function HousekeepingRooms() {
           <CardContent>
             <CrudPage
               title="Rooms"
-              storageKey="hk_rooms"
-              description="Housekeeping status per room."
+              storageKey="rooms"
+              description="Housekeeping status per room in sync with Front Desk and Admin."
               columns={[
                 { key: "room", label: "Room", input: "text", required: true },
                 { key: "status", label: "Status", input: "select", options: [
@@ -26,12 +26,14 @@ export default function HousekeepingRooms() {
                   { label: "Vacant Dirty", value: "Vacant Dirty" },
                   { label: "Occupied Clean", value: "Occupied Clean" },
                   { label: "Occupied Dirty", value: "Occupied Dirty" },
+                  { label: "OOO", value: "OOO" },
                 ], required: true },
                 { key: "lastCleaned", label: "Last Cleaned", input: "date" },
               ]}
               seed={[
-                { id: "hr1", room: "205", status: "Occupied Clean", lastCleaned: "2025-09-09" },
-                { id: "hr2", room: "118", status: "Occupied Dirty", lastCleaned: "2025-09-08" },
+                { id: "rm1", number: "205", type: "Deluxe King", status: "Occupied", guest: "Ana Garcia", rate: 220, lastCleaned: "2025-09-09" },
+                { id: "rm2", number: "214", type: "Standard Queen", status: "Vacant Clean", guest: "", rate: 150, lastCleaned: "2025-09-09" },
+                { id: "rm3", number: "118", type: "Standard Twin", status: "Occupied", guest: "Ivy Chen", rate: 160, lastCleaned: "2025-09-08" },
               ]}
             />
           </CardContent>
