@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/layouts/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CrudPage } from "@/components/CrudPage";
 
 export default function InventoryItems() {
   return (
@@ -14,9 +15,22 @@ export default function InventoryItems() {
             <CardTitle>Items Catalog</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-muted-foreground text-sm">
-              Build items table with stock, thresholds, and categories here.
-            </div>
+            <CrudPage
+              title="Inventory Items"
+              storageKey="inv_items"
+              description="Items, stock levels, and thresholds."
+              columns={[
+                { key: "item", label: "Item", input: "text", required: true },
+                { key: "sku", label: "SKU", input: "text", required: true },
+                { key: "stock", label: "Stock", input: "number", required: true },
+                { key: "min", label: "Min", input: "number", required: true },
+                { key: "category", label: "Category", input: "text" },
+              ]}
+              seed={[
+                { id: "ii1", item: "Towels", sku: "TW-001", stock: 120, min: 150, category: "Linen" },
+                { id: "ii2", item: "Soap", sku: "SP-010", stock: 240, min: 300, category: "Toiletries" },
+              ]}
+            />
           </CardContent>
         </Card>
       </div>

@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/layouts/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CrudPage } from "@/components/CrudPage";
 
 export default function GuestBills() {
   return (
@@ -14,9 +15,25 @@ export default function GuestBills() {
             <CardTitle>Current Charges</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-muted-foreground text-sm">
-              Build folio details, payments, and export here.
-            </div>
+            <CrudPage
+              title="Folio Charges"
+              storageKey="guest_bills"
+              description="View, add charges, and track status."
+              columns={[
+                { key: "charge", label: "Charge", input: "text", required: true },
+                { key: "amount", label: "Amount ($)", input: "number", required: true },
+                { key: "date", label: "Date", input: "date", required: true },
+                { key: "status", label: "Status", input: "select", options: [
+                  { label: "Pending", value: "Pending" },
+                  { label: "Paid", value: "Paid" },
+                  { label: "Refunded", value: "Refunded" },
+                ], required: true },
+              ]}
+              seed={[
+                { id: "gb1", charge: "Room Night", amount: 142.6, date: "2025-09-09", status: "Pending" },
+                { id: "gb2", charge: "Dining", amount: 28.5, date: "2025-09-09", status: "Paid" },
+              ]}
+            />
           </CardContent>
         </Card>
       </div>

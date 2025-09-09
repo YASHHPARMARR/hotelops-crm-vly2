@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/layouts/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CrudPage } from "@/components/CrudPage";
 
 export default function TransportVehicles() {
   return (
@@ -14,9 +15,24 @@ export default function TransportVehicles() {
             <CardTitle>Fleet Registry</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-muted-foreground text-sm">
-              Build vehicle list, utilization, and service records here.
-            </div>
+            <CrudPage
+              title="Vehicles"
+              storageKey="tp_vehicles"
+              description="Manage fleet and status."
+              columns={[
+                { key: "plate", label: "Plate", input: "text", required: true },
+                { key: "model", label: "Model", input: "text", required: true },
+                { key: "capacity", label: "Capacity", input: "number", required: true },
+                { key: "status", label: "Status", input: "select", options: [
+                  { label: "Available", value: "Available" },
+                  { label: "In Service", value: "In Service" },
+                  { label: "Maintenance", value: "Maintenance" },
+                ], required: true },
+              ]}
+              seed={[
+                { id: "tv1", plate: "XYZ-101", model: "Sprinter", capacity: 10, status: "Available" },
+              ]}
+            />
           </CardContent>
         </Card>
       </div>

@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/layouts/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CrudPage } from "@/components/CrudPage";
 
 export default function SecurityBadges() {
   return (
@@ -14,9 +15,25 @@ export default function SecurityBadges() {
             <CardTitle>Badge Center</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-muted-foreground text-sm">
-              Build badge templates, issuance, and logs here.
-            </div>
+            <CrudPage
+              title="Visitor Badges"
+              storageKey="sec_badges"
+              description="Issue and manage visitor badges."
+              columns={[
+                { key: "visitorName", label: "Visitor", input: "text", required: true },
+                { key: "company", label: "Company", input: "text" },
+                { key: "badgeId", label: "Badge ID", input: "text", required: true },
+                { key: "status", label: "Status", input: "select", options: [
+                  { label: "Active", value: "Active" },
+                  { label: "Expired", value: "Expired" },
+                  { label: "Revoked", value: "Revoked" },
+                ], required: true },
+              ]}
+              seed={[
+                { id: "sb1", visitorName: "John Smith", company: "Acme Co", badgeId: "B-1001", status: "Active" },
+                { id: "sb2", visitorName: "Jane Doe", company: "Globex", badgeId: "B-1002", status: "Expired" },
+              ]}
+            />
           </CardContent>
         </Card>
       </div>

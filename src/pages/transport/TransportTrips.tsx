@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/layouts/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CrudPage } from "@/components/CrudPage";
 
 export default function TransportTrips() {
   return (
@@ -14,9 +15,24 @@ export default function TransportTrips() {
             <CardTitle>Trip Board</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-muted-foreground text-sm">
-              Build trip scheduling, assignment, and status updates here.
-            </div>
+            <CrudPage
+              title="Trips"
+              storageKey="tp_trips"
+              description="Schedule and monitor trips."
+              columns={[
+                { key: "tripNo", label: "Trip #", input: "text", required: true },
+                { key: "guest", label: "Guest", input: "text" },
+                { key: "pickupTime", label: "Pickup Time", input: "text", required: true },
+                { key: "status", label: "Status", input: "select", options: [
+                  { label: "Scheduled", value: "Scheduled" },
+                  { label: "En Route", value: "En Route" },
+                  { label: "Completed", value: "Completed" },
+                ], required: true },
+              ]}
+              seed={[
+                { id: "tt1", tripNo: "TR-001", guest: "Ana Garcia", pickupTime: "09:00", status: "Scheduled" },
+              ]}
+            />
           </CardContent>
         </Card>
       </div>

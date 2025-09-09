@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/layouts/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CrudPage } from "@/components/CrudPage";
 
 export default function AdminReports() {
   return (
@@ -14,9 +15,25 @@ export default function AdminReports() {
             <CardTitle>Reports Center</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-muted-foreground text-sm">
-              Build report filters, exports, and analytics here.
-            </div>
+            <CrudPage
+              title="Reports"
+              storageKey="admin_reports"
+              description="Track generated reports and exports."
+              columns={[
+                { key: "name", label: "Report", input: "text", required: true },
+                { key: "period", label: "Period", input: "text", required: true },
+                { key: "generatedAt", label: "Generated At", input: "date", required: true },
+                { key: "status", label: "Status", input: "select", options: [
+                  { label: "Ready", value: "Ready" },
+                  { label: "Queued", value: "Queued" },
+                  { label: "Failed", value: "Failed" },
+                ], required: true },
+              ]}
+              seed={[
+                { id: "rep1", name: "Daily Arrivals", period: "2025-09-09", generatedAt: "2025-09-09", status: "Ready" },
+                { id: "rep2", name: "Revenue MTD", period: "Sept 2025", generatedAt: "2025-09-08", status: "Queued" },
+              ]}
+            />
           </CardContent>
         </Card>
       </div>

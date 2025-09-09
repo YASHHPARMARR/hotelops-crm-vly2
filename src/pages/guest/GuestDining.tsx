@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/layouts/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CrudPage } from "@/components/CrudPage";
 
 export default function GuestDining() {
   return (
@@ -14,9 +15,23 @@ export default function GuestDining() {
             <CardTitle>Dining Options</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-muted-foreground text-sm">
-              Build dining menu and ordering UI here.
-            </div>
+            <CrudPage
+              title="Dining Orders"
+              storageKey="guest_dining"
+              description="Order food and track status."
+              columns={[
+                { key: "order", label: "Order", input: "textarea", required: true },
+                { key: "total", label: "Total ($)", input: "number", required: true },
+                { key: "status", label: "Status", input: "select", options: [
+                  { label: "Placed", value: "Placed" },
+                  { label: "Preparing", value: "Preparing" },
+                  { label: "Delivered", value: "Delivered" },
+                ], required: true },
+              ]}
+              seed={[
+                { id: "gd1", order: "Club Sandwich, Juice", total: 18.5, status: "Preparing" },
+              ]}
+            />
           </CardContent>
         </Card>
       </div>

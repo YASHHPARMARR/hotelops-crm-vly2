@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/layouts/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CrudPage } from "@/components/CrudPage";
 
 export default function MaintenanceAssets() {
   return (
@@ -14,9 +15,25 @@ export default function MaintenanceAssets() {
             <CardTitle>Asset Registry</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-muted-foreground text-sm">
-              Build assets list and maintenance schedules here.
-            </div>
+            <CrudPage
+              title="Assets"
+              storageKey="mt_assets"
+              description="Hotel assets and current status."
+              columns={[
+                { key: "name", label: "Name", input: "text", required: true },
+                { key: "assetTag", label: "Asset Tag", input: "text", required: true },
+                { key: "location", label: "Location", input: "text" },
+                { key: "status", label: "Status", input: "select", options: [
+                  { label: "Active", value: "Active" },
+                  { label: "Maintenance", value: "Maintenance" },
+                  { label: "Retired", value: "Retired" },
+                ], required: true },
+              ]}
+              seed={[
+                { id: "a100", name: "Boiler A", assetTag: "AST-001", location: "Basement", status: "Active" },
+                { id: "a101", name: "Elevator 2", assetTag: "AST-017", location: "Tower B", status: "Maintenance" },
+              ]}
+            />
           </CardContent>
         </Card>
       </div>

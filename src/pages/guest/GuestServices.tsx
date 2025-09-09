@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/layouts/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CrudPage } from "@/components/CrudPage";
 
 export default function GuestServices() {
   return (
@@ -14,9 +15,24 @@ export default function GuestServices() {
             <CardTitle>Available Services</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-muted-foreground text-sm">
-              Build service request forms and tracking here.
-            </div>
+            <CrudPage
+              title="Service Requests"
+              storageKey="guest_services"
+              description="Request and track services."
+              columns={[
+                { key: "request", label: "Request", input: "text", required: true },
+                { key: "eta", label: "ETA", input: "text" },
+                { key: "status", label: "Status", input: "select", options: [
+                  { label: "Requested", value: "Requested" },
+                  { label: "In Progress", value: "In Progress" },
+                  { label: "Completed", value: "Completed" },
+                ], required: true },
+              ]}
+              seed={[
+                { id: "gs1", request: "Laundry Pickup", eta: "6pm", status: "Requested" },
+                { id: "gs2", request: "Extra Pillows", eta: "15 min", status: "In Progress" },
+              ]}
+            />
           </CardContent>
         </Card>
       </div>

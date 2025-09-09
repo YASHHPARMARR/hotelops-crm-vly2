@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/layouts/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CrudPage } from "@/components/CrudPage";
 
 export default function RestaurantTables() {
   return (
@@ -14,9 +15,24 @@ export default function RestaurantTables() {
             <CardTitle>Floor Plan</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-muted-foreground text-sm">
-              Build visual tables map and reservations link here.
-            </div>
+            <CrudPage
+              title="Tables"
+              storageKey="rest_tables"
+              description="Manage tables and occupancy."
+              columns={[
+                { key: "tableNo", label: "Table #", input: "text", required: true },
+                { key: "seats", label: "Seats", input: "number", required: true },
+                { key: "status", label: "Status", input: "select", options: [
+                  { label: "Vacant", value: "Vacant" },
+                  { label: "Occupied", value: "Occupied" },
+                  { label: "Reserved", value: "Reserved" },
+                ], required: true },
+              ]}
+              seed={[
+                { id: "rt1", tableNo: "T-1", seats: 4, status: "Vacant" },
+                { id: "rt2", tableNo: "T-5", seats: 2, status: "Occupied" },
+              ]}
+            />
           </CardContent>
         </Card>
       </div>

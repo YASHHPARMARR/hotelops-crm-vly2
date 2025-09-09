@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/layouts/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CrudPage } from "@/components/CrudPage";
 
 export default function HousekeepingRooms() {
   return (
@@ -14,9 +15,25 @@ export default function HousekeepingRooms() {
             <CardTitle>Cleanliness Overview</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-muted-foreground text-sm">
-              Build list of rooms with statuses and actions here.
-            </div>
+            <CrudPage
+              title="Rooms"
+              storageKey="hk_rooms"
+              description="Housekeeping status per room."
+              columns={[
+                { key: "room", label: "Room", input: "text", required: true },
+                { key: "status", label: "Status", input: "select", options: [
+                  { label: "Vacant Clean", value: "Vacant Clean" },
+                  { label: "Vacant Dirty", value: "Vacant Dirty" },
+                  { label: "Occupied Clean", value: "Occupied Clean" },
+                  { label: "Occupied Dirty", value: "Occupied Dirty" },
+                ], required: true },
+                { key: "lastCleaned", label: "Last Cleaned", input: "date" },
+              ]}
+              seed={[
+                { id: "hr1", room: "205", status: "Occupied Clean", lastCleaned: "2025-09-09" },
+                { id: "hr2", room: "118", status: "Occupied Dirty", lastCleaned: "2025-09-08" },
+              ]}
+            />
           </CardContent>
         </Card>
       </div>

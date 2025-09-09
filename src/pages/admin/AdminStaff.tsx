@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/layouts/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CrudPage } from "@/components/CrudPage";
 
 export default function AdminStaff() {
   return (
@@ -14,9 +15,34 @@ export default function AdminStaff() {
             <CardTitle>Staff Management</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-muted-foreground text-sm">
-              Build roles, permissions, and schedules here.
-            </div>
+            <CrudPage
+              title="Staff"
+              storageKey="admin_staff"
+              description="Manage staff, roles, and contact details."
+              columns={[
+                { key: "name", label: "Name", input: "text", required: true },
+                { key: "role", label: "Role", input: "select", options: [
+                  { label: "Front Desk", value: "Front Desk" },
+                  { label: "Housekeeping", value: "Housekeeping" },
+                  { label: "Maintenance", value: "Maintenance" },
+                  { label: "Security", value: "Security" },
+                  { label: "Restaurant", value: "Restaurant" },
+                  { label: "Inventory", value: "Inventory" },
+                  { label: "Admin", value: "Admin" },
+                ], required: true },
+                { key: "email", label: "Email", input: "text", required: true },
+                { key: "phone", label: "Phone", input: "text" },
+                { key: "shift", label: "Shift", input: "select", options: [
+                  { label: "Morning", value: "Morning" },
+                  { label: "Evening", value: "Evening" },
+                  { label: "Night", value: "Night" },
+                ]},
+              ]}
+              seed={[
+                { id: "s1", name: "Ivy Chen", role: "Front Desk", email: "ivy@example.com", phone: "+1 555-0102", shift: "Morning" },
+                { id: "s2", name: "Peter Johnson", role: "Maintenance", email: "peter@example.com", phone: "+1 555-0103", shift: "Evening" },
+              ]}
+            />
           </CardContent>
         </Card>
       </div>

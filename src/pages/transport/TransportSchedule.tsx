@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/layouts/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CrudPage } from "@/components/CrudPage";
 
 export default function TransportSchedule() {
   return (
@@ -14,9 +15,20 @@ export default function TransportSchedule() {
             <CardTitle>Planner</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-muted-foreground text-sm">
-              Build schedule view and capacity management here.
-            </div>
+            <CrudPage
+              title="Transport Schedule"
+              storageKey="tp_schedule"
+              description="Daily transport schedule."
+              columns={[
+                { key: "route", label: "Route", input: "text", required: true },
+                { key: "time", label: "Time", input: "text", required: true },
+                { key: "vehicle", label: "Vehicle", input: "text" },
+                { key: "driver", label: "Driver", input: "text" },
+              ]}
+              seed={[
+                { id: "ts1", route: "Airport -> Hotel", time: "09:00", vehicle: "Sprinter", driver: "Sam" },
+              ]}
+            />
           </CardContent>
         </Card>
       </div>

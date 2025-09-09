@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/layouts/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CrudPage } from "@/components/CrudPage";
 
 export default function MaintenanceTickets() {
   return (
@@ -14,9 +15,37 @@ export default function MaintenanceTickets() {
             <CardTitle>Open Tickets</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-muted-foreground text-sm">
-              Build ticket list, filters, and actions here.
-            </div>
+            <CrudPage
+              title="Tickets"
+              storageKey="mt_tickets"
+              description="Create, assign, and track repairs."
+              columns={[
+                { key: "title", label: "Title", input: "text", required: true },
+                { key: "category", label: "Category", input: "select", options: [
+                  { label: "Plumbing", value: "Plumbing" },
+                  { label: "Electrical", value: "Electrical" },
+                  { label: "HVAC", value: "HVAC" },
+                  { label: "Furniture", value: "Furniture" },
+                  { label: "Other", value: "Other" },
+                ], required: true },
+                { key: "priority", label: "Priority", input: "select", options: [
+                  { label: "Low", value: "Low" },
+                  { label: "Medium", value: "Medium" },
+                  { label: "High", value: "High" },
+                  { label: "Urgent", value: "Urgent" },
+                ], required: true },
+                { key: "status", label: "Status", input: "select", options: [
+                  { label: "Open", value: "Open" },
+                  { label: "In Progress", value: "In Progress" },
+                  { label: "Completed", value: "Completed" },
+                ], required: true },
+                { key: "assignedTo", label: "Assigned To", input: "text" },
+              ]}
+              seed={[
+                { id: "t1", title: "Leaking pipe - 214", category: "Plumbing", priority: "High", status: "Open", assignedTo: "Peter J." },
+                { id: "t2", title: "AC not cooling - 507", category: "HVAC", priority: "Urgent", status: "In Progress", assignedTo: "Luis F." },
+              ]}
+            />
           </CardContent>
         </Card>
       </div>

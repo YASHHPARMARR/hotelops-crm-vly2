@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/layouts/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CrudPage } from "@/components/CrudPage";
 
 export default function AdminSettings() {
   return (
@@ -14,9 +15,20 @@ export default function AdminSettings() {
             <CardTitle>Configuration</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-muted-foreground text-sm">
-              Build org settings, branding, and billing here.
-            </div>
+            <CrudPage
+              title="Settings"
+              storageKey="admin_settings"
+              description="Application key-value configuration."
+              columns={[
+                { key: "key", label: "Key", input: "text", required: true },
+                { key: "value", label: "Value", input: "text", required: true },
+                { key: "notes", label: "Notes", input: "textarea" },
+              ]}
+              seed={[
+                { id: "set1", key: "brandName", value: "Nova Hotel", notes: "" },
+                { id: "set2", key: "timezone", value: "UTC", notes: "Default timezone" },
+              ]}
+            />
           </CardContent>
         </Card>
       </div>
