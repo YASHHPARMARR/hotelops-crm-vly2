@@ -28,6 +28,8 @@ export default function HousekeepingInventory() {
                 { id: "hi1", item: "Towels", stock: 120, min: 150 },
                 { id: "hi2", item: "Soap", stock: 240, min: 300 },
               ]}
+              backend="supabase"
+              table="hk_inventory"
             />
           </CardContent>
         </Card>

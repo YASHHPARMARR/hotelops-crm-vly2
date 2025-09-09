@@ -31,6 +31,8 @@ export default function GuestDining() {
               seed={[
                 { id: "gd1", order: "Club Sandwich, Juice", total: 18.5, status: "Preparing" },
               ]}
+              backend="supabase"
+              table="dining_orders"
             />
           </CardContent>
         </Card>

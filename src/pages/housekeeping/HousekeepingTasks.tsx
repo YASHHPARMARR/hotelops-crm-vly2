@@ -38,6 +38,8 @@ export default function HousekeepingTasks() {
                 { id: "hk1", task: "Make bed", room: "205", priority: "Low", status: "Open", assignedTo: "Ana" },
                 { id: "hk2", task: "Deep clean bath", room: "118", priority: "High", status: "In Progress", assignedTo: "Maya" },
               ]}
+              backend="supabase"
+              table="hk_tasks"
             />
           </CardContent>
         </Card>

@@ -32,6 +32,8 @@ export default function TransportTrips() {
               seed={[
                 { id: "tt1", tripNo: "TR-001", guest: "Ana Garcia", pickupTime: "09:00", status: "Scheduled" },
               ]}
+              backend="supabase"
+              table="transport_trips"
             />
           </CardContent>
         </Card>

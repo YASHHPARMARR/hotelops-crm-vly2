@@ -32,6 +32,8 @@ export default function RestaurantMenu() {
                 { id: "rm1", name: "Cheeseburger", category: "Mains", price: 12.5, available: "Yes" },
                 { id: "rm2", name: "Caesar Salad", category: "Starters", price: 9.0, available: "Yes" },
               ]}
+              backend="supabase"
+              table="restaurant_menu"
             />
           </CardContent>
         </Card>

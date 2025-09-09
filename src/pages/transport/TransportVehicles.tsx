@@ -32,6 +32,8 @@ export default function TransportVehicles() {
               seed={[
                 { id: "tv1", plate: "XYZ-101", model: "Sprinter", capacity: 10, status: "Available" },
               ]}
+              backend="supabase"
+              table="transport_vehicles"
             />
           </CardContent>
         </Card>
