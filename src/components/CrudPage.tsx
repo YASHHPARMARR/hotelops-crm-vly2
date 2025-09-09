@@ -103,11 +103,10 @@ export function CrudPage(props: CrudPageProps) {
     let unsubscribed = false;
     if (backend !== "supabase" || !supabase || !table) return;
 
-    // Initial fetch
+    // Initial fetch (no ordering to avoid requiring a created_at column)
     supabase
       .from(table)
       .select("*")
-      .order("created_at", { ascending: false })
       .then(({ data, error }: { data: any; error: any }) => {
         if (unsubscribed) return;
         if (error) {
@@ -131,7 +130,6 @@ export function CrudPage(props: CrudPageProps) {
             if (!id) return prev;
 
             if (payload.eventType === "INSERT") {
-              // Avoid duplicates
               if (prev.some((r) => r.id === newRow.id)) return prev;
               return [newRow, ...prev];
             }
