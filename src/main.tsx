@@ -15,6 +15,15 @@ import Unauthorized from "./pages/Unauthorized.tsx";
 import { ProtectedRoute } from "./components/ProtectedRoute.tsx";
 import "./types/global.d.ts";
 
+import FrontDeskDashboard from "@/pages/FrontDeskDashboard.tsx";
+import HousekeepingDashboard from "@/pages/HousekeepingDashboard.tsx";
+import RestaurantDashboard from "@/pages/RestaurantDashboard.tsx";
+import SecurityDashboard from "@/pages/SecurityDashboard.tsx";
+import MaintenanceDashboard from "@/pages/MaintenanceDashboard.tsx";
+import TransportDashboard from "@/pages/TransportDashboard.tsx";
+import InventoryDashboard from "@/pages/InventoryDashboard.tsx";
+import GuestDashboard from "@/pages/GuestDashboard.tsx";
+
 const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
 
 function RouteSyncer() {
@@ -67,7 +76,7 @@ createRoot(document.getElementById("root")!).render(
               path="/front-desk" 
               element={
                 <ProtectedRoute>
-                  <AdminDashboard />
+                  <FrontDeskDashboard />
                 </ProtectedRoute>
               } 
             />
@@ -75,7 +84,7 @@ createRoot(document.getElementById("root")!).render(
               path="/housekeeping" 
               element={
                 <ProtectedRoute>
-                  <AdminDashboard />
+                  <HousekeepingDashboard />
                 </ProtectedRoute>
               } 
             />
@@ -83,7 +92,7 @@ createRoot(document.getElementById("root")!).render(
               path="/restaurant" 
               element={
                 <ProtectedRoute>
-                  <AdminDashboard />
+                  <RestaurantDashboard />
                 </ProtectedRoute>
               } 
             />
@@ -91,7 +100,7 @@ createRoot(document.getElementById("root")!).render(
               path="/security" 
               element={
                 <ProtectedRoute>
-                  <AdminDashboard />
+                  <SecurityDashboard />
                 </ProtectedRoute>
               } 
             />
@@ -99,7 +108,7 @@ createRoot(document.getElementById("root")!).render(
               path="/maintenance" 
               element={
                 <ProtectedRoute>
-                  <AdminDashboard />
+                  <MaintenanceDashboard />
                 </ProtectedRoute>
               } 
             />
@@ -107,7 +116,7 @@ createRoot(document.getElementById("root")!).render(
               path="/transport" 
               element={
                 <ProtectedRoute>
-                  <AdminDashboard />
+                  <TransportDashboard />
                 </ProtectedRoute>
               } 
             />
@@ -115,7 +124,7 @@ createRoot(document.getElementById("root")!).render(
               path="/inventory" 
               element={
                 <ProtectedRoute>
-                  <AdminDashboard />
+                  <InventoryDashboard />
                 </ProtectedRoute>
               } 
             />
@@ -123,7 +132,7 @@ createRoot(document.getElementById("root")!).render(
               path="/guest" 
               element={
                 <ProtectedRoute>
-                  <AdminDashboard />
+                  <GuestDashboard />
                 </ProtectedRoute>
               } 
             />
