@@ -5,7 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { applyThemeToDocument, cycleTheme, getTheme, setTheme, type AppTheme } from "@/lib/theme";
 import { useEffect, useState } from "react";
-import { getSupabase } from "@/lib/supabaseClient";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { setSupabaseKeys, getSupabase } from "@/lib/supabaseClient";
 
 type PalettePreview = {
   key: AppTheme;
@@ -37,11 +39,29 @@ const palettes: Array<PalettePreview> = [
 
 export default function AdminSettings() {
   const [theme, setLocalTheme] = useState<AppTheme>("neon");
+  const [supabaseUrl, setSupabaseUrl] = useState<string>("");
+  const [supabaseAnon, setSupabaseAnon] = useState<string>("");
+  const [connected, setConnected] = useState<boolean>(false);
 
   useEffect(() => {
     const t = getTheme();
     setLocalTheme(t);
     applyThemeToDocument(t);
+
+    // Initialize form with env or saved keys
+    try {
+      const envUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+      const envAnon = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+      const lsUrl = localStorage.getItem("VITE_SUPABASE_URL") || "";
+      const lsAnon = localStorage.getItem("VITE_SUPABASE_ANON_KEY") || "";
+      setSupabaseUrl(envUrl ?? lsUrl);
+      setSupabaseAnon(envAnon ?? lsAnon);
+    } catch {
+      // ignore
+    }
+
+    // connection check
+    setConnected(!!getSupabase());
   }, []);
 
   const applyTheme = (t: AppTheme) => {
@@ -56,7 +76,6 @@ export default function AdminSettings() {
     applyTheme(next);
   };
 
-  // Add: SQL DDL for all required tables
   const setupSql = `
 -- Reservations
 create table if not exists reservations (
@@ -190,7 +209,6 @@ create table if not exists transport_vehicles (
 );
 `.trim();
 
-  // Add: Copy SQL to clipboard
   const copySql = async () => {
     try {
       await navigator.clipboard.writeText(setupSql);
@@ -200,7 +218,6 @@ create table if not exists transport_vehicles (
     }
   };
 
-  // Add: Seed all tables with sample data if empty
   const seedAll = async () => {
     const s = getSupabase();
     if (!s) {
@@ -284,6 +301,23 @@ create table if not exists transport_vehicles (
     }
   };
 
+  const saveSupabase = () => {
+    if (!supabaseUrl || !supabaseAnon) {
+      toast.error("Provide both Supabase URL and Anon Key");
+      return;
+    }
+    setSupabaseKeys(supabaseUrl.trim(), supabaseAnon.trim());
+    // Recheck connection
+    const s = getSupabase();
+    if (s) {
+      setConnected(true);
+      toast.success("Supabase connected");
+    } else {
+      setConnected(false);
+      toast.error("Failed to initialize Supabase client");
+    }
+  };
+
   return (
     <AdminShell>
       <div className="space-y-6">
@@ -301,6 +335,43 @@ create table if not exists transport_vehicles (
             </Button>
           </div>
         </div>
+
+        <Card className="gradient-card">
+          <CardHeader>
+            <CardTitle>Supabase Connection</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-3">
+              <div className="grid gap-1">
+                <Label>Supabase URL</Label>
+                <Input
+                  placeholder="https://xxxxxx.supabase.co"
+                  value={supabaseUrl}
+                  onChange={(e) => setSupabaseUrl(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-1">
+                <Label>Supabase Anon Key</Label>
+                <Input
+                  placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  value={supabaseAnon}
+                  onChange={(e) => setSupabaseAnon(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button onClick={saveSupabase} className="neon-glow" size="sm">
+                Save & Connect
+              </Button>
+              <Badge variant={connected ? "default" : "outline"}>
+                {connected ? "Connected" : "Not Connected"}
+              </Badge>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Tip: These settings are stored locally and used if .env is unavailable.
+            </div>
+          </CardContent>
+        </Card>
 
         <Card className="gradient-card">
           <CardHeader>
