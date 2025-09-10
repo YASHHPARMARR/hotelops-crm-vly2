@@ -1,8 +1,12 @@
 import { AdminShell } from "@/components/layouts/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CrudPage } from "@/components/CrudPage";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function FrontDeskReservations() {
+  const { user } = useAuth();
+  const ownerEmail = user?.email || undefined;
+
   return (
     <AdminShell>
       <div className="space-y-6">
@@ -47,6 +51,8 @@ export default function FrontDeskReservations() {
               ]}
               backend="supabase"
               table="reservations"
+              ownerField="owner"
+              ownerValue={ownerEmail}
             />
           </CardContent>
         </Card>

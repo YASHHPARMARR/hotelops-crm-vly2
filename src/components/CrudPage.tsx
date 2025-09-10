@@ -47,6 +47,8 @@ type CrudPageProps = {
   description?: string;
   backend?: "local" | "supabase";
   table?: string;
+  ownerField?: string;
+  ownerValue?: string | undefined;
 };
 
 function loadLocal<T>(key: string, fallback: T): T {
@@ -77,6 +79,8 @@ export function CrudPage(props: CrudPageProps) {
     description,
     backend = "local",
     table,
+    ownerField,
+    ownerValue,
   } = props;
 
   const [query, setQuery] = useState("");
@@ -107,7 +111,11 @@ export function CrudPage(props: CrudPageProps) {
     const s = getSupabase();
     if (!s) return;
     try {
-      const { data, error } = await s.from(table).select("*");
+      let query = s.from(table).select("*");
+      if (ownerField && ownerValue) {
+        query = query.eq(ownerField, ownerValue);
+      }
+      const { data, error } = await query;
       if (error) {
         console.error("Supabase fetch error:", error);
         return;
@@ -132,6 +140,10 @@ export function CrudPage(props: CrudPageProps) {
       if (unsubscribed) return;
       // Auto-seed if table is empty and we have seed rows
       try {
+        // Only seed if table is empty AND no owner scoping or ownerValue provided
+        // Seeding global demo rows when scoping by user would be misleading
+        if (ownerField && ownerValue) return;
+
         const { data: current } = await s.from(table).select("id").limit(1);
         const isEmpty = !Array.isArray(current) || current.length === 0;
         if (isEmpty && Array.isArray(seed) && seed.length > 0 && !hasSeededRef.current) {
@@ -183,7 +195,7 @@ export function CrudPage(props: CrudPageProps) {
       unsubscribed = true;
       getSupabase()?.removeChannel(channel);
     };
-  }, [backend, table, seed]);
+  }, [backend, table, seed, ownerField, ownerValue]);
 
   // Add: polling refetch every 5s to keep other pages in sync without Realtime
   useEffect(() => {
@@ -288,6 +300,10 @@ export function CrudPage(props: CrudPageProps) {
         const payload = { ...form };
         if (!payload.id) {
           payload.id = crypto.randomUUID();
+        }
+        // Add: stamp owner for new/updated rows when configured
+        if (ownerField && ownerValue && payload[ownerField] == null) {
+          payload[ownerField] = ownerValue;
         }
 
         if (editingIndex === null) {

@@ -90,6 +90,7 @@ create table if not exists reservations (
   balance numeric,
   source text,
   notes text,
+  owner text, -- Added: per-user ownership via email
   created_at timestamptz default now()
 );
 
@@ -229,8 +230,8 @@ create table if not exists transport_vehicles (
     try {
       const seeds: Record<string, Array<Record<string, any>>> = {
         reservations: [
-          { id: crypto.randomUUID(), guestName: "Ana Garcia", confirmation: "CNF-1001", roomType: "Deluxe King", roomNumber: "205", arrival: "2025-09-09", departure: "2025-09-11", status: "Booked", balance: 220, source: "Direct", notes: "High floor" },
-          { id: crypto.randomUUID(), guestName: "Luis Fernandez", confirmation: "CNF-1002", roomType: "Standard Queen", roomNumber: "214", arrival: "2025-09-08", departure: "2025-09-10", status: "CheckedIn", balance: 0, source: "OTA", notes: "" },
+          { id: crypto.randomUUID(), guestName: "Ana Garcia", confirmation: "CNF-1001", roomType: "Deluxe King", roomNumber: "205", arrival: "2025-09-09", departure: "2025-09-11", status: "Booked", balance: 220, source: "Direct", notes: "High floor", owner: "demo@example.com" },
+          { id: crypto.randomUUID(), guestName: "Luis Fernandez", confirmation: "CNF-1002", roomType: "Standard Queen", roomNumber: "214", arrival: "2025-09-08", departure: "2025-09-10", status: "CheckedIn", balance: 0, source: "OTA", notes: "", owner: "demo@example.com" },
         ],
         guests: [
           { id: crypto.randomUUID(), name: "Ana Garcia", email: "ana@example.com", phone: "+1 555-0100", address: "100 Ocean Ave, Miami, FL", loyalty: "Gold", vip: "Yes", notes: "High floor" },
