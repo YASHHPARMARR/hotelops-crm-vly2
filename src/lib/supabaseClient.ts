@@ -55,3 +55,38 @@ export function getSupabase() {
 
 // Keep existing eager export for compatibility; now created lazily if not set
 export const supabase = getSupabase();
+
+// Add: Supabase auth helpers and current user email accessor
+export async function supabaseSignUp(email: string, password: string) {
+  const s = getSupabase();
+  if (!s) throw new Error("Supabase not initialized");
+  const { data, error } = await s.auth.signUp({ email, password });
+  if (error) throw error;
+  return data;
+}
+
+export async function supabaseSignIn(email: string, password: string) {
+  const s = getSupabase();
+  if (!s) throw new Error("Supabase not initialized");
+  const { data, error } = await s.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  return data;
+}
+
+export async function supabaseSignOut() {
+  const s = getSupabase();
+  if (!s) return;
+  const { error } = await s.auth.signOut();
+  if (error) throw error;
+}
+
+export async function getSupabaseUserEmail(): Promise<string | undefined> {
+  const s = getSupabase();
+  if (!s) return undefined;
+  try {
+    const { data } = await s.auth.getUser();
+    return data?.user?.email ?? undefined;
+  } catch {
+    return undefined;
+  }
+}

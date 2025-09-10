@@ -302,6 +302,56 @@ create table if not exists transport_vehicles (
     }
   };
 
+  const rlsSql = `
+-- Enable RLS for all tables
+alter table if exists reservations enable row level security;
+alter table if exists guests enable row level security;
+alter table if exists rooms enable row level security;
+alter table if exists hk_tasks enable row level security;
+alter table if exists hk_inventory enable row level security;
+alter table if exists restaurant_menu enable row level security;
+alter table if exists restaurant_orders enable row level security;
+alter table if exists dining_orders enable row level security;
+alter table if exists charges enable row level security;
+alter table if exists payments enable row level security;
+alter table if exists transport_trips enable row level security;
+alter table if exists transport_vehicles enable row level security;
+
+-- Reservations: Only owner (by email) can CRUD
+drop policy if exists "Reservations owner can access" on reservations;
+create policy "Reservations owner can access" on reservations
+for all
+using ( owner = (current_setting('request.jwt.claims', true)::jsonb ->> 'email') )
+with check ( owner = (current_setting('request.jwt.claims', true)::jsonb ->> 'email') );
+
+-- Rooms: Allow read to all authenticated; writes restricted to authenticated for demo
+drop policy if exists "Rooms read for auth" on rooms;
+create policy "Rooms read for auth" on rooms
+for select
+to authenticated
+using (true);
+
+drop policy if exists "Rooms write for auth" on rooms;
+create policy "Rooms write for auth" on rooms
+for insert with check (true)
+to authenticated;
+
+create policy "Rooms update for auth" on rooms
+for update using (true)
+to authenticated;
+
+-- Repeat similar policies per your needs for other tables (owner-col or auth-only)
+`.trim();
+
+  const copyRlsSql = async () => {
+    try {
+      await navigator.clipboard.writeText(rlsSql);
+      toast.success("RLS SQL copied");
+    } catch {
+      toast.error("Failed to copy RLS SQL");
+    }
+  };
+
   const saveSupabase = () => {
     if (!supabaseUrl || !supabaseAnon) {
       toast.error("Provide both Supabase URL and Anon Key");
@@ -447,6 +497,9 @@ create table if not exists transport_vehicles (
             <div className="flex flex-wrap gap-2">
               <Button onClick={copySql} className="neon-glow" size="sm">
                 Copy SQL (create tables)
+              </Button>
+              <Button onClick={copyRlsSql} variant="outline" size="sm">
+                Copy RLS Policies SQL
               </Button>
               <Button onClick={seedAll} variant="outline" size="sm">
                 Seed Sample Data (if empty)

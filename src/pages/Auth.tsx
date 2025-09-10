@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { ArrowRight, Loader2, Mail, UserX } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import { supabaseSignIn, supabaseSignOut, supabaseSignUp, getSupabaseUserEmail } from "@/lib/supabaseClient";
 
 interface AuthProps {
   redirectAfterAuth?: string;
@@ -31,6 +32,9 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showRolePicker, setShowRolePicker] = useState(false);
+  const [useSupabase, setUseSupabase] = useState(false);
+  const [sbEmail, setSbEmail] = useState("");
+  const [sbPassword, setSbPassword] = useState("");
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
@@ -231,6 +235,106 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
                       </div>
                     )}
                   </div>
+
+                  <div className="mt-6 border-t pt-4">
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs font-medium text-muted-foreground">Use Supabase Email/Password</div>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => setUseSupabase((v) => !v)}>
+                        {useSupabase ? "Hide" : "Show"}
+                      </Button>
+                    </div>
+                    {useSupabase && (
+                      <div className="mt-3 space-y-2">
+                        <Input
+                          placeholder="email@domain.com"
+                          type="email"
+                          value={sbEmail}
+                          onChange={(e) => setSbEmail(e.target.value)}
+                          disabled={isLoading}
+                        />
+                        <Input
+                          placeholder="Password"
+                          type="password"
+                          value={sbPassword}
+                          onChange={(e) => setSbPassword(e.target.value)}
+                          disabled={isLoading}
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            className="flex-1"
+                            disabled={isLoading || !sbEmail || !sbPassword}
+                            onClick={async () => {
+                              setIsLoading(true);
+                              setError(null);
+                              try {
+                                await supabaseSignUp(sbEmail, sbPassword);
+                                // After signup, also log in
+                                await supabaseSignIn(sbEmail, sbPassword);
+                                const email = await getSupabaseUserEmail();
+                                if (!email) throw new Error("Signed in but no Supabase user email found.");
+                                navigate(redirectAfterAuth || "/");
+                              } catch (e: any) {
+                                console.error(e);
+                                setError(e?.message || "Signup failed");
+                              } finally {
+                                setIsLoading(false);
+                              }
+                            }}
+                          >
+                            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            Sign up
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            className="flex-1"
+                            disabled={isLoading || !sbEmail || !sbPassword}
+                            onClick={async () => {
+                              setIsLoading(true);
+                              setError(null);
+                              try {
+                                await supabaseSignIn(sbEmail, sbPassword);
+                                const email = await getSupabaseUserEmail();
+                                if (!email) throw new Error("Signed in but no Supabase user email found.");
+                                navigate(redirectAfterAuth || "/");
+                              } catch (e: any) {
+                                console.error(e);
+                                setError(e?.message || "Login failed");
+                              } finally {
+                                setIsLoading(false);
+                              }
+                            }}
+                          >
+                            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            Log in
+                          </Button>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="w-full"
+                          disabled={isLoading}
+                          onClick={async () => {
+                            setIsLoading(true);
+                            setError(null);
+                            try {
+                              await supabaseSignOut();
+                              setSbEmail("");
+                              setSbPassword("");
+                            } catch (e: any) {
+                              setError(e?.message || "Logout failed");
+                            } finally {
+                              setIsLoading(false);
+                            }
+                          }}
+                        >
+                          Log out of Supabase
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
                 </CardContent>
               </form>
             </>

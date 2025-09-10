@@ -295,7 +295,10 @@ export function CrudPage(props: CrudPageProps) {
 
     if (backend === "supabase" && table) {
       const s = getSupabase();
-      if (!s) return;
+      if (!s) {
+        toast.error("Supabase not initialized. Set keys in Admin → Settings and reload.");
+        return;
+      }
       try {
         const payload = { ...form };
         if (!payload.id) {
@@ -324,9 +327,11 @@ export function CrudPage(props: CrudPageProps) {
         toast.success(editingIndex === null ? "Added" : "Updated");
         // Add: refetch to ensure other tabs/pages and local state are current
         await fetchRows();
-      } catch (e) {
+      } catch (e: any) {
         console.error(e);
-        toast.error("Save failed");
+        // Improve: show reason when available
+        const msg = e?.message || "Save failed";
+        toast.error(`Save failed: ${msg}`);
       }
       return;
     }

@@ -2,10 +2,22 @@ import { AdminShell } from "@/components/layouts/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CrudPage } from "@/components/CrudPage";
 import { useAuth } from "@/hooks/use-auth";
+import { useEffect, useState } from "react";
+import { getSupabaseUserEmail } from "@/lib/supabaseClient";
 
 export default function FrontDeskReservations() {
   const { user } = useAuth();
-  const ownerEmail = user?.email || undefined;
+  const [sbEmail, setSbEmail] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    (async () => {
+      const email = await getSupabaseUserEmail();
+      setSbEmail(email);
+    })();
+  }, []);
+
+  // Prefer Supabase auth email (RLS) fallback to Convex user email
+  const ownerEmail = sbEmail || user?.email || undefined;
 
   return (
     <AdminShell>
