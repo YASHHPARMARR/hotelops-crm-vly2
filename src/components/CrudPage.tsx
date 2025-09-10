@@ -101,6 +101,25 @@ export function CrudPage(props: CrudPageProps) {
   // Track if we've already attempted seeding to avoid duplicates
   const hasSeededRef = useRef(false);
 
+  // Add: central fetch function for Supabase, used on mount, after writes, and by polling/Refresh
+  async function fetchRows() {
+    if (backend !== "supabase" || !table) return;
+    const s = getSupabase();
+    if (!s) return;
+    try {
+      const { data, error } = await s.from(table).select("*");
+      if (error) {
+        console.error("Supabase fetch error:", error);
+        return;
+      }
+      if (Array.isArray(data)) {
+        setRows(data);
+      }
+    } catch (e) {
+      console.error("Fetch failed:", e);
+    }
+  }
+
   useEffect(() => {
     let unsubscribed = false;
     if (backend !== "supabase" || !table) return;
@@ -108,46 +127,30 @@ export function CrudPage(props: CrudPageProps) {
     const s = getSupabase();
     if (!s) return;
 
-    // Initial fetch
-    s
-      .from(table)
-      .select("*")
-      .then(async ({ data, error }: { data: any; error: any }) => {
-        if (unsubscribed) return;
-        if (error) {
-          console.error("Supabase fetch error:", error);
-          return;
-        }
-        if (Array.isArray(data)) {
-          setRows(data);
-
-          // Auto-seed if table is empty and we have seed rows
-          if (
-            data.length === 0 &&
-            Array.isArray(seed) &&
-            seed.length > 0 &&
-            !hasSeededRef.current
-          ) {
-            try {
-              hasSeededRef.current = true;
-              const payload = seed.map((r) =>
-                r.id ? r : { id: crypto.randomUUID(), ...r }
-              );
-              const { error: insertErr } = await s.from(table).insert(payload);
-              if (insertErr) {
-                console.error("Supabase seed insert error:", insertErr);
-              } else {
-                setRows(payload);
-                toast.success("Sample data added");
-              }
-            } catch (e) {
-              console.error("Seeding failed:", e);
-            }
+    // Initial fetch (replaced with central fetch)
+    fetchRows().then(async () => {
+      if (unsubscribed) return;
+      // Auto-seed if table is empty and we have seed rows
+      try {
+        const { data: current } = await s.from(table).select("id").limit(1);
+        const isEmpty = !Array.isArray(current) || current.length === 0;
+        if (isEmpty && Array.isArray(seed) && seed.length > 0 && !hasSeededRef.current) {
+          hasSeededRef.current = true;
+          const payload = seed.map((r) => (r.id ? r : { id: crypto.randomUUID(), ...r }));
+          const { error: insertErr } = await s.from(table).insert(payload);
+          if (insertErr) {
+            console.error("Supabase seed insert error:", insertErr);
+          } else {
+            setRows(payload);
+            toast.success("Sample data added");
           }
         }
-      });
+      } catch (e) {
+        console.error("Seed check failed:", e);
+      }
+    });
 
-    // Realtime subscription
+    // Realtime subscription is optional; if Realtime not enabled, it simply won't receive events
     const channel = s
       .channel(`public:${table}`)
       .on(
@@ -181,6 +184,15 @@ export function CrudPage(props: CrudPageProps) {
       getSupabase()?.removeChannel(channel);
     };
   }, [backend, table, seed]);
+
+  // Add: polling refetch every 5s to keep other pages in sync without Realtime
+  useEffect(() => {
+    if (backend !== "supabase" || !table) return;
+    const interval = setInterval(() => {
+      fetchRows();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [backend, table]);
 
   useEffect(() => {
     if (backend === "local") {
@@ -239,6 +251,8 @@ export function CrudPage(props: CrudPageProps) {
         if (error) throw error;
         setRows((prev) => prev.filter((_, i) => i !== idx));
         toast.success("Deleted");
+        // Add: refetch to ensure fully up-to-date
+        await fetchRows();
       } catch (e) {
         console.error(e);
         toast.error("Delete failed");
@@ -292,6 +306,8 @@ export function CrudPage(props: CrudPageProps) {
         setEditingIndex(null);
         setForm({});
         toast.success(editingIndex === null ? "Added" : "Updated");
+        // Add: refetch to ensure other tabs/pages and local state are current
+        await fetchRows();
       } catch (e) {
         console.error(e);
         toast.error("Save failed");
@@ -355,6 +371,10 @@ export function CrudPage(props: CrudPageProps) {
                 className="bg-background w-full md:w-[280px]"
               />
             </div>
+            {/* Add: Manual Refresh button (works even without Realtime) */}
+            <Button size="sm" variant="outline" onClick={fetchRows}>
+              Refresh
+            </Button>
             <Button size="sm" variant="outline" onClick={exportCsv}>
               Export CSV
             </Button>
