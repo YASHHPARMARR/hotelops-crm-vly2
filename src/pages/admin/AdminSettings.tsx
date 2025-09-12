@@ -246,45 +246,6 @@ create table if not exists staff (
           { id: crypto.randomUUID(), guestName: "Ana Garcia", confirmation: "CNF-1001", roomType: "Deluxe King", roomNumber: "205", arrival: "2025-09-09", departure: "2025-09-11", status: "Booked", balance: 220, source: "Direct", notes: "High floor", owner: "demo@example.com" },
           { id: crypto.randomUUID(), guestName: "Luis Fernandez", confirmation: "CNF-1002", roomType: "Standard Queen", roomNumber: "214", arrival: "2025-09-08", departure: "2025-09-10", status: "CheckedIn", balance: 0, source: "OTA", notes: "", owner: "demo@example.com" },
         ],
-        guests: [
-          { id: crypto.randomUUID(), name: "Ana Garcia", email: "ana@example.com", phone: "+1 555-0100", address: "100 Ocean Ave, Miami, FL", loyalty: "Gold", vip: "Yes", notes: "High floor" },
-          { id: crypto.randomUUID(), name: "Luis Fernandez", email: "luis@example.com", phone: "+1 555-0101", address: "55 Palm St, Miami, FL", loyalty: "Silver", vip: "No", notes: "" },
-        ],
-        rooms: [
-          { id: crypto.randomUUID(), number: "205", type: "Deluxe King", status: "Occupied", guest: "Ana Garcia", rate: 220, lastCleaned: "2025-09-09" },
-          { id: crypto.randomUUID(), number: "214", type: "Standard Queen", status: "Vacant Clean", guest: "", rate: 150, lastCleaned: "2025-09-09" },
-        ],
-        hk_tasks: [
-          { id: crypto.randomUUID(), task: "Make bed", room: "205", priority: "Low", status: "Open", assignedTo: "Ana" },
-          { id: crypto.randomUUID(), task: "Deep clean bath", room: "118", priority: "High", status: "In Progress", assignedTo: "Maya" },
-        ],
-        hk_inventory: [
-          { id: crypto.randomUUID(), item: "Towels", stock: 120, min: 150 },
-          { id: crypto.randomUUID(), item: "Soap", stock: 240, min: 300 },
-        ],
-        restaurant_menu: [
-          { id: crypto.randomUUID(), name: "Cheeseburger", category: "Mains", price: 12.5, available: "Yes" },
-          { id: crypto.randomUUID(), name: "Caesar Salad", category: "Starters", price: 9.0, available: "Yes" },
-        ],
-        restaurant_orders: [
-          { id: crypto.randomUUID(), table: "T-5", items: "Burger x2, Fries", total: 28.5, status: "Preparing" },
-        ],
-        dining_orders: [
-          { id: crypto.randomUUID(), order: "Club Sandwich, Juice", total: 18.5, status: "Preparing" },
-        ],
-        charges: [
-          { id: crypto.randomUUID(), date: "2025-08-28", item: "Room Night 1", room: "1208", category: "Room Night", amount: 245.0 },
-          { id: crypto.randomUUID(), date: "2025-08-28", item: "Room Service - Club Sandwich", room: "1208", category: "Dining", amount: 16.0 },
-        ],
-        payments: [
-          { id: crypto.randomUUID(), date: "2025-08-28", method: "Visa", ref: "•••• 4242", amount: 100.0 },
-        ],
-        transport_trips: [
-          { id: crypto.randomUUID(), tripNo: "TR-001", guest: "Ana Garcia", pickupTime: "09:00", status: "Scheduled" },
-        ],
-        transport_vehicles: [
-          { id: crypto.randomUUID(), plate: "XYZ-101", model: "Sprinter", capacity: 10, status: "Available" },
-        ],
         staff: [
           { id: crypto.randomUUID(), email: "demo@example.com", role: "admin" },
         ],
@@ -295,7 +256,7 @@ create table if not exists staff (
         const { data: existing, error: qErr } = await s.from(table).select("id").limit(1);
         if (qErr) {
           console.error(`Query failed for ${table}:`, qErr);
-          toast.error(`Failed checking ${table}`);
+          toast.error(`Failed checking ${table}: ${qErr.message || qErr.code || "error"}`);
           continue;
         }
         if (Array.isArray(existing) && existing.length > 0) {
@@ -305,16 +266,16 @@ create table if not exists staff (
         const { error: insErr } = await s.from(table).insert(data);
         if (insErr) {
           console.error(`Insert failed for ${table}:`, insErr);
-          toast.error(`Seeding failed: ${table}`);
+          toast.error(`Seeding failed: ${table}: ${insErr.message || insErr.code || "error"}`);
         } else {
           toast.success(`Seeded: ${table}`);
         }
       }
 
       toast.success("Seeding completed");
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      toast.error("Seeding encountered an error");
+      toast.error(`Seeding encountered an error: ${e?.message || "unknown"}`);
     }
   };
 
