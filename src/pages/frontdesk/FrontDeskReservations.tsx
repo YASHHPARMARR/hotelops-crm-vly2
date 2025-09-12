@@ -13,6 +13,13 @@ export default function FrontDeskReservations() {
   const [sbEmail, setSbEmail] = useState<string | undefined>(undefined);
   const [connected, setConnected] = useState(false);
   const [sbLoggedIn, setSbLoggedIn] = useState(false);
+  const [demoOverride, setDemoOverride] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("demoMode") === "1";
+    } catch {
+      return false;
+    }
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,8 +48,8 @@ export default function FrontDeskReservations() {
           <p className="text-muted-foreground">Front Desk reservation management.</p>
         </div>
 
-        {/* Add: Supabase connection/auth status banner */}
-        {(!connected || !sbLoggedIn) && (
+        {/* Show banner only if not connected OR (not logged in and no demo override) */}
+        {(!connected || (!sbLoggedIn && !demoOverride)) && (
           <Card className="border-amber-400/40">
             <CardHeader>
               <CardTitle className="text-amber-400">Supabase not fully ready</CardTitle>
@@ -50,9 +57,24 @@ export default function FrontDeskReservations() {
             <CardContent className="text-sm text-muted-foreground space-y-2">
               {!connected && <div>- Supabase client not initialized. Go to Admin → Settings to set URL and Anon Key, then reload.</div>}
               {connected && !sbLoggedIn && <div>- Please log in with Supabase Email/Password on the Auth page so RLS allows your data.</div>}
-              <div className="flex gap-2 pt-2">
+              <div className="flex flex-wrap gap-2 pt-2">
                 <Button variant="outline" size="sm" onClick={() => navigate("/admin/settings")}>Open Settings</Button>
                 <Button variant="outline" size="sm" onClick={() => navigate("/auth")}>Open Auth</Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    try {
+                      localStorage.setItem("demoMode", "1");
+                    } catch { /* ignore */ }
+                    setDemoOverride(true);
+                  }}
+                >
+                  Continue in Demo Mode
+                </Button>
+              </div>
+              <div className="text-xs opacity-70">
+                Demo Mode hides this banner only. For database writes to succeed, complete the Supabase setup and login.
               </div>
             </CardContent>
           </Card>
