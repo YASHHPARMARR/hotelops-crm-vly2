@@ -3,7 +3,9 @@ export type AppTheme = "neon" | "ocean" | "sunset" | "forest" | "pastel" | "midn
 
 export function getTheme(): AppTheme {
   const t = (typeof window !== "undefined" && localStorage.getItem(THEME_STORAGE_KEY)) as AppTheme | null;
-  if (t === "neon" || t === "ocean" || t === "sunset") return t;
+  // Accept all declared themes
+  const allowed: AppTheme[] = ["neon", "ocean", "sunset", "forest", "pastel", "midnight", "sand", "rose"];
+  if (t && allowed.includes(t)) return t;
   return "neon";
 }
 

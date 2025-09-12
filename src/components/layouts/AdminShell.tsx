@@ -25,6 +25,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { MessageSquare } from "lucide-react";
+import { ChatPanel } from "@/components/ChatPanel";
 
 import type { ReactNode } from "react";
 import { Role, ROLES } from "@/convex/schema";
@@ -78,6 +81,14 @@ export function AdminShell({ children }: AdminShellProps) {
     (demoRoleString as Role | undefined);
 
   const navigationItems = effectiveRole ? ROLE_NAVIGATION[effectiveRole] || [] : [];
+
+  // Redirect to role-specific landing when at generic admin/dashboard
+  useEffect(() => {
+    const genericHomes = new Set<string>(["/admin", "/dashboard"]);
+    if (genericHomes.has(location.pathname) && navigationItems.length > 0) {
+      navigate(navigationItems[0].path, { replace: true });
+    }
+  }, [location.pathname, navigationItems, navigate]);
 
   // Initialize and react to theme changes
   useEffect(() => {
@@ -159,6 +170,27 @@ export function AdminShell({ children }: AdminShellProps) {
               );
             })}
           </nav>
+
+          {/* Sidebar Chat access */}
+          <div className="px-4 pb-3">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button
+                  variant="secondary"
+                  className={cn(
+                    "w-full justify-start gap-3",
+                    !sidebarOpen && "justify-center px-0"
+                  )}
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  {sidebarOpen && <span>Team Chat</span>}
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+                <ChatPanel />
+              </SheetContent>
+            </Sheet>
+          </div>
 
           {/* User Profile */}
           <div className="p-4 border-t border-border">
