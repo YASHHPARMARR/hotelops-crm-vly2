@@ -329,6 +329,9 @@ alter table if exists transport_trips enable row level security;
 alter table if exists transport_vehicles enable row level security;
 alter table if exists staff enable row level security;
 
+-- Ensure required columns exist before policies
+alter table if exists reservations add column if not exists owner text;
+
 -- Reservations: Only owner (by email) can CRUD
 drop policy if exists "Reservations owner can access" on reservations;
 create policy "Reservations owner can access" on reservations
