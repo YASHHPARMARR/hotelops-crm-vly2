@@ -297,7 +297,7 @@ alter table if exists staff enable row level security;
 -- Ensure required columns exist before policies
 alter table if exists reservations add column if not exists owner text;
 
--- Reservations: Only owner (by email) can CRUD when authenticated
+-- Reservations: Owner-scoped for authenticated
 drop policy if exists "Reservations owner can access" on reservations;
 create policy "Reservations owner can access" on reservations
 for all
@@ -305,8 +305,7 @@ to authenticated
 using ( owner = auth.email() )
 with check ( owner = auth.email() );
 
--- Reservations: Demo access without Supabase login
--- Allows anon role to read/write rows owned by demo@example.com
+-- Reservations: Demo access without Supabase login (anon) for demo@example.com owner
 drop policy if exists "Reservations demo access" on reservations;
 create policy "Reservations demo access" on reservations
 for all
@@ -314,26 +313,88 @@ to anon
 using ( owner = 'demo@example.com' )
 with check ( owner = 'demo@example.com' );
 
--- Rooms: Allow read to authenticated; writes restricted to authenticated for demo
-drop policy if exists "Rooms read for auth" on rooms;
-create policy "Rooms read for auth" on rooms
-for select
-to authenticated
-using (true);
-
-drop policy if exists "Rooms write for auth" on rooms;
-create policy "Rooms write for auth" on rooms
-for insert
-to authenticated
+-- OPTION B: Full demo mode — allow anon full CRUD on app tables (except staff)
+-- Rooms
+drop policy if exists "Rooms anon full" on rooms;
+create policy "Rooms anon full" on rooms
+for all
+to anon
+using (true)
 with check (true);
 
-drop policy if exists "Rooms update for auth" on rooms;
-create policy "Rooms update for auth" on rooms
-for update
-to authenticated
-using (true);
+-- Housekeeping tasks
+drop policy if exists "HK tasks anon full" on hk_tasks;
+create policy "HK tasks anon full" on hk_tasks
+for all
+to anon
+using (true)
+with check (true);
 
--- Staff: only authenticated can read; allow upserts by authenticated for demo (lock down later)
+-- Housekeeping inventory
+drop policy if exists "HK inventory anon full" on hk_inventory;
+create policy "HK inventory anon full" on hk_inventory
+for all
+to anon
+using (true)
+with check (true);
+
+-- Restaurant menu
+drop policy if exists "Restaurant menu anon full" on restaurant_menu;
+create policy "Restaurant menu anon full" on restaurant_menu
+for all
+to anon
+using (true)
+with check (true);
+
+-- Restaurant orders
+drop policy if exists "Restaurant orders anon full" on restaurant_orders;
+create policy "Restaurant orders anon full" on restaurant_orders
+for all
+to anon
+using (true)
+with check (true);
+
+-- Guest dining orders
+drop policy if exists "Dining orders anon full" on dining_orders;
+create policy "Dining orders anon full" on dining_orders
+for all
+to anon
+using (true)
+with check (true);
+
+-- Guest charges
+drop policy if exists "Charges anon full" on charges;
+create policy "Charges anon full" on charges
+for all
+to anon
+using (true)
+with check (true);
+
+-- Guest payments
+drop policy if exists "Payments anon full" on payments;
+create policy "Payments anon full" on payments
+for all
+to anon
+using (true)
+with check (true);
+
+-- Transport trips
+drop policy if exists "Transport trips anon full" on transport_trips;
+create policy "Transport trips anon full" on transport_trips
+for all
+to anon
+using (true)
+with check (true);
+
+-- Transport vehicles
+drop policy if exists "Transport vehicles anon full" on transport_vehicles;
+create policy "Transport vehicles anon full" on transport_vehicles
+for all
+to anon
+using (true)
+with check (true);
+
+-- Staff: keep auth-only (safer)
 drop policy if exists "Staff select for auth" on staff;
 create policy "Staff select for auth" on staff
 for select
@@ -346,8 +407,6 @@ for all
 to authenticated
 using (true)
 with check (true);
-
--- Repeat similar policies per your needs for other tables (owner-col or auth-only)
 `.trim();
 
   const copyRlsSql = async () => {
