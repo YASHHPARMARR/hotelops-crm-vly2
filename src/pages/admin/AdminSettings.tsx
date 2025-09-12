@@ -47,6 +47,8 @@ export default function AdminSettings() {
   const [newStaffRole, setNewStaffRole] = useState("front_desk");
   const [loadingStaff, setLoadingStaff] = useState(false);
   const [loadingReset, setLoadingReset] = useState(false);
+  // Add: track supabase auth session status
+  const [sbAuth, setSbAuth] = useState<boolean>(false);
 
   useEffect(() => {
     const t = getTheme();
@@ -67,6 +69,34 @@ export default function AdminSettings() {
 
     // connection check
     setConnected(!!getSupabase());
+
+    // Add: check and subscribe to Supabase auth session
+    const s = getSupabase();
+    let unsub: (() => void) | undefined;
+    (async () => {
+      try {
+        const res = await s?.auth.getSession();
+        setSbAuth(!!res?.data?.session);
+      } catch {
+        setSbAuth(false);
+      }
+      try {
+        const { data: sub } = s?.auth.onAuthStateChange((_: any, session: any) => {
+          setSbAuth(!!session);
+        }) || { data: { subscription: { unsubscribe() {} } } };
+        unsub = () => sub.subscription.unsubscribe();
+      } catch {
+        // ignore
+      }
+    })();
+
+    return () => {
+      try {
+        unsub?.();
+      } catch {
+        // ignore
+      }
+    };
   }, []);
 
   const applyTheme = (t: AppTheme) => {
@@ -443,6 +473,10 @@ with check (true);
   const loadStaff = async () => {
     const s = getSupabase();
     if (!s) return;
+    // Add: require auth for staff operations
+    if (!sbAuth) {
+      return;
+    }
     setLoadingStaff(true);
     try {
       const { data, error } = await s.from("staff").select("*").order("email");
@@ -533,18 +567,23 @@ with check (true);
 
       await seedAll();
 
-      try {
-        const { error } = await s.from("staff").upsert(
-          [{ id: crypto.randomUUID(), email: "demo@example.com", role: "admin" }],
-          { onConflict: "email", ignoreDuplicates: false }
-        );
-        if (error) {
-          console.warn("Upsert staff failed:", error);
-          toast.error(`Staff upsert failed: ${normalizeSupabaseError(error)}`);
+      // Add: only upsert staff if authenticated
+      if (!sbAuth) {
+        toast.info("Skipped staff reseed (login required to write to staff table).");
+      } else {
+        try {
+          const { error } = await s.from("staff").upsert(
+            [{ id: crypto.randomUUID(), email: "demo@example.com", role: "admin" }],
+            { onConflict: "email", ignoreDuplicates: false }
+          );
+          if (error) {
+            console.warn("Upsert staff failed:", error);
+            toast.error(`Staff upsert failed: ${normalizeSupabaseError(error)}`);
+          }
+        } catch (e: any) {
+          console.warn("Upsert staff exception:", e);
+          toast.error(`Staff upsert exception: ${normalizeSupabaseError(e)}`);
         }
-      } catch (e: any) {
-        console.warn("Upsert staff exception:", e);
-        toast.error(`Staff upsert exception: ${normalizeSupabaseError(e)}`);
       }
 
       await loadStaff();
@@ -604,6 +643,10 @@ with check (true);
               </Button>
               <Badge variant={connected ? "default" : "outline"}>
                 {connected ? "Connected" : "Not Connected"}
+              </Badge>
+              {/* Add: auth status badge */}
+              <Badge variant={sbAuth ? "default" : "outline"}>
+                {sbAuth ? "Authed" : "Anon"}
               </Badge>
               <Button onClick={clearKeys} variant="destructive" size="sm">
                 Clear Supabase Keys
@@ -740,6 +783,11 @@ with check (true);
                   const s = getSupabase();
                   if (!s) return toast.error("Supabase not initialized");
                   if (!newStaffEmail) return toast.error("Email is required");
+                  // Add: require auth for staff writes
+                  if (!sbAuth) {
+                    toast.error("Please sign in (Auth page) to manage staff.");
+                    return;
+                  }
                   try {
                     const { error } = await s
                       .from("staff")
@@ -755,7 +803,7 @@ with check (true);
                     toast.error(e?.message || "Failed to save staff");
                   }
                 }}
-                disabled={loadingStaff || !connected}
+                disabled={loadingStaff || !connected || !sbAuth}
               >
                 Save Staff
               </Button>
@@ -763,7 +811,7 @@ with check (true);
                 size="sm"
                 variant="outline"
                 onClick={loadStaff}
-                disabled={loadingStaff || !connected}
+                disabled={loadingStaff || !connected || !sbAuth}
               >
                 Refresh
               </Button>
@@ -789,6 +837,11 @@ with check (true);
                         onClick={async () => {
                           const s = getSupabase();
                           if (!s) return;
+                          // Add: require auth for staff edits
+                          if (!sbAuth) {
+                            toast.error("Please sign in (Auth page) to edit staff.");
+                            return;
+                          }
                           const role = prompt("New role:", u.role);
                           if (!role) return;
                           try {
@@ -809,6 +862,11 @@ with check (true);
                         onClick={async () => {
                           const s = getSupabase();
                           if (!s) return;
+                          // Add: require auth for staff deletes
+                          if (!sbAuth) {
+                            toast.error("Please sign in (Auth page) to remove staff.");
+                            return;
+                          }
                           try {
                             const { error } = await s.from("staff").delete().eq("email", u.email);
                             if (error) throw error;
@@ -828,6 +886,8 @@ with check (true);
             </div>
             <div className="text-xs text-muted-foreground">
               Admin can assign roles by email. Navigation and access respect these roles immediately.
+              <br />
+              Note: Staff table is auth-only by RLS. Please sign in on the Auth page to view or edit staff.
             </div>
           </CardContent>
         </Card>
