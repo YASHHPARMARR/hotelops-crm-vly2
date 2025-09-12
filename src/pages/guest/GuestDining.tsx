@@ -22,17 +22,22 @@ export default function GuestDining() {
               columns={[
                 { key: "order", label: "Order", input: "textarea", required: true },
                 { key: "total", label: "Total ($)", input: "number", required: true },
-                { key: "status", label: "Status", input: "select", options: [
-                  { label: "Placed", value: "Placed" },
-                  { label: "Preparing", value: "Preparing" },
-                  { label: "Delivered", value: "Delivered" },
-                ], required: true },
+                {
+                  key: "status",
+                  label: "Status",
+                  input: "select",
+                  options: [
+                    { label: "Placed", value: "Placed" },
+                    { label: "Preparing", value: "Preparing" },
+                    { label: "Delivered", value: "Delivered" },
+                  ],
+                  required: true,
+                },
               ]}
               seed={[
                 { id: "gd1", order: "Club Sandwich, Juice", total: 18.5, status: "Preparing" },
               ]}
-              backend="supabase"
-              table="dining_orders"
+              backend="local"
             />
           </CardContent>
         </Card>

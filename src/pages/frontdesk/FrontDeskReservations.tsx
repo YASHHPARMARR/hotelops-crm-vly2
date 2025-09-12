@@ -1,38 +1,8 @@
 import { AdminShell } from "@/components/layouts/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CrudPage } from "@/components/CrudPage";
-import { useAuth } from "@/hooks/use-auth";
-import { useEffect, useState } from "react";
-import { getSupabaseUserEmail } from "@/lib/supabaseClient";
 
 export default function FrontDeskReservations() {
-  const { user } = useAuth();
-  const [sbEmail, setSbEmail] = useState<string | undefined>(undefined);
-  const [connected, setConnected] = useState(false);
-  const [sbLoggedIn, setSbLoggedIn] = useState(false);
-  const [demoOverride, setDemoOverride] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem("demoMode") === "1";
-    } catch {
-      return false;
-    }
-  });
-
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const email = await getSupabaseUserEmail();
-        if (mounted) setSbEmail(email);
-      } catch {
-        // ignore
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
   return (
     <AdminShell>
       <div className="space-y-6">
@@ -57,18 +27,29 @@ export default function FrontDeskReservations() {
                 { key: "roomNumber", label: "Room #", input: "text" },
                 { key: "arrival", label: "Arrival", input: "date" },
                 { key: "departure", label: "Departure", input: "date" },
-                { key: "status", label: "Status", input: "select", options: [
-                  { label: "Booked", value: "Booked" },
-                  { label: "CheckedIn", value: "CheckedIn" },
-                  { label: "CheckedOut", value: "CheckedOut" },
-                  { label: "Cancelled", value: "Cancelled" },
-                ], required: true },
+                {
+                  key: "status",
+                  label: "Status",
+                  input: "select",
+                  options: [
+                    { label: "Booked", value: "Booked" },
+                    { label: "CheckedIn", value: "CheckedIn" },
+                    { label: "CheckedOut", value: "CheckedOut" },
+                    { label: "Cancelled", value: "Cancelled" },
+                  ],
+                  required: true,
+                },
                 { key: "balance", label: "Balance ($)", input: "number" },
-                { key: "source", label: "Source", input: "select", options: [
-                  { label: "Direct", value: "Direct" },
-                  { label: "OTA", value: "OTA" },
-                  { label: "Corporate", value: "Corporate" },
-                ]},
+                {
+                  key: "source",
+                  label: "Source",
+                  input: "select",
+                  options: [
+                    { label: "Direct", value: "Direct" },
+                    { label: "OTA", value: "OTA" },
+                    { label: "Corporate", value: "Corporate" },
+                  ],
+                },
                 { key: "notes", label: "Notes", input: "textarea" },
               ]}
               seed={[
@@ -76,10 +57,7 @@ export default function FrontDeskReservations() {
                 { id: "r2", guestName: "Luis Fernandez", confirmation: "CNF-1002", roomType: "Standard Queen", roomNumber: "214", arrival: "2025-09-08", departure: "2025-09-10", status: "CheckedIn", balance: 0, source: "OTA", notes: "" },
                 { id: "r3", guestName: "Maya Lee", confirmation: "CNF-1003", roomType: "Suite", roomNumber: "", arrival: "2025-09-12", departure: "2025-09-15", status: "Booked", balance: 650, source: "Corporate", notes: "Late arrival" },
               ]}
-              backend="supabase"
-              table="reservations"
-              ownerField="owner"
-              ownerValue={sbEmail ?? "demo@example.com"}
+              backend="local"
             />
           </CardContent>
         </Card>

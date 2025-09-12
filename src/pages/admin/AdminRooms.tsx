@@ -22,12 +22,18 @@ export default function AdminRooms() {
               columns={[
                 { key: "number", label: "Room #", input: "text", required: true },
                 { key: "type", label: "Type", input: "text", required: true },
-                { key: "status", label: "Status", input: "select", options: [
-                  { label: "Vacant Clean", value: "Vacant Clean" },
-                  { label: "Vacant Dirty", value: "Vacant Dirty" },
-                  { label: "Occupied", value: "Occupied" },
-                  { label: "OOO", value: "OOO" },
-                ], required: true },
+                {
+                  key: "status",
+                  label: "Status",
+                  input: "select",
+                  options: [
+                    { label: "Vacant Clean", value: "Vacant Clean" },
+                    { label: "Vacant Dirty", value: "Vacant Dirty" },
+                    { label: "Occupied", value: "Occupied" },
+                    { label: "OOO", value: "OOO" },
+                  ],
+                  required: true,
+                },
                 { key: "guest", label: "Guest", input: "text" },
                 { key: "rate", label: "Rate ($)", input: "number", required: true },
                 { key: "lastCleaned", label: "Last Cleaned", input: "date" },
@@ -37,8 +43,7 @@ export default function AdminRooms() {
                 { id: "rm2", number: "214", type: "Standard Queen", status: "Vacant Clean", guest: "", rate: 150, lastCleaned: "2025-09-09" },
                 { id: "rm3", number: "118", type: "Standard Twin", status: "Occupied", guest: "Ivy Chen", rate: 160, lastCleaned: "2025-09-08" },
               ]}
-              backend="supabase"
-              table="rooms"
+              backend="local"
             />
           </CardContent>
         </Card>

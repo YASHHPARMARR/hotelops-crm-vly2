@@ -23,17 +23,22 @@ export default function RestaurantMenu() {
                 { key: "name", label: "Item", input: "text", required: true },
                 { key: "category", label: "Category", input: "text", required: true },
                 { key: "price", label: "Price ($)", input: "number", required: true },
-                { key: "available", label: "Available", input: "select", options: [
-                  { label: "Yes", value: "Yes" },
-                  { label: "No", value: "No" },
-                ], required: true },
+                {
+                  key: "available",
+                  label: "Available",
+                  input: "select",
+                  options: [
+                    { label: "Yes", value: "Yes" },
+                    { label: "No", value: "No" },
+                  ],
+                  required: true,
+                },
               ]}
               seed={[
                 { id: "rm1", name: "Cheeseburger", category: "Mains", price: 12.5, available: "Yes" },
                 { id: "rm2", name: "Caesar Salad", category: "Starters", price: 9.0, available: "Yes" },
               ]}
-              backend="supabase"
-              table="restaurant_menu"
+              backend="local"
             />
           </CardContent>
         </Card>
