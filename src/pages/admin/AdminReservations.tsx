@@ -45,8 +45,7 @@ export default function AdminReservations() {
                 { id: "r2", guestName: "Luis Fernandez", confirmation: "CNF-1002", roomType: "Standard Queen", roomNumber: "214", arrival: "2025-09-08", departure: "2025-09-10", status: "CheckedIn", balance: 0, source: "OTA", notes: "" },
                 { id: "r3", guestName: "Maya Lee", confirmation: "CNF-1003", roomType: "Suite", roomNumber: "", arrival: "2025-09-12", departure: "2025-09-15", status: "Booked", balance: 650, source: "Corporate", notes: "Late arrival" },
               ]}
-              backend="supabase"
-              table="reservations"
+              backend="local"
             />
           </CardContent>
         </Card>

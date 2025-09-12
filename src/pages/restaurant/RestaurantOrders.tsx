@@ -34,8 +34,7 @@ export default function RestaurantOrders() {
                 { id: "ro1", table: "T-5", items: "Burger x2, Fries", total: 28.5, status: "Preparing" },
                 { id: "ro2", table: "T-2", items: "Pasta, Salad", total: 24.0, status: "Open" },
               ]}
-              backend="supabase"
-              table="restaurant_orders"
+              backend="local"
             />
           </CardContent>
         </Card>
