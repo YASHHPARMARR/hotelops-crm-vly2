@@ -333,10 +333,10 @@ alter table if exists staff enable row level security;
 drop policy if exists "Reservations owner can access" on reservations;
 create policy "Reservations owner can access" on reservations
 for all
-using ( owner = (current_setting('request.jwt.claims', true)::jsonb ->> 'email') )
-with check ( owner = (current_setting('request.jwt.claims', true)::jsonb ->> 'email') );
+using ( owner = auth.email() )
+with check ( owner = auth.email() );
 
--- Rooms: Allow read to all authenticated; writes restricted to authenticated for demo
+-- Rooms: Allow read to authenticated; writes restricted to authenticated for demo
 drop policy if exists "Rooms read for auth" on rooms;
 create policy "Rooms read for auth" on rooms
 for select
@@ -345,12 +345,15 @@ using (true);
 
 drop policy if exists "Rooms write for auth" on rooms;
 create policy "Rooms write for auth" on rooms
-for insert with check (true)
-to authenticated;
+for insert
+to authenticated
+with check (true);
 
+drop policy if exists "Rooms update for auth" on rooms;
 create policy "Rooms update for auth" on rooms
-for update using (true)
-to authenticated;
+for update
+to authenticated
+using (true);
 
 -- Staff: only authenticated can read; allow upserts by authenticated for demo (lock down later)
 drop policy if exists "Staff select for auth" on staff;
