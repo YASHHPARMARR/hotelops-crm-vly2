@@ -682,7 +682,7 @@ export function CrudPage(props: CrudPageProps) {
       </CardContent>
 
       <Dialog open={open} onOpenChange={(v) => (!saving ? setOpen(v) : null)}>
-        <DialogContent className="max-w-[95vw] w-screen h-[90vh] md:h-[85vh] p-0 overflow-hidden">
+        <DialogContent className="max-w-[95vw] w-screen h-[95vh] md:h-[90vh] p-0 overflow-auto">
           <div className="flex flex-col h-full">
             <div className="px-6 pt-6">
               <DialogHeader>

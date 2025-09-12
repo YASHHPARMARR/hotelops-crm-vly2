@@ -1,6 +1,7 @@
 import { AdminShell } from "@/components/layouts/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CrudPage } from "@/components/CrudPage";
+import { ChatPanel } from "@/components/ChatPanel";
 
 export default function FrontDeskGuests() {
   return (
@@ -95,6 +96,9 @@ export default function FrontDeskGuests() {
             />
           </CardContent>
         </Card>
+
+        {/* Team Chat module */}
+        <ChatPanel />
       </div>
     </AdminShell>
   );
