@@ -107,10 +107,47 @@ export function CrudPage(props: CrudPageProps) {
   // Track if we've already attempted seeding to avoid duplicates
   const hasSeededRef = useRef(false);
 
+  // Add: table missing flag to guide users to create the table quickly
+  const [missingTable, setMissingTable] = useState(false);
+
   // Add: request state flags to prevent duplicate submissions and provide UI feedback
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Add: helper to generate CREATE TABLE SQL for the current grid
+  function generateCreateTableSql() {
+    if (!table) return "";
+    const mapType = (input?: Column["input"]) => {
+      switch (input) {
+        case "number":
+          return "numeric";
+        case "date":
+          return "date";
+        case "textarea":
+        case "select":
+        case "text":
+        default:
+          return "text";
+      }
+    };
+    const fieldLines: string[] = [];
+    fieldLines.push(`id text primary key`);
+    for (const c of columns) {
+      // avoid duplicate id if user included "id" in columns schema
+      if (c.key === "id") continue;
+      fieldLines.push(`${c.key} ${mapType(c.input)}`);
+    }
+    if (ownerField) {
+      fieldLines.push(`${ownerField} text`);
+    }
+    fieldLines.push(`created_at timestamptz default now()`);
+    return [
+      `create table if not exists ${table} (`,
+      `  ${fieldLines.join(",\n  ")}`,
+      `);`,
+    ].join("\n");
+  }
 
   // Add: central fetch function for Supabase, used on mount, after writes, and by polling/Refresh
   async function fetchRows() {
@@ -119,12 +156,19 @@ export function CrudPage(props: CrudPageProps) {
     if (!check.ok || !check.s) return;
     try {
       setRefreshing(true);
+      setMissingTable(false); // reset before attempt
       let query = check.s.from(table).select("*");
       if (ownerField && ownerValue) {
         query = query.eq(ownerField, ownerValue);
       }
       const { data, error } = await query;
       if (error) {
+        // Mark table-missing for helpful UI if 404/PGRST204 or message says not found
+        const code = (error as any)?.code ?? (error as any)?.status;
+        const m = String((error as any)?.message || "").toLowerCase();
+        if (code === "PGRST204" || code === 404 || m.includes("not found")) {
+          setMissingTable(true);
+        }
         const msg = parseSupabaseError(error);
         toast.error(`Fetch failed: ${msg}`);
         console.error("Supabase fetch error:", error);
@@ -136,6 +180,12 @@ export function CrudPage(props: CrudPageProps) {
     } catch (e: any) {
       console.error("Fetch failed:", e);
       const msg = parseSupabaseError(e);
+      // Detect table missing on thrown errors too
+      const code = e?.code ?? e?.status;
+      const m = String(e?.message || "").toLowerCase();
+      if (code === "PGRST204" || code === 404 || m.includes("not found")) {
+        setMissingTable(true);
+      }
       toast.error(`Fetch failed: ${msg}`);
     } finally {
       setRefreshing(false);
@@ -322,7 +372,15 @@ export function CrudPage(props: CrudPageProps) {
         }
         setDeleting(String(record.id));
         const { error } = await check.s.from(table).delete().eq("id", record.id);
-        if (error) throw error;
+        if (error) {
+          // Detect missing table
+          const code = (error as any)?.code ?? (error as any)?.status;
+          const m = String((error as any)?.message || "").toLowerCase();
+          if (code === "PGRST204" || code === 404 || m.includes("not found")) {
+            setMissingTable(true);
+          }
+          throw error;
+        }
         setRows((prev) => prev.filter((_, i) => i !== idx));
         toast.success("Deleted");
         await fetchRows();
@@ -376,7 +434,15 @@ export function CrudPage(props: CrudPageProps) {
 
         if (editingIndex === null) {
           const { error } = await check.s.from(table).insert(payload);
-          if (error) throw error;
+          if (error) {
+            // Detect missing table
+            const code = (error as any)?.code ?? (error as any)?.status;
+            const m = String((error as any)?.message || "").toLowerCase();
+            if (code === "PGRST204" || code === 404 || m.includes("not found")) {
+              setMissingTable(true);
+            }
+            throw error;
+          }
         } else {
           const current = rows[editingIndex];
           if (current?.id === undefined || current?.id === null) {
@@ -384,7 +450,15 @@ export function CrudPage(props: CrudPageProps) {
             return;
           }
           const { error } = await check.s.from(table).update(payload).eq("id", current.id);
-          if (error) throw error;
+          if (error) {
+            // Detect missing table
+            const code = (error as any)?.code ?? (error as any)?.status;
+            const m = String((error as any)?.message || "").toLowerCase();
+            if (code === "PGRST204" || code === 404 || m.includes("not found")) {
+              setMissingTable(true);
+            }
+            throw error;
+          }
         }
         setOpen(false);
         setEditingIndex(null);
@@ -512,6 +586,34 @@ export function CrudPage(props: CrudPageProps) {
         </div>
       </CardHeader>
       <CardContent>
+        {/* Add: Missing table helper with one-click SQL copy */}
+        {backend === "supabase" && table && missingTable && (
+          <div className="mb-3 rounded-md border border-amber-400/50 bg-amber-50/5 p-3 text-sm">
+            <div className="font-medium text-amber-300">Supabase table not found: "{table}"</div>
+            <div className="text-amber-200/80 mt-1">
+              Run the generated SQL in Supabase → SQL Editor to create this table, then click Refresh.
+            </div>
+            <div className="mt-2 flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(generateCreateTableSql());
+                    toast.success("CREATE TABLE SQL copied");
+                  } catch {
+                    toast.error("Failed to copy SQL");
+                  }
+                }}
+              >
+                Copy SQL to create "{table}"
+              </Button>
+              <Button size="sm" variant="outline" onClick={fetchRows} disabled={refreshing}>
+                {refreshing ? "Refreshing..." : "Refresh"}
+              </Button>
+            </div>
+          </div>
+        )}
         <div className="rounded-lg border border-border overflow-hidden">
           <Table>
             <TableHeader>
