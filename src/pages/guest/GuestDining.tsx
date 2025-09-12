@@ -20,6 +20,18 @@ export default function GuestDining() {
               storageKey="guest_dining"
               description="Order food and track status."
               columns={[
+                { key: "roomNumber", label: "Room #", input: "text", required: true },
+                {
+                  key: "method",
+                  label: "Method",
+                  input: "select",
+                  options: [
+                    { label: "Dine-in", value: "Dine-in" },
+                    { label: "Pickup", value: "Pickup" },
+                    { label: "Room Delivery", value: "Room Delivery" },
+                  ],
+                  required: true,
+                },
                 { key: "order", label: "Order", input: "textarea", required: true },
                 { key: "total", label: "Total ($)", input: "number", required: true },
                 {
@@ -35,7 +47,7 @@ export default function GuestDining() {
                 },
               ]}
               seed={[
-                { id: "gd1", order: "Club Sandwich, Juice", total: 18.5, status: "Preparing" },
+                { id: "gd1", roomNumber: "205", method: "Room Delivery", order: "Club Sandwich, Juice", total: 18.5, status: "Preparing" },
               ]}
               backend="local"
             />

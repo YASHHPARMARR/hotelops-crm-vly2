@@ -18,29 +18,66 @@ export default function AdminStaff() {
             <CrudPage
               title="Staff"
               storageKey="admin_staff"
-              description="Manage staff, roles, and contact details."
+              description="Manage staff, roles, segments, and contact details."
               columns={[
                 { key: "name", label: "Name", input: "text", required: true },
-                { key: "role", label: "Role", input: "select", options: [
-                  { label: "Front Desk", value: "Front Desk" },
-                  { label: "Housekeeping", value: "Housekeeping" },
-                  { label: "Maintenance", value: "Maintenance" },
-                  { label: "Security", value: "Security" },
-                  { label: "Restaurant", value: "Restaurant" },
-                  { label: "Inventory", value: "Inventory" },
-                  { label: "Admin", value: "Admin" },
-                ], required: true },
+                {
+                  key: "role",
+                  label: "Role",
+                  input: "select",
+                  options: [
+                    { label: "Front Desk", value: "Front Desk" },
+                    { label: "Housekeeping", value: "Housekeeping" },
+                    { label: "Maintenance", value: "Maintenance" },
+                    { label: "Security", value: "Security" },
+                    { label: "Restaurant", value: "Restaurant" },
+                    { label: "Inventory", value: "Inventory" },
+                    { label: "Admin", value: "Admin" },
+                  ],
+                  required: true,
+                },
+                {
+                  key: "segment",
+                  label: "Segment",
+                  input: "select",
+                  options: [
+                    { label: "Front Desk", value: "Front Desk" },
+                    { label: "Housekeeping", value: "Housekeeping" },
+                    { label: "Waiter", value: "Waiter" },
+                    { label: "Chef", value: "Chef" },
+                    { label: "Bartender", value: "Bartender" },
+                    { label: "Security", value: "Security" },
+                    { label: "Maintenance", value: "Maintenance" },
+                    { label: "Transport", value: "Transport" },
+                    { label: "Inventory", value: "Inventory" },
+                    { label: "Restaurant", value: "Restaurant" },
+                  ],
+                },
+                {
+                  key: "isManager",
+                  label: "Manager",
+                  input: "select",
+                  options: [
+                    { label: "No", value: "No" },
+                    { label: "Yes", value: "Yes" },
+                  ],
+                },
                 { key: "email", label: "Email", input: "text", required: true },
                 { key: "phone", label: "Phone", input: "text" },
-                { key: "shift", label: "Shift", input: "select", options: [
-                  { label: "Morning", value: "Morning" },
-                  { label: "Evening", value: "Evening" },
-                  { label: "Night", value: "Night" },
-                ]},
+                {
+                  key: "shift",
+                  label: "Shift",
+                  input: "select",
+                  options: [
+                    { label: "Morning", value: "Morning" },
+                    { label: "Evening", value: "Evening" },
+                    { label: "Night", value: "Night" },
+                  ],
+                },
               ]}
               seed={[
-                { id: "s1", name: "Ivy Chen", role: "Front Desk", email: "ivy@example.com", phone: "+1 555-0102", shift: "Morning" },
-                { id: "s2", name: "Peter Johnson", role: "Maintenance", email: "peter@example.com", phone: "+1 555-0103", shift: "Evening" },
+                { id: "s1", name: "Ivy Chen", role: "Front Desk", segment: "Front Desk", isManager: "No", email: "ivy@example.com", phone: "+1 555-0102", shift: "Morning" },
+                { id: "s2", name: "Peter Johnson", role: "Maintenance", segment: "Maintenance", isManager: "Yes", email: "peter@example.com", phone: "+1 555-0103", shift: "Evening" },
               ]}
             />
           </CardContent>

@@ -55,6 +55,30 @@ const departmentPerformance = [
   { department: "Security", score: 96, tasks: 8 },
 ];
 
+// Add helper to pull local storage data and compute metrics
+const getLocal = <T,>(k: string, fallback: T): T => {
+  try {
+    const v = localStorage.getItem(k);
+    return v ? (JSON.parse(v) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+const reservations = getLocal<Array<Record<string, any>>>("reservations", []);
+const rooms = getLocal<Array<Record<string, any>>>("rooms", []);
+const staff = getLocal<Array<Record<string, any>>>("admin_staff", []);
+const totalBookings = reservations.length;
+const emptyRooms = rooms.filter((r) => String(r.status || "") === "Vacant Clean").length;
+const currentGuests = reservations.filter((r) => String(r.status || "") === "CheckedIn").length;
+const currentRevenue = reservations
+  .filter((r) => String(r.paymentStatus || "") === "Paid")
+  .reduce((sum, r) => sum + (Number(r.balance) || 0), 0);
+const lifetimeRevenue = getLocal<number>("lifetime_revenue", 328500) + currentRevenue;
+const totalExpenses = getLocal<number>("total_expenses", 125000);
+const totalProfit = lifetimeRevenue - totalExpenses;
+const totalTax = Math.round(lifetimeRevenue * 0.08);
+const staffCount = staff.length;
+
 export default function AdminDashboard() {
   return (
     <AdminShell>
@@ -195,6 +219,29 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Operational Metrics (live from local storage) */}
+        <Card className="gradient-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              Operational Metrics
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <KPICard title="Total Bookings" value={String(totalBookings)} change={{ value: 0, period: "" }} trend="up" icon={<Calendar className="h-4 w-4" />} />
+              <KPICard title="Empty Rooms" value={String(emptyRooms)} change={{ value: 0, period: "" }} trend="up" icon={<Bed className="h-4 w-4" />} />
+              <KPICard title="Current Guests" value={String(currentGuests)} change={{ value: 0, period: "" }} trend="up" icon={<Users className="h-4 w-4" />} />
+              <KPICard title="Revenue (Current)" value={`$${currentRevenue.toLocaleString()}`} change={{ value: 0, period: "" }} trend="up" icon={<DollarSign className="h-4 w-4" />} />
+              <KPICard title="Revenue (Lifetime)" value={`$${lifetimeRevenue.toLocaleString()}`} change={{ value: 0, period: "" }} trend="up" icon={<DollarSign className="h-4 w-4" />} />
+              <KPICard title="Total Expenses" value={`$${totalExpenses.toLocaleString()}`} change={{ value: 0, period: "" }} trend="down" icon={<DollarSign className="h-4 w-4" />} />
+              <KPICard title="Total Profit" value={`$${totalProfit.toLocaleString()}`} change={{ value: 0, period: "" }} trend={totalProfit >= 0 ? "up" : "down"} icon={<TrendingUp className="h-4 w-4" />} />
+              <KPICard title="Tax Paid (Est.)" value={`$${totalTax.toLocaleString()}`} change={{ value: 0, period: "" }} trend="down" icon={<DollarSign className="h-4 w-4" />} />
+              <KPICard title="Staff Members" value={String(staffCount)} change={{ value: 0, period: "" }} trend="up" icon={<Users className="h-4 w-4" />} />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Department Performance & Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
