@@ -64,15 +64,29 @@ const getLocal = <T,>(k: string, fallback: T): T => {
     return fallback;
   }
 };
-const reservations = getLocal<Array<Record<string, any>>>("reservations", []);
+
+const reservationsLocal = getLocal<Array<Record<string, any>>>("reservations", []);
+const bookingsLocal = getLocal<Array<Record<string, any>>>("bookings", []);
+const reservations = [...reservationsLocal, ...bookingsLocal];
 const rooms = getLocal<Array<Record<string, any>>>("rooms", []);
 const staff = getLocal<Array<Record<string, any>>>("admin_staff", []);
 const totalBookings = reservations.length;
-const emptyRooms = rooms.filter((r) => String(r.status || "") === "Vacant Clean").length;
-const currentGuests = reservations.filter((r) => String(r.status || "") === "CheckedIn").length;
+const emptyRooms = rooms.filter((r) => String(r.status || "") === "Vacant Clean" || String(r.status || "") === "Vacant").length;
+const currentGuests = reservations.filter((r) => {
+  const s = String(r.status || r.bookingStatus || "");
+  return s === "CheckedIn" || s === "Checked-in";
+}).length;
 const currentRevenue = reservations
-  .filter((r) => String(r.paymentStatus || "") === "Paid")
-  .reduce((sum, r) => sum + (Number(r.balance) || 0), 0);
+  .filter((r) => {
+    const pay = String(r.paymentStatus || "");
+    return pay === "Paid" || pay === "Partially Paid";
+  })
+  .reduce((sum, r) => {
+    const paid = Number(r.amountPaid ?? 0);
+    const curr = Number(r.balance ?? 0);
+    // Count paid; balance optionally adds to lifetime on export elsewhere
+    return sum + (isNaN(paid) ? 0 : paid);
+  }, 0);
 const lifetimeRevenue = getLocal<number>("lifetime_revenue", 328500) + currentRevenue;
 const totalExpenses = getLocal<number>("total_expenses", 125000);
 const totalProfit = lifetimeRevenue - totalExpenses;

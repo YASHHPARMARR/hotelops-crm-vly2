@@ -18,30 +18,65 @@ export default function AdminRooms() {
             <CrudPage
               title="Rooms"
               storageKey="rooms"
-              description="Configure rooms, types, housekeeping and live status, rates, and assignments."
+              description="Configure rooms with full setup and live status."
               columns={[
                 { key: "number", label: "Room #", input: "text", required: true },
-                { key: "type", label: "Type", input: "text", required: true },
-                {
-                  key: "status",
-                  label: "Status",
-                  input: "select",
-                  options: [
-                    { label: "Vacant Clean", value: "Vacant Clean" },
-                    { label: "Vacant Dirty", value: "Vacant Dirty" },
-                    { label: "Occupied", value: "Occupied" },
-                    { label: "OOO", value: "OOO" },
-                  ],
-                  required: true,
-                },
-                { key: "guest", label: "Guest", input: "text" },
-                { key: "rate", label: "Rate ($)", input: "number", required: true },
-                { key: "lastCleaned", label: "Last Cleaned", input: "date" },
+                { key: "roomType", label: "Room Type", input: "select", options: [
+                  { label: "Single", value: "Single" },
+                  { label: "Double", value: "Double" },
+                  { label: "Suite", value: "Suite" },
+                  { label: "Deluxe", value: "Deluxe" },
+                ], required: true },
+                { key: "bedType", label: "Bed Type", input: "select", options: [
+                  { label: "King", value: "King" },
+                  { label: "Queen", value: "Queen" },
+                  { label: "Twin", value: "Twin" },
+                ], required: true },
+                { key: "status", label: "Status", input: "select", options: [
+                  { label: "Vacant", value: "Vacant" },
+                  { label: "Occupied", value: "Occupied" },
+                  { label: "Under Maintenance", value: "Under Maintenance" },
+                  { label: "Reserved", value: "Reserved" },
+                ], required: true },
+                { key: "pricePerNight", label: "Price per night", input: "number", required: true },
+                { key: "maxOccupancy", label: "Max Occupancy", input: "number", required: true },
+                { key: "viewBalcony", label: "View / Balcony", input: "select", options: [
+                  { label: "Sea", value: "Sea" },
+                  { label: "Garden", value: "Garden" },
+                  { label: "City", value: "City" },
+                  { label: "None", value: "None" },
+                ]},
+                { key: "floorWing", label: "Floor / Wing", input: "text" },
+                { key: "amenities", label: "Amenities (comma-separated)", input: "text" },
+                { key: "notes", label: "Notes", input: "textarea" },
               ]}
               seed={[
-                { id: "rm1", number: "205", type: "Deluxe King", status: "Occupied", guest: "Ana Garcia", rate: 220, lastCleaned: "2025-09-09" },
-                { id: "rm2", number: "214", type: "Standard Queen", status: "Vacant Clean", guest: "", rate: 150, lastCleaned: "2025-09-09" },
-                { id: "rm3", number: "118", type: "Standard Twin", status: "Occupied", guest: "Ivy Chen", rate: 160, lastCleaned: "2025-09-08" },
+                {
+                  id: "rm1",
+                  number: "101",
+                  roomType: "Deluxe",
+                  bedType: "King",
+                  status: "Vacant",
+                  pricePerNight: 4000.0,
+                  maxOccupancy: 3,
+                  viewBalcony: "Sea",
+                  floorWing: "Floor 1, Wing A",
+                  amenities: "AC,Wi-Fi,Minibar",
+                  notes: "Recently renovated",
+                },
+                {
+                  id: "rm2",
+                  number: "205",
+                  roomType: "Suite",
+                  bedType: "King",
+                  status: "Occupied",
+                  pricePerNight: 6500.0,
+                  maxOccupancy: 4,
+                  viewBalcony: "City",
+                  floorWing: "Floor 2, Wing B",
+                  amenities: "AC,TV,Wi-Fi,Kitchenette",
+                  notes: "",
+                }
               ]}
               backend="local"
             />
