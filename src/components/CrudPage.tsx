@@ -105,19 +105,26 @@ export function CrudPage(props: CrudPageProps) {
   // Track if we've already attempted seeding to avoid duplicates
   const hasSeededRef = useRef(false);
 
+  // Add: request state flags to prevent duplicate submissions and provide UI feedback
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
   // Add: central fetch function for Supabase, used on mount, after writes, and by polling/Refresh
   async function fetchRows() {
     if (backend !== "supabase" || !table) return;
     const check = await ensureSupabaseReady(false);
     if (!check.ok || !check.s) return;
     try {
+      setRefreshing(true);
       let query = check.s.from(table).select("*");
       if (ownerField && ownerValue) {
         query = query.eq(ownerField, ownerValue);
       }
       const { data, error } = await query;
       if (error) {
-        toast.error(`Fetch failed: ${error.message || "Unknown error"}`);
+        const msg = parseSupabaseError(error);
+        toast.error(`Fetch failed: ${msg}`);
         console.error("Supabase fetch error:", error);
         return;
       }
@@ -126,7 +133,10 @@ export function CrudPage(props: CrudPageProps) {
       }
     } catch (e: any) {
       console.error("Fetch failed:", e);
-      toast.error(`Fetch failed: ${e?.message || "Unknown error"}`);
+      const msg = parseSupabaseError(e);
+      toast.error(`Fetch failed: ${msg}`);
+    } finally {
+      setRefreshing(false);
     }
   }
 
@@ -149,6 +159,31 @@ export function CrudPage(props: CrudPageProps) {
       return { ok: false as const, s, session: undefined };
     }
     return { ok: true as const, s, session };
+  }
+
+  // Add: normalize Supabase errors into human-readable messages
+  function parseSupabaseError(err: any): string {
+    const code = err?.code || err?.status || err?.name;
+    const message = err?.message || err?.hint || err?.details || "Unknown error";
+    if (typeof message === "string" && message.toLowerCase().includes("fetch failed")) {
+      return "Network error. Check your connection.";
+    }
+    if (code === "42501" || /rls|row level security|permission/i.test(String(message))) {
+      return "Permission denied by RLS. Ensure you are logged in (Auth page) or using demo owner.";
+    }
+    if (code === "PGRST116" || /duplicate key/i.test(String(message))) {
+      return "Duplicate ID detected. Try again.";
+    }
+    if (code === "PGRST204" || code === 404) {
+      return "Table or route not found. Verify tables are created in Supabase.";
+    }
+    if (code === "429" || /rate limit/i.test(String(message))) {
+      return "Rate limited. Please slow down and try again.";
+    }
+    if (code === "401" || /unauthorized|auth/i.test(String(message))) {
+      return "Unauthorized. Please login via the Auth page.";
+    }
+    return message;
   }
 
   useEffect(() => {
@@ -282,6 +317,7 @@ export function CrudPage(props: CrudPageProps) {
           toast.error("Cannot delete: missing id");
           return;
         }
+        setDeleting(String(record.id));
         const { error } = await check.s.from(table).delete().eq("id", record.id);
         if (error) throw error;
         setRows((prev) => prev.filter((_, i) => i !== idx));
@@ -289,7 +325,10 @@ export function CrudPage(props: CrudPageProps) {
         await fetchRows();
       } catch (e: any) {
         console.error(e);
-        toast.error(`Delete failed: ${e?.message || "Unknown error"}`);
+        const msg = parseSupabaseError(e);
+        toast.error(`Delete failed: ${msg}`);
+      } finally {
+        setDeleting(null);
       }
       return;
     }
@@ -314,6 +353,7 @@ export function CrudPage(props: CrudPageProps) {
       toast.error(err);
       return;
     }
+    if (saving) return;
 
     if (backend === "supabase" && table) {
       // Require auth whenever owner scoping is enabled (RLS scenario)
@@ -322,6 +362,7 @@ export function CrudPage(props: CrudPageProps) {
       if (!check.ok || !check.s) return;
 
       try {
+        setSaving(true);
         const payload = { ...form };
         if (!payload.id) {
           payload.id = crypto.randomUUID();
@@ -349,8 +390,10 @@ export function CrudPage(props: CrudPageProps) {
         await fetchRows();
       } catch (e: any) {
         console.error(e);
-        const msg = e?.message || "Save failed";
+        const msg = parseSupabaseError(e);
         toast.error(`Save failed: ${msg}`);
+      } finally {
+        setSaving(false);
       }
       return;
     }
@@ -402,7 +445,7 @@ export function CrudPage(props: CrudPageProps) {
           ) : null}
         </div>
         <div className="flex flex-col md:flex-row gap-2 md:items-center w-full md:w-auto">
-          <div className="flex gap-2 w-full md:w-auto">
+          <div className="flex gap-2 w/full md:w-auto">
             <div className="relative flex-1 md:flex-none">
               <Input
                 placeholder="Search..."
@@ -411,15 +454,15 @@ export function CrudPage(props: CrudPageProps) {
                 className="bg-background w-full md:w-[280px]"
               />
             </div>
-            {/* Add: Manual Refresh button (works even without Realtime) */}
-            <Button size="sm" variant="outline" onClick={fetchRows}>
-              Refresh
+            {/* Add: Disable + label for refresh */}
+            <Button size="sm" variant="outline" onClick={fetchRows} disabled={refreshing}>
+              {refreshing ? "Refreshing..." : "Refresh"}
             </Button>
             <Button size="sm" variant="outline" onClick={exportCsv}>
               Export CSV
             </Button>
             {actions.includes("add") && (
-              <Button size="sm" className="neon-glow" onClick={startAdd}>
+              <Button size="sm" className="neon-glow" onClick={startAdd} disabled={saving}>
                 Add
               </Button>
             )}
@@ -499,6 +542,7 @@ export function CrudPage(props: CrudPageProps) {
                           size="sm"
                           variant="outline"
                           onClick={() => startEdit(idx)}
+                          disabled={saving || deleting === String(r.id ?? "")}
                         >
                           Edit
                         </Button>
@@ -508,8 +552,9 @@ export function CrudPage(props: CrudPageProps) {
                           size="sm"
                           variant="destructive"
                           onClick={() => remove(idx)}
+                          disabled={deleting === String(r.id ?? "")}
                         >
-                          Delete
+                          {deleting === String(r.id ?? "") ? "Deleting..." : "Delete"}
                         </Button>
                       )}
                     </TableCell>
@@ -531,7 +576,7 @@ export function CrudPage(props: CrudPageProps) {
         </div>
       </CardContent>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={(v) => (!saving ? setOpen(v) : null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editingIndex === null ? "Add" : "Edit"} {title.slice(0, -1)}</DialogTitle>
@@ -583,11 +628,11 @@ export function CrudPage(props: CrudPageProps) {
             ))}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={saving}>
               Cancel
             </Button>
-            <Button className="neon-glow" onClick={submit}>
-              Save
+            <Button className="neon-glow" onClick={submit} disabled={saving}>
+              {saving ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>
