@@ -4,15 +4,29 @@ import { CrudPage } from "@/components/CrudPage";
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
 import { getSupabaseUserEmail } from "@/lib/supabaseClient";
+import { Button } from "@/components/ui/button";
+import { getSupabase } from "@/lib/supabaseClient";
+import { useNavigate } from "react-router";
 
 export default function FrontDeskReservations() {
   const { user } = useAuth();
   const [sbEmail, setSbEmail] = useState<string | undefined>(undefined);
+  const [connected, setConnected] = useState(false);
+  const [sbLoggedIn, setSbLoggedIn] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     (async () => {
       const email = await getSupabaseUserEmail();
       setSbEmail(email);
+      const s = getSupabase();
+      setConnected(!!s);
+      try {
+        const res = await s?.auth.getSession();
+        setSbLoggedIn(!!res?.data?.session);
+      } catch {
+        setSbLoggedIn(false);
+      }
     })();
   }, []);
 
@@ -26,6 +40,24 @@ export default function FrontDeskReservations() {
           <h1 className="text-3xl font-bold text-foreground">Reservations</h1>
           <p className="text-muted-foreground">Front Desk reservation management.</p>
         </div>
+
+        {/* Add: Supabase connection/auth status banner */}
+        {(!connected || !sbLoggedIn) && (
+          <Card className="border-amber-400/40">
+            <CardHeader>
+              <CardTitle className="text-amber-400">Supabase not fully ready</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground space-y-2">
+              {!connected && <div>- Supabase client not initialized. Go to Admin → Settings to set URL and Anon Key, then reload.</div>}
+              {connected && !sbLoggedIn && <div>- Please log in with Supabase Email/Password on the Auth page so RLS allows your data.</div>}
+              <div className="flex gap-2 pt-2">
+                <Button variant="outline" size="sm" onClick={() => navigate("/admin/settings")}>Open Settings</Button>
+                <Button variant="outline" size="sm" onClick={() => navigate("/auth")}>Open Auth</Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Card className="gradient-card">
           <CardHeader>
             <CardTitle>Today's Bookings</CardTitle>

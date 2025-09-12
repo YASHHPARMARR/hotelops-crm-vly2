@@ -108,24 +108,47 @@ export function CrudPage(props: CrudPageProps) {
   // Add: central fetch function for Supabase, used on mount, after writes, and by polling/Refresh
   async function fetchRows() {
     if (backend !== "supabase" || !table) return;
-    const s = getSupabase();
-    if (!s) return;
+    const check = await ensureSupabaseReady(false);
+    if (!check.ok || !check.s) return;
     try {
-      let query = s.from(table).select("*");
+      let query = check.s.from(table).select("*");
       if (ownerField && ownerValue) {
         query = query.eq(ownerField, ownerValue);
       }
       const { data, error } = await query;
       if (error) {
+        toast.error(`Fetch failed: ${error.message || "Unknown error"}`);
         console.error("Supabase fetch error:", error);
         return;
       }
       if (Array.isArray(data)) {
         setRows(data);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error("Fetch failed:", e);
+      toast.error(`Fetch failed: ${e?.message || "Unknown error"}`);
     }
+  }
+
+  // Add: connection/session helpers
+  async function ensureSupabaseReady(requireAuth: boolean) {
+    const s = getSupabase();
+    if (!s) {
+      toast.error("Supabase not initialized. Set URL and Anon Key in Admin → Settings, then reload.");
+      return { ok: false as const, s: undefined, session: undefined };
+    }
+    let session: any | undefined = undefined;
+    try {
+      const res = await s.auth.getSession();
+      session = res?.data?.session;
+    } catch (e) {
+      // ignore
+    }
+    if (requireAuth && !session) {
+      toast.error("Supabase login required. Use Email/Password on the Auth page.");
+      return { ok: false as const, s, session: undefined };
+    }
+    return { ok: true as const, s, session };
   }
 
   useEffect(() => {
@@ -252,22 +275,21 @@ export function CrudPage(props: CrudPageProps) {
   async function remove(idx: number) {
     const record = rows[idx];
     if (backend === "supabase" && table) {
-      const s = getSupabase();
-      if (!s) return;
+      const check = await ensureSupabaseReady(true);
+      if (!check.ok || !check.s) return;
       try {
         if (record?.id === undefined || record?.id === null) {
           toast.error("Cannot delete: missing id");
           return;
         }
-        const { error } = await s.from(table).delete().eq("id", record.id);
+        const { error } = await check.s.from(table).delete().eq("id", record.id);
         if (error) throw error;
         setRows((prev) => prev.filter((_, i) => i !== idx));
         toast.success("Deleted");
-        // Add: refetch to ensure fully up-to-date
         await fetchRows();
-      } catch (e) {
+      } catch (e: any) {
         console.error(e);
-        toast.error("Delete failed");
+        toast.error(`Delete failed: ${e?.message || "Unknown error"}`);
       }
       return;
     }
@@ -294,23 +316,22 @@ export function CrudPage(props: CrudPageProps) {
     }
 
     if (backend === "supabase" && table) {
-      const s = getSupabase();
-      if (!s) {
-        toast.error("Supabase not initialized. Set keys in Admin → Settings and reload.");
-        return;
-      }
+      // Require auth whenever owner scoping is enabled (RLS scenario)
+      const requireAuth = !!ownerField;
+      const check = await ensureSupabaseReady(requireAuth);
+      if (!check.ok || !check.s) return;
+
       try {
         const payload = { ...form };
         if (!payload.id) {
           payload.id = crypto.randomUUID();
         }
-        // Add: stamp owner for new/updated rows when configured
         if (ownerField && ownerValue && payload[ownerField] == null) {
           payload[ownerField] = ownerValue;
         }
 
         if (editingIndex === null) {
-          const { error } = await s.from(table).insert(payload);
+          const { error } = await check.s.from(table).insert(payload);
           if (error) throw error;
         } else {
           const current = rows[editingIndex];
@@ -318,18 +339,16 @@ export function CrudPage(props: CrudPageProps) {
             toast.error("Cannot update: missing id");
             return;
           }
-          const { error } = await s.from(table).update(payload).eq("id", current.id);
+          const { error } = await check.s.from(table).update(payload).eq("id", current.id);
           if (error) throw error;
         }
         setOpen(false);
         setEditingIndex(null);
         setForm({});
         toast.success(editingIndex === null ? "Added" : "Updated");
-        // Add: refetch to ensure other tabs/pages and local state are current
         await fetchRows();
       } catch (e: any) {
         console.error(e);
-        // Improve: show reason when available
         const msg = e?.message || "Save failed";
         toast.error(`Save failed: ${msg}`);
       }
