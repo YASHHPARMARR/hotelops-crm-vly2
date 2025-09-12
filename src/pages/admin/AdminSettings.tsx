@@ -241,22 +241,35 @@ create table if not exists staff (
     toast("Seeding started…");
 
     try {
+      // Check auth session to decide whether staff seeding is allowed under RLS
+      let isAuthed = false;
+      try {
+        const { data } = await s.auth.getSession();
+        isAuthed = !!data?.session;
+      } catch {
+        isAuthed = false;
+      }
+
+      // Build seeds dynamically; only include staff when authenticated to satisfy RLS
       const seeds: Record<string, Array<Record<string, any>>> = {
         reservations: [
           { id: crypto.randomUUID(), guestName: "Ana Garcia", confirmation: "CNF-1001", roomType: "Deluxe King", roomNumber: "205", arrival: "2025-09-09", departure: "2025-09-11", status: "Booked", balance: 220, source: "Direct", notes: "High floor", owner: "demo@example.com" },
           { id: crypto.randomUUID(), guestName: "Luis Fernandez", confirmation: "CNF-1002", roomType: "Standard Queen", roomNumber: "214", arrival: "2025-09-08", departure: "2025-09-10", status: "CheckedIn", balance: 0, source: "OTA", notes: "", owner: "demo@example.com" },
         ],
-        staff: [
-          { id: crypto.randomUUID(), email: "demo@example.com", role: "admin" },
-        ],
       };
+      if (isAuthed) {
+        seeds.staff = [{ id: crypto.randomUUID(), email: "demo@example.com", role: "admin" }];
+      } else {
+        toast.info("Skipping staff seeding because you are not logged in (RLS). Use the Auth page to sign in and try again.");
+      }
 
       // For each table: if empty, insert seed
       for (const [table, data] of Object.entries(seeds)) {
         const { data: existing, error: qErr } = await s.from(table).select("id").limit(1);
         if (qErr) {
           console.error(`Query failed for ${table}:`, qErr);
-          toast.error(`Failed checking ${table}: ${qErr.message || qErr.code || "error"}`);
+          const msg = qErr?.message || qErr?.code || "error";
+          toast.error(`Failed checking ${table}: ${msg}`);
           continue;
         }
         if (Array.isArray(existing) && existing.length > 0) {
@@ -266,7 +279,13 @@ create table if not exists staff (
         const { error: insErr } = await s.from(table).insert(data);
         if (insErr) {
           console.error(`Insert failed for ${table}:`, insErr);
-          toast.error(`Seeding failed: ${table}: ${insErr.message || insErr.code || "error"}`);
+          const code = insErr?.code || insErr?.status;
+          const message = insErr?.message || insErr?.hint || insErr?.details || "Unknown error";
+          if (String(message).toLowerCase().includes("row level security") || /rls|permission/i.test(String(message))) {
+            toast.error(`Seeding failed for ${table}: Permission denied by RLS. Ensure you are logged in and RLS policies are applied.`);
+          } else {
+            toast.error(`Seeding failed for ${table}: ${message} (${code ?? "no-code"})`);
+          }
         } else {
           toast.success(`Seeded: ${table}`);
         }
@@ -466,12 +485,29 @@ with check (true);
       await seedAll();
       // Ensure demo admin exists in staff
       try {
-        const { error } = await s.from("staff").upsert(
-          [{ id: crypto.randomUUID(), email: "demo@example.com", role: "admin" }],
-          { onConflict: "email", ignoreDuplicates: false }
-        );
-        if (error) {
-          console.warn("Upsert staff failed:", error);
+        let isAuthed = false;
+        try {
+          const { data } = await s.auth.getSession();
+          isAuthed = !!data?.session;
+        } catch {
+          isAuthed = false;
+        }
+        if (!isAuthed) {
+          toast.info("Skipped staff upsert (RLS). Sign in on the Auth page to manage staff.");
+        } else {
+          const { error } = await s.from("staff").upsert(
+            [{ id: crypto.randomUUID(), email: "demo@example.com", role: "admin" }],
+            { onConflict: "email", ignoreDuplicates: false }
+          );
+          if (error) {
+            const message = error?.message || error?.hint || error?.details || "Unknown error";
+            if (String(message).toLowerCase().includes("row level security") || /rls|permission/i.test(String(message))) {
+              toast.error("Staff upsert blocked by RLS. Verify policies in Admin → Settings → Copy RLS Policies SQL.");
+            } else {
+              toast.error(`Upsert staff failed: ${message}`);
+            }
+            console.warn("Upsert staff failed:", error);
+          }
         }
       } catch (e) {
         console.warn("Upsert staff exception:", e);
