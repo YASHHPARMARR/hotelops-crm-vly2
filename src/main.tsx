@@ -6,7 +6,7 @@ import { ConvexAuthProvider } from "@convex-dev/auth/react";
 import { ConvexReactClient } from "convex/react";
 import { StrictMode, useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router";
+import { BrowserRouter, Route, Routes, useLocation, Navigate } from "react-router";
 import "./index.css";
 import Landing from "./pages/Landing.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -60,6 +60,8 @@ import GuestServices from "@/pages/guest/GuestServices.tsx";
 import GuestDining from "@/pages/guest/GuestDining.tsx";
 import GuestBills from "@/pages/guest/GuestBills.tsx";
 
+import { useAuth } from "./hooks/use-auth.ts";
+
 const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
 
 function RouteSyncer() {
@@ -85,6 +87,27 @@ function RouteSyncer() {
   return null;
 }
 
+function DashboardRedirect() {
+  const { isLoading, isAuthenticated, user } = useAuth();
+  if (isLoading) return null;
+  if (!isAuthenticated) return <Navigate to="/auth" replace />;
+  const role = user?.role;
+  // Map roles to landing dashboards
+  const pathByRole: Record<string, string> = {
+    admin: "/admin",
+    front_desk: "/front-desk",
+    housekeeping: "/housekeeping",
+    restaurant: "/restaurant",
+    security: "/security",
+    maintenance: "/maintenance",
+    transport: "/transport",
+    inventory: "/inventory",
+    guest: "/guest",
+  };
+  const target = role ? pathByRole[role] ?? "/admin" : "/admin";
+  return <Navigate to={target} replace />;
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     {/* VlyToolbar removed */}
@@ -94,7 +117,8 @@ createRoot(document.getElementById("root")!).render(
           <RouteSyncer />
           <Routes>
             <Route path="/" element={<Landing />} />
-            <Route path="/auth" element={<AuthPage redirectAfterAuth="/admin" />} />
+            <Route path="/auth" element={<AuthPage redirectAfterAuth="/dashboard" />} />
+            <Route path="/dashboard" element={<DashboardRedirect />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             
             {/* Admin Route */}

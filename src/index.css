@@ -244,3 +244,9 @@
     box-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
   }
 }
+
+/* Ensure modal/dialog contents are scrollable on smaller screens */
+[role="dialog"] {
+  max-height: 100dvh;
+  overflow-y: auto;
+}

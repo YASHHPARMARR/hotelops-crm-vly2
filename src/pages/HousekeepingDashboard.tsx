@@ -4,6 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bed, Brush, Clock, Download, Filter, CheckCheck } from "lucide-react";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { MessageSquare } from "lucide-react";
+import { ChatPanel } from "@/components/ChatPanel";
 
 const roomStatusData = [
   { name: "Vacant Clean", value: 38, color: "#0088ff" },
@@ -87,6 +90,17 @@ export default function HousekeepingDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button className="fixed bottom-6 right-6 z-50 neon-glow" size="icon" aria-label="Open Chat">
+              <MessageSquare className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+            <ChatPanel />
+          </SheetContent>
+        </Sheet>
       </div>
     </AdminShell>
   );

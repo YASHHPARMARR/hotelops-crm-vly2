@@ -4,6 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UtensilsCrossed, Download, Filter, DollarSign, Timer, ShoppingCart } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, BarChart, Bar } from "recharts";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { MessageSquare } from "lucide-react";
+import { ChatPanel } from "@/components/ChatPanel";
 
 const ordersTrend = [
   { time: "10:00", orders: 22, revenue: 180 },
@@ -92,6 +95,17 @@ export default function RestaurantDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button className="fixed bottom-6 right-6 z-50 neon-glow" size="icon" aria-label="Open Chat">
+              <MessageSquare className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+            <ChatPanel />
+          </SheetContent>
+        </Sheet>
       </div>
     </AdminShell>
   );

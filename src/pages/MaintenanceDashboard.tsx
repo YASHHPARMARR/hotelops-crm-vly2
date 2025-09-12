@@ -2,8 +2,11 @@ import { AdminShell } from "@/components/layouts/AdminShell";
 import { KPICard } from "@/components/ui/kpi-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Wrench, Download, Filter, AlertTriangle, CheckCircle, Timer } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
+import { MessageSquare } from "lucide-react";
+import { ChatPanel } from "@/components/ChatPanel";
 
 const backlog = [
   { category: "Plumbing", tickets: 8 },
@@ -57,6 +60,17 @@ export default function MaintenanceDashboard() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
+
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button className="fixed bottom-6 right-6 z-50 neon-glow" size="icon" aria-label="Open Chat">
+              <MessageSquare className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+            <ChatPanel />
+          </SheetContent>
+        </Sheet>
       </div>
     </AdminShell>
   );

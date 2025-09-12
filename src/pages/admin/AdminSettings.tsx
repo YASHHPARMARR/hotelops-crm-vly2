@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { setSupabaseKeys, getSupabase, clearSupabaseKeys, normalizeSupabaseError } from "@/lib/supabaseClient";
+import { Textarea } from "@/components/ui/textarea";
 
 type PalettePreview = {
   key: AppTheme;
@@ -35,6 +36,36 @@ const palettes: Array<PalettePreview> = [
     description: "Warm ambers and corals with soft backgrounds",
     swatches: ["#f59e0b", "#fb7185", "#1a1410", "#2b1f1a", "#fbbf24"],
   },
+  {
+    key: "forest",
+    name: "Forest Grove",
+    description: "Deep greens with earthy contrast",
+    swatches: ["#14532d", "#22c55e", "#0b0f0c", "#122015", "#86efac"],
+  },
+  {
+    key: "pastel",
+    name: "Pastel Breeze",
+    description: "Soft, light, playful pastels",
+    swatches: ["#fde68a", "#fbcfe8", "#dbeafe", "#dcfce7", "#fef9c3"],
+  },
+  {
+    key: "midnight",
+    name: "Midnight Noir",
+    description: "Dark, high-contrast with electric accents",
+    swatches: ["#0a0a0a", "#111827", "#22d3ee", "#a78bfa", "#e11d48"],
+  },
+  {
+    key: "sand",
+    name: "Desert Sand",
+    description: "Warm sands and muted browns",
+    swatches: ["#fef3c7", "#f59e0b", "#78350f", "#fde68a", "#d97706"],
+  },
+  {
+    key: "rose",
+    name: "Rose Blush",
+    description: "Rosy accents over subtle backgrounds",
+    swatches: ["#0f0f12", "#fb7185", "#fda4af", "#0b0b0e", "#fecdd3"],
+  },
 ];
 
 export default function AdminSettings() {
@@ -49,6 +80,12 @@ export default function AdminSettings() {
   const [loadingReset, setLoadingReset] = useState(false);
   // Add: track supabase auth session status
   const [sbAuth, setSbAuth] = useState<boolean>(false);
+  const [orgName, setOrgName] = useState<string>("");
+  const [orgLogo, setOrgLogo] = useState<string>("");
+  const [orgAddress, setOrgAddress] = useState<string>("");
+  const [orgGstin, setOrgGstin] = useState<string>("");
+  const [orgCurrency, setOrgCurrency] = useState<string>("INR");
+  const [orgTimezone, setOrgTimezone] = useState<string>("Asia/Kolkata");
 
   useEffect(() => {
     const t = getTheme();
@@ -66,6 +103,14 @@ export default function AdminSettings() {
     } catch {
       // ignore
     }
+
+    // Load org settings
+    setOrgName(localStorage.getItem("org:name") || "");
+    setOrgLogo(localStorage.getItem("org:logo") || "");
+    setOrgAddress(localStorage.getItem("org:address") || "");
+    setOrgGstin(localStorage.getItem("org:gstin") || "");
+    setOrgCurrency(localStorage.getItem("org:currency") || "INR");
+    setOrgTimezone(localStorage.getItem("org:timezone") || "Asia/Kolkata");
 
     // connection check
     setConnected(!!getSupabase());
@@ -470,6 +515,20 @@ with check (true);
     }
   };
 
+  const saveOrgSettings = () => {
+    try {
+      localStorage.setItem("org:name", orgName.trim());
+      localStorage.setItem("org:logo", orgLogo.trim());
+      localStorage.setItem("org:address", orgAddress.trim());
+      localStorage.setItem("org:gstin", orgGstin.trim());
+      localStorage.setItem("org:currency", orgCurrency.trim());
+      localStorage.setItem("org:timezone", orgTimezone.trim());
+      toast.success("Organization settings saved");
+    } catch (e: any) {
+      toast.error(`Failed to save: ${normalizeSupabaseError(e)}`);
+    }
+  };
+
   const loadStaff = async () => {
     const s = getSupabase();
     if (!s) return;
@@ -654,6 +713,69 @@ with check (true);
             </div>
             <div className="text-xs text-muted-foreground">
               Tip: These settings are stored locally and used if .env is unavailable.
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="gradient-card">
+          <CardHeader>
+            <CardTitle>Organization Settings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <Label>Company Name</Label>
+                <Input value={orgName} onChange={(e) => setOrgName(e.target.value)} placeholder="Your Hotel Pvt Ltd" />
+              </div>
+              <div>
+                <Label>Logo URL</Label>
+                <Input value={orgLogo} onChange={(e) => setOrgLogo(e.target.value)} placeholder="https://..." />
+              </div>
+              <div>
+                <Label>GSTIN / Tax ID</Label>
+                <Input value={orgGstin} onChange={(e) => setOrgGstin(e.target.value)} placeholder="27ABCDE1234F1Z5" />
+              </div>
+              <div className="md:col-span-2">
+                <Label>Address</Label>
+                <Textarea value={orgAddress} onChange={(e) => setOrgAddress(e.target.value)} placeholder="Street, City, Country" />
+              </div>
+              <div>
+                <Label>Currency</Label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={orgCurrency}
+                  onChange={(e) => setOrgCurrency(e.target.value)}
+                >
+                  <option>INR</option>
+                  <option>USD</option>
+                  <option>EUR</option>
+                  <option>GBP</option>
+                </select>
+              </div>
+              <div>
+                <Label>Timezone</Label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={orgTimezone}
+                  onChange={(e) => setOrgTimezone(e.target.value)}
+                >
+                  <option value="Asia/Kolkata">Asia/Kolkata</option>
+                  <option value="UTC">UTC</option>
+                  <option value="America/New_York">America/New_York</option>
+                  <option value="Europe/London">Europe/London</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button size="sm" className="neon-glow" onClick={saveOrgSettings}>Save</Button>
+              <div className="text-xs text-muted-foreground">Stored locally for demo mode.</div>
+            </div>
+            <div className="flex items-center gap-3 pt-2">
+              {orgLogo ? <img src={orgLogo} alt="logo" className="h-10 w-10 rounded-md border" /> : null}
+              <div className="text-sm">
+                <div className="font-medium">{orgName || "Unnamed Organization"}</div>
+                <div className="text-xs text-muted-foreground">{orgCurrency} • {orgTimezone}</div>
+              </div>
             </div>
           </CardContent>
         </Card>

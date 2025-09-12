@@ -1,5 +1,5 @@
 const THEME_STORAGE_KEY = "app_theme";
-export type AppTheme = "neon" | "ocean" | "sunset";
+export type AppTheme = "neon" | "ocean" | "sunset" | "forest" | "pastel" | "midnight" | "sand" | "rose";
 
 export function getTheme(): AppTheme {
   const t = (typeof window !== "undefined" && localStorage.getItem(THEME_STORAGE_KEY)) as AppTheme | null;
@@ -23,7 +23,7 @@ export function applyThemeToDocument(theme: AppTheme) {
 }
 
 export function cycleTheme(current?: AppTheme): AppTheme {
-  const order: AppTheme[] = ["neon", "ocean", "sunset"];
+  const order: AppTheme[] = ["neon", "ocean", "sunset", "forest", "pastel", "midnight", "sand", "rose"];
   const idx = order.indexOf(current ?? getTheme());
   return order[(idx + 1) % order.length];
 }

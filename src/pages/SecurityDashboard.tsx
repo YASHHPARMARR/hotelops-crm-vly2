@@ -2,8 +2,10 @@ import { AdminShell } from "@/components/layouts/AdminShell";
 import { KPICard } from "@/components/ui/kpi-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Shield, AlertTriangle, Download, Filter, BadgeCheck, Camera } from "lucide-react";
+import { Shield, AlertTriangle, Download, Filter, BadgeCheck, Camera, MessageSquare } from "lucide-react";
 import { motion } from "framer-motion";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { ChatPanel } from "@/components/ChatPanel";
 
 const incidents = [
   { title: "Noise complaint - Room 512", severity: "Low", time: "10m ago" },
@@ -57,6 +59,17 @@ export default function SecurityDashboard() {
             </div>
           </CardContent>
         </Card>
+
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button className="fixed bottom-6 right-6 z-50 neon-glow" size="icon" aria-label="Open Chat">
+              <MessageSquare className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+            <ChatPanel />
+          </SheetContent>
+        </Sheet>
       </div>
     </AdminShell>
   );

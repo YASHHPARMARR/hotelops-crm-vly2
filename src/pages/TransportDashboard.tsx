@@ -4,6 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Car, Download, Filter, Clock, CheckCircle, Users } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { MessageSquare } from "lucide-react";
+import { ChatPanel } from "@/components/ChatPanel";
 
 const tripsTrend = [
   { time: "08:00", scheduled: 8, completed: 6 },
@@ -59,6 +62,17 @@ export default function TransportDashboard() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
+
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button className="fixed bottom-6 right-6 z-50 neon-glow" size="icon" aria-label="Open Chat">
+              <MessageSquare className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+            <ChatPanel />
+          </SheetContent>
+        </Sheet>
       </div>
     </AdminShell>
   );
