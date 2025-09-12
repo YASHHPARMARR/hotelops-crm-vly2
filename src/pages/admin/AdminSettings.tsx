@@ -162,7 +162,7 @@ create table if not exists restaurant_orders (
 -- Guest dining orders
 create table if not exists dining_orders (
   id text primary key,
-  order text,
+  "order" text,
   total numeric,
   status text,
   created_at timestamptz default now()
@@ -206,6 +206,14 @@ create table if not exists transport_vehicles (
   model text,
   capacity numeric,
   status text,
+  created_at timestamptz default now()
+);
+
+-- Staff directory (drive roles by email)
+create table if not exists staff (
+  id text primary key,
+  email text unique,
+  role text, -- matches app roles, e.g. 'admin', 'front_desk', 'guest', etc.
   created_at timestamptz default now()
 );
 `.trim();
@@ -272,6 +280,9 @@ create table if not exists transport_vehicles (
         transport_vehicles: [
           { id: crypto.randomUUID(), plate: "XYZ-101", model: "Sprinter", capacity: 10, status: "Available" },
         ],
+        staff: [
+          { id: crypto.randomUUID(), email: "demo@example.com", role: "admin" },
+        ],
       };
 
       // For each table: if empty, insert seed
@@ -316,6 +327,7 @@ alter table if exists charges enable row level security;
 alter table if exists payments enable row level security;
 alter table if exists transport_trips enable row level security;
 alter table if exists transport_vehicles enable row level security;
+alter table if exists staff enable row level security;
 
 -- Reservations: Only owner (by email) can CRUD
 drop policy if exists "Reservations owner can access" on reservations;
@@ -339,6 +351,20 @@ to authenticated;
 create policy "Rooms update for auth" on rooms
 for update using (true)
 to authenticated;
+
+-- Staff: only authenticated can read; allow upserts by authenticated for demo (lock down later)
+drop policy if exists "Staff select for auth" on staff;
+create policy "Staff select for auth" on staff
+for select
+to authenticated
+using (true);
+
+drop policy if exists "Staff write for auth" on staff;
+create policy "Staff write for auth" on staff
+for all
+to authenticated
+using (true)
+with check (true);
 
 -- Repeat similar policies per your needs for other tables (owner-col or auth-only)
 `.trim();

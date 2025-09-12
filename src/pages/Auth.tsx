@@ -19,6 +19,7 @@ import { ArrowRight, Loader2, Mail, UserX } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { supabaseSignIn, supabaseSignOut, supabaseSignUp, getSupabaseUserEmail } from "@/lib/supabaseClient";
+import { getSupabase } from "@/lib/supabaseClient";
 
 interface AuthProps {
   redirectAfterAuth?: string;
@@ -35,6 +36,37 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
   const [useSupabase, setUseSupabase] = useState(false);
   const [sbEmail, setSbEmail] = useState("");
   const [sbPassword, setSbPassword] = useState("");
+
+  // Helper: compute redirect path based on role precedence: staff role in Supabase -> demoRole -> default
+  const roleToPath: Record<string, string> = {
+    admin: "/admin",
+    front_desk: "/front-desk",
+    housekeeping: "/housekeeping",
+    restaurant: "/restaurant",
+    security: "/security",
+    maintenance: "/maintenance",
+    transport: "/transport",
+    inventory: "/inventory",
+    guest: "/guest",
+  };
+
+  async function getRoleRedirect(): Promise<string> {
+    // 1) Supabase staff role by email
+    try {
+      const email = await getSupabaseUserEmail();
+      const s = getSupabase();
+      if (s && email) {
+        const { data } = await s.from("staff").select("role").eq("email", email).limit(1).maybeSingle();
+        const staffRole = data?.role as string | undefined;
+        if (staffRole && roleToPath[staffRole]) return roleToPath[staffRole];
+      }
+    } catch { /* ignore */ }
+    // 2) demoRole if set
+    const demoRole = localStorage.getItem("demoRole") || undefined;
+    if (demoRole && roleToPath[demoRole]) return roleToPath[demoRole];
+    // 3) fallback
+    return "/";
+  }
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
@@ -71,10 +103,8 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       const formData = new FormData(event.currentTarget);
       await signIn("email-otp", formData);
 
-      console.log("signed in");
-
-      const redirect = redirectAfterAuth || "/";
-      navigate(redirect);
+      const dest = redirectAfterAuth || (await getRoleRedirect());
+      navigate(dest);
     } catch (error) {
       console.error("OTP verification error:", error);
 
@@ -100,18 +130,6 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       setError(`Failed to sign in as guest: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setIsLoading(false);
     }
-  };
-
-  const roleToPath: Record<string, string> = {
-    admin: "/admin",
-    front_desk: "/front-desk",
-    housekeeping: "/housekeeping",
-    restaurant: "/restaurant",
-    security: "/security",
-    maintenance: "/maintenance",
-    transport: "/transport",
-    inventory: "/inventory",
-    guest: "/guest",
   };
 
   const handleGuestLoginWithRole = async (role: keyof typeof roleToPath) => {
@@ -269,11 +287,11 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
                               setError(null);
                               try {
                                 await supabaseSignUp(sbEmail, sbPassword);
-                                // After signup, also log in
                                 await supabaseSignIn(sbEmail, sbPassword);
                                 const email = await getSupabaseUserEmail();
                                 if (!email) throw new Error("Signed in but no Supabase user email found.");
-                                navigate(redirectAfterAuth || "/");
+                                const dest = redirectAfterAuth || (await getRoleRedirect());
+                                navigate(dest);
                               } catch (e: any) {
                                 console.error(e);
                                 setError(e?.message || "Signup failed");
@@ -297,7 +315,8 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
                                 await supabaseSignIn(sbEmail, sbPassword);
                                 const email = await getSupabaseUserEmail();
                                 if (!email) throw new Error("Signed in but no Supabase user email found.");
-                                navigate(redirectAfterAuth || "/");
+                                const dest = redirectAfterAuth || (await getRoleRedirect());
+                                navigate(dest);
                               } catch (e: any) {
                                 console.error(e);
                                 setError(e?.message || "Login failed");

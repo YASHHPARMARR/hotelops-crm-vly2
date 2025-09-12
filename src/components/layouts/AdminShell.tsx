@@ -31,6 +31,7 @@ import { Role, ROLES } from "@/convex/schema";
 
 import { useEffect } from "react";
 import { applyThemeToDocument, getTheme } from "@/lib/theme";
+import { getSupabase, getSupabaseUserEmail } from "@/lib/supabaseClient";
 
 interface AdminShellProps {
   children: ReactNode;
@@ -42,10 +43,39 @@ export function AdminShell({ children }: AdminShellProps) {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [staffRole, setStaffRole] = useState<Role | undefined>(undefined);
 
   // Add: fallback to demoRole if user.role is undefined
   const demoRoleString = typeof window !== "undefined" ? localStorage.getItem("demoRole") : null;
-  const effectiveRole: Role | undefined = (user?.role as Role | undefined) || (demoRoleString as Role | undefined);
+
+  // Add: load staffRole from Supabase by email
+  useEffect(() => {
+    (async () => {
+      try {
+        const email = await getSupabaseUserEmail();
+        const s = getSupabase();
+        if (!s || !email) {
+          setStaffRole(undefined);
+          return;
+        }
+        const { data, error } = await s.from("staff").select("role").eq("email", email).limit(1).maybeSingle();
+        if (error) {
+          setStaffRole(undefined);
+          return;
+        }
+        const role = (data?.role as Role | undefined) || undefined;
+        setStaffRole(role);
+      } catch {
+        setStaffRole(undefined);
+      }
+    })();
+  }, [user?.email]);
+
+  // Compute effectiveRole priority: Supabase staff role > user.role > demoRole
+  const effectiveRole: Role | undefined =
+    (staffRole as Role | undefined) ||
+    (user?.role as Role | undefined) ||
+    (demoRoleString as Role | undefined);
 
   const navigationItems = effectiveRole ? ROLE_NAVIGATION[effectiveRole] || [] : [];
 
