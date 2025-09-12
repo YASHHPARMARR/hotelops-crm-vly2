@@ -7,7 +7,7 @@ import { applyThemeToDocument, cycleTheme, getTheme, setTheme, type AppTheme } f
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { setSupabaseKeys, getSupabase } from "@/lib/supabaseClient";
+import { setSupabaseKeys, getSupabase, clearSupabaseKeys } from "@/lib/supabaseClient";
 
 type PalettePreview = {
   key: AppTheme;
@@ -42,6 +42,11 @@ export default function AdminSettings() {
   const [supabaseUrl, setSupabaseUrl] = useState<string>("");
   const [supabaseAnon, setSupabaseAnon] = useState<string>("");
   const [connected, setConnected] = useState<boolean>(false);
+  const [staff, setStaff] = useState<Array<{ id: string; email: string; role: string }>>([]);
+  const [newStaffEmail, setNewStaffEmail] = useState("");
+  const [newStaffRole, setNewStaffRole] = useState("front_desk");
+  const [loadingStaff, setLoadingStaff] = useState(false);
+  const [loadingReset, setLoadingReset] = useState(false);
 
   useEffect(() => {
     const t = getTheme();
@@ -401,6 +406,116 @@ with check (true);
     }
   };
 
+  const loadStaff = async () => {
+    const s = getSupabase();
+    if (!s) return;
+    setLoadingStaff(true);
+    try {
+      const { data, error } = await s.from("staff").select("*").order("email");
+      if (!error && Array.isArray(data)) {
+        setStaff(data as any);
+      }
+    } finally {
+      setLoadingStaff(false);
+    }
+  };
+
+  useEffect(() => {
+    if (connected) {
+      loadStaff();
+    }
+  }, [connected]);
+
+  const clearKeys = () => {
+    clearSupabaseKeys();
+    setSupabaseUrl("");
+    setSupabaseAnon("");
+    setConnected(false);
+    toast.success("Cleared local Supabase keys. Enter new keys and Save & Connect.");
+  };
+
+  const wipeAndReseed = async () => {
+    const s = getSupabase();
+    if (!s) {
+      toast.error("Supabase not initialized.");
+      return;
+    }
+    setLoadingReset(true);
+    toast("Starting wipe & reseed…");
+    try {
+      // Determine current email for owner-scoped deletes
+      let currentEmail: string | undefined;
+      try {
+        const u = await s.auth.getUser();
+        currentEmail = u?.data?.user?.email ?? undefined;
+      } catch {
+        currentEmail = undefined;
+      }
+
+      // Known tables
+      const tables: Array<{ name: string; deleteWhere?: { column: string; value?: string } }> = [
+        // reservations is owner-scoped: delete only current owner's
+        { name: "reservations", deleteWhere: currentEmail ? { column: "owner", value: currentEmail } : undefined },
+        { name: "guests" },
+        { name: "rooms" },
+        { name: "hk_tasks" },
+        { name: "hk_inventory" },
+        { name: "restaurant_menu" },
+        { name: "restaurant_orders" },
+        { name: "dining_orders" },
+        { name: "charges" },
+        { name: "payments" },
+        { name: "transport_trips" },
+        { name: "transport_vehicles" },
+        // staff: keep, we'll upsert demo admin below
+      ];
+
+      // Delete data
+      for (const t of tables) {
+        try {
+          let q = s.from(t.name).delete();
+          if (t.deleteWhere) {
+            q = q.eq(t.deleteWhere.column, t.deleteWhere.value ?? null);
+          } else {
+            // NOTE: Without service role, unrestricted deletes rely on permissive RLS.
+            // If RLS blocks, this will fail and be skipped.
+          }
+          const { error } = await q;
+          if (error) {
+            console.warn(`Delete failed for ${t.name}:`, error);
+          } else {
+            toast.success(`Cleared ${t.name}`);
+          }
+        } catch (e) {
+          console.warn(`Delete exception for ${t.name}:`, e);
+        }
+      }
+
+      // Reseed demo data (reuse existing seedAll logic directly here)
+      await seedAll();
+      // Ensure demo admin exists in staff
+      try {
+        const { error } = await s.from("staff").upsert(
+          [{ id: crypto.randomUUID(), email: "demo@example.com", role: "admin" }],
+          { onConflict: "email", ignoreDuplicates: false }
+        );
+        if (error) {
+          console.warn("Upsert staff failed:", error);
+        }
+      } catch (e) {
+        console.warn("Upsert staff exception:", e);
+      }
+
+      await loadStaff();
+      toast.success("Wipe & reseed completed");
+    } catch (e) {
+      console.error(e);
+      toast.error("Wipe & reseed encountered an error");
+    } finally {
+      setLoadingReset(false);
+    }
+  };
+
   return (
     <AdminShell>
       <div className="space-y-6">
@@ -449,9 +564,34 @@ with check (true);
               <Badge variant={connected ? "default" : "outline"}>
                 {connected ? "Connected" : "Not Connected"}
               </Badge>
+              <Button onClick={clearKeys} variant="destructive" size="sm">
+                Clear Supabase Keys
+              </Button>
             </div>
             <div className="text-xs text-muted-foreground">
               Tip: These settings are stored locally and used if .env is unavailable.
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="gradient-card">
+          <CardHeader>
+            <CardTitle>Database Maintenance</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="text-sm text-muted-foreground">
+              Use these tools to reset demo data safely (within RLS) and reseed all tables.
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={wipeAndReseed} variant="destructive" size="sm" disabled={loadingReset || !connected}>
+                {loadingReset ? "Resetting..." : "Wipe & Reseed (Demo)"}
+              </Button>
+              <Button onClick={seedAll} variant="outline" size="sm" disabled={!connected}>
+                Seed Sample Data (if empty)
+              </Button>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Note: Creating/dropping tables requires running the SQL in Supabase SQL editor (use the Copy SQL buttons below).
             </div>
           </CardContent>
         </Card>
@@ -514,6 +654,139 @@ with check (true);
             </div>
             <div className="text-xs text-muted-foreground">
               Tip: Use the One-click Theme Toggle to quickly switch between palettes anywhere.
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="gradient-card">
+          <CardHeader>
+            <CardTitle>Staff Management</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <div className="md:col-span-2">
+                <Label>Email</Label>
+                <Input
+                  placeholder="user@company.com"
+                  value={newStaffEmail}
+                  onChange={(e) => setNewStaffEmail(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Role</Label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={newStaffRole}
+                  onChange={(e) => setNewStaffRole(e.target.value)}
+                >
+                  <option value="admin">admin</option>
+                  <option value="front_desk">front_desk</option>
+                  <option value="housekeeping">housekeeping</option>
+                  <option value="restaurant">restaurant</option>
+                  <option value="security">security</option>
+                  <option value="maintenance">maintenance</option>
+                  <option value="transport">transport</option>
+                  <option value="inventory">inventory</option>
+                  <option value="guest">guest</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                className="neon-glow"
+                onClick={async () => {
+                  const s = getSupabase();
+                  if (!s) return toast.error("Supabase not initialized");
+                  if (!newStaffEmail) return toast.error("Email is required");
+                  try {
+                    const { error } = await s
+                      .from("staff")
+                      .upsert([{ id: crypto.randomUUID(), email: newStaffEmail.trim(), role: newStaffRole }], {
+                        onConflict: "email",
+                        ignoreDuplicates: false,
+                      });
+                    if (error) throw error;
+                    toast.success("Staff saved");
+                    setNewStaffEmail("");
+                    await loadStaff();
+                  } catch (e: any) {
+                    toast.error(e?.message || "Failed to save staff");
+                  }
+                }}
+                disabled={loadingStaff || !connected}
+              >
+                Save Staff
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={loadStaff}
+                disabled={loadingStaff || !connected}
+              >
+                Refresh
+              </Button>
+            </div>
+
+            <div className="rounded-lg border border-border overflow-hidden">
+              <div className="grid grid-cols-3 text-sm font-medium bg-muted/50 px-3 py-2">
+                <div>Email</div>
+                <div>Role</div>
+                <div className="text-right">Actions</div>
+              </div>
+              {staff.length === 0 ? (
+                <div className="px-3 py-6 text-sm text-muted-foreground text-center">No staff yet.</div>
+              ) : (
+                staff.map((u) => (
+                  <div key={u.id} className="grid grid-cols-3 items-center px-3 py-2 border-t border-border">
+                    <div className="truncate">{u.email}</div>
+                    <div className="capitalize">{u.role?.replace("_", " ") || "-"}</div>
+                    <div className="text-right space-x-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={async () => {
+                          const s = getSupabase();
+                          if (!s) return;
+                          const role = prompt("New role:", u.role);
+                          if (!role) return;
+                          try {
+                            const { error } = await s.from("staff").update({ role }).eq("email", u.email);
+                            if (error) throw error;
+                            toast.success("Role updated");
+                            await loadStaff();
+                          } catch (e: any) {
+                            toast.error(e?.message || "Failed to update role");
+                          }
+                        }}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={async () => {
+                          const s = getSupabase();
+                          if (!s) return;
+                          try {
+                            const { error } = await s.from("staff").delete().eq("email", u.email);
+                            if (error) throw error;
+                            toast.success("Removed");
+                            await loadStaff();
+                          } catch (e: any) {
+                            toast.error(e?.message || "Failed to remove");
+                          }
+                        }}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Admin can assign roles by email. Navigation and access respect these roles immediately.
             </div>
           </CardContent>
         </Card>

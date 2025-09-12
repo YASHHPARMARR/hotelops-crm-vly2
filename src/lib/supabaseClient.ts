@@ -28,6 +28,17 @@ export function setSupabaseKeys(url: string, anonKey: string) {
   }
 }
 
+// Add: clear keys and reset client
+export function clearSupabaseKeys() {
+  try {
+    localStorage.removeItem("VITE_SUPABASE_URL");
+    localStorage.removeItem("VITE_SUPABASE_ANON_KEY");
+    client = undefined;
+  } catch {
+    // ignore
+  }
+}
+
 // Lazily create the client the first time it's requested
 export function getSupabase() {
   if (client) return client;

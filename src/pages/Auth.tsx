@@ -292,6 +292,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
                                 if (!email) throw new Error("Signed in but no Supabase user email found.");
                                 const dest = redirectAfterAuth || (await getRoleRedirect());
                                 navigate(dest);
+                                localStorage.removeItem("demoRole");
                               } catch (e: any) {
                                 console.error(e);
                                 setError(e?.message || "Signup failed");
@@ -317,6 +318,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
                                 if (!email) throw new Error("Signed in but no Supabase user email found.");
                                 const dest = redirectAfterAuth || (await getRoleRedirect());
                                 navigate(dest);
+                                localStorage.removeItem("demoRole");
                               } catch (e: any) {
                                 console.error(e);
                                 setError(e?.message || "Login failed");
