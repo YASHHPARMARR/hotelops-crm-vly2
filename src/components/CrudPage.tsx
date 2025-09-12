@@ -83,6 +83,8 @@ export function CrudPage(props: CrudPageProps) {
     ownerValue,
   } = props;
 
+  const demoOwner = !!ownerField && ownerValue === "demo@example.com";
+
   const [query, setQuery] = useState("");
   const [rows, setRows] = useState<Record<string, any>[]>(() => {
     if (backend === "supabase" && supabase && table) {
@@ -310,7 +312,8 @@ export function CrudPage(props: CrudPageProps) {
   async function remove(idx: number) {
     const record = rows[idx];
     if (backend === "supabase" && table) {
-      const check = await ensureSupabaseReady(true);
+      // Change: only require auth if not demo owner
+      const check = await ensureSupabaseReady(!demoOwner);
       if (!check.ok || !check.s) return;
       try {
         if (record?.id === undefined || record?.id === null) {
@@ -356,8 +359,8 @@ export function CrudPage(props: CrudPageProps) {
     if (saving) return;
 
     if (backend === "supabase" && table) {
-      // Require auth whenever owner scoping is enabled (RLS scenario)
-      const requireAuth = !!ownerField;
+      // Change: require auth only when owner is not demo@example.com
+      const requireAuth = !!ownerField && !demoOwner;
       const check = await ensureSupabaseReady(requireAuth);
       if (!check.ok || !check.s) return;
 
