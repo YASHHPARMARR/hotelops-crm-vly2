@@ -7,7 +7,7 @@ import { applyThemeToDocument, cycleTheme, getTheme, setTheme, type AppTheme } f
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { setSupabaseKeys, getSupabase, clearSupabaseKeys } from "@/lib/supabaseClient";
+import { setSupabaseKeys, getSupabase, clearSupabaseKeys, normalizeSupabaseError } from "@/lib/supabaseClient";
 
 type PalettePreview = {
   key: AppTheme;
@@ -241,51 +241,31 @@ create table if not exists staff (
     toast("Seeding started…");
 
     try {
-      // Check auth session to decide whether staff seeding is allowed under RLS
-      let isAuthed = false;
-      try {
-        const { data } = await s.auth.getSession();
-        isAuthed = !!data?.session;
-      } catch {
-        isAuthed = false;
-      }
-
-      // Build seeds dynamically; only include staff when authenticated to satisfy RLS
       const seeds: Record<string, Array<Record<string, any>>> = {
         reservations: [
           { id: crypto.randomUUID(), guestName: "Ana Garcia", confirmation: "CNF-1001", roomType: "Deluxe King", roomNumber: "205", arrival: "2025-09-09", departure: "2025-09-11", status: "Booked", balance: 220, source: "Direct", notes: "High floor", owner: "demo@example.com" },
           { id: crypto.randomUUID(), guestName: "Luis Fernandez", confirmation: "CNF-1002", roomType: "Standard Queen", roomNumber: "214", arrival: "2025-09-08", departure: "2025-09-10", status: "CheckedIn", balance: 0, source: "OTA", notes: "", owner: "demo@example.com" },
         ],
+        staff: [
+          { id: crypto.randomUUID(), email: "demo@example.com", role: "admin" },
+        ],
       };
-      if (isAuthed) {
-        seeds.staff = [{ id: crypto.randomUUID(), email: "demo@example.com", role: "admin" }];
-      } else {
-        toast.info("Skipping staff seeding because you are not logged in (RLS). Use the Auth page to sign in and try again.");
-      }
 
-      // For each table: if empty, insert seed
       for (const [table, data] of Object.entries(seeds)) {
         const { data: existing, error: qErr } = await s.from(table).select("id").limit(1);
         if (qErr) {
+          const msg = normalizeSupabaseError(qErr);
           console.error(`Query failed for ${table}:`, qErr);
-          const msg = qErr?.message || qErr?.code || "error";
           toast.error(`Failed checking ${table}: ${msg}`);
           continue;
         }
-        if (Array.isArray(existing) && existing.length > 0) {
-          // already has data
-          continue;
-        }
+        if (Array.isArray(existing) && existing.length > 0) continue;
+
         const { error: insErr } = await s.from(table).insert(data);
         if (insErr) {
+          const msg = normalizeSupabaseError(insErr);
           console.error(`Insert failed for ${table}:`, insErr);
-          const code = insErr?.code || insErr?.status;
-          const message = insErr?.message || insErr?.hint || insErr?.details || "Unknown error";
-          if (String(message).toLowerCase().includes("row level security") || /rls|permission/i.test(String(message))) {
-            toast.error(`Seeding failed for ${table}: Permission denied by RLS. Ensure you are logged in and RLS policies are applied.`);
-          } else {
-            toast.error(`Seeding failed for ${table}: ${message} (${code ?? "no-code"})`);
-          }
+          toast.error(`Seeding failed for ${table}: ${msg}`);
         } else {
           toast.success(`Seeded: ${table}`);
         }
@@ -294,7 +274,7 @@ create table if not exists staff (
       toast.success("Seeding completed");
     } catch (e: any) {
       console.error(e);
-      toast.error(`Seeding encountered an error: ${e?.message || "unknown"}`);
+      toast.error(`Seeding encountered an error: ${normalizeSupabaseError(e)}`);
     }
   };
 
@@ -384,15 +364,20 @@ with check (true);
       toast.error("Provide both Supabase URL and Anon Key");
       return;
     }
-    setSupabaseKeys(supabaseUrl.trim(), supabaseAnon.trim());
-    // Recheck connection
-    const s = getSupabase();
-    if (s) {
-      setConnected(true);
-      toast.success("Supabase connected");
-    } else {
+    try {
+      setSupabaseKeys(supabaseUrl.trim(), supabaseAnon.trim());
+      const s = getSupabase();
+      if (s) {
+        setConnected(true);
+        toast.success("Supabase connected");
+      } else {
+        setConnected(false);
+        toast.error("Failed to initialize Supabase client. Verify URL and Anon Key.");
+      }
+    } catch (e: any) {
+      console.error("Supabase init error:", e);
       setConnected(false);
-      toast.error("Failed to initialize Supabase client");
+      toast.error(`Failed to initialize Supabase client: ${normalizeSupabaseError(e)}`);
     }
   };
 
@@ -402,9 +387,16 @@ with check (true);
     setLoadingStaff(true);
     try {
       const { data, error } = await s.from("staff").select("*").order("email");
-      if (!error && Array.isArray(data)) {
+      if (error) {
+        const msg = normalizeSupabaseError(error);
+        toast.error(`Failed loading staff: ${msg}`);
+        return;
+      }
+      if (Array.isArray(data)) {
         setStaff(data as any);
       }
+    } catch (e: any) {
+      toast.error(`Failed loading staff: ${normalizeSupabaseError(e)}`);
     } finally {
       setLoadingStaff(false);
     }
@@ -466,58 +458,41 @@ with check (true);
           let q = s.from(t.name).delete();
           if (t.deleteWhere) {
             q = q.eq(t.deleteWhere.column, t.deleteWhere.value ?? null);
-          } else {
-            // NOTE: Without service role, unrestricted deletes rely on permissive RLS.
-            // If RLS blocks, this will fail and be skipped.
           }
           const { error } = await q;
           if (error) {
             console.warn(`Delete failed for ${t.name}:`, error);
+            toast.error(`Delete failed for ${t.name}: ${normalizeSupabaseError(error)}`);
           } else {
             toast.success(`Cleared ${t.name}`);
           }
-        } catch (e) {
+        } catch (e: any) {
           console.warn(`Delete exception for ${t.name}:`, e);
+          toast.error(`Delete exception for ${t.name}: ${normalizeSupabaseError(e)}`);
         }
       }
 
-      // Reseed demo data (reuse existing seedAll logic directly here)
       await seedAll();
-      // Ensure demo admin exists in staff
+
       try {
-        let isAuthed = false;
-        try {
-          const { data } = await s.auth.getSession();
-          isAuthed = !!data?.session;
-        } catch {
-          isAuthed = false;
+        const { error } = await s.from("staff").upsert(
+          [{ id: crypto.randomUUID(), email: "demo@example.com", role: "admin" }],
+          { onConflict: "email", ignoreDuplicates: false }
+        );
+        if (error) {
+          console.warn("Upsert staff failed:", error);
+          toast.error(`Staff upsert failed: ${normalizeSupabaseError(error)}`);
         }
-        if (!isAuthed) {
-          toast.info("Skipped staff upsert (RLS). Sign in on the Auth page to manage staff.");
-        } else {
-          const { error } = await s.from("staff").upsert(
-            [{ id: crypto.randomUUID(), email: "demo@example.com", role: "admin" }],
-            { onConflict: "email", ignoreDuplicates: false }
-          );
-          if (error) {
-            const message = error?.message || error?.hint || error?.details || "Unknown error";
-            if (String(message).toLowerCase().includes("row level security") || /rls|permission/i.test(String(message))) {
-              toast.error("Staff upsert blocked by RLS. Verify policies in Admin → Settings → Copy RLS Policies SQL.");
-            } else {
-              toast.error(`Upsert staff failed: ${message}`);
-            }
-            console.warn("Upsert staff failed:", error);
-          }
-        }
-      } catch (e) {
+      } catch (e: any) {
         console.warn("Upsert staff exception:", e);
+        toast.error(`Staff upsert exception: ${normalizeSupabaseError(e)}`);
       }
 
       await loadStaff();
       toast.success("Wipe & reseed completed");
     } catch (e) {
       console.error(e);
-      toast.error("Wipe & reseed encountered an error");
+      toast.error(`Wipe & reseed encountered an error: ${normalizeSupabaseError(e)}`);
     } finally {
       setLoadingReset(false);
     }
