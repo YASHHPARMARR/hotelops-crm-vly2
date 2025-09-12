@@ -18,6 +18,8 @@ export default function AdminStaff() {
             <CrudPage
               title="Staff"
               storageKey="admin_staff"
+              table="admin_staff"
+              backend="convex"
               description="Manage staff, roles, segments, and contact details."
               columns={[
                 { key: "name", label: "Name", input: "text", required: true },

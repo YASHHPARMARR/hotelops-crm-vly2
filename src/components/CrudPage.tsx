@@ -28,6 +28,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase, getSupabase } from "@/lib/supabaseClient";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 type Column = {
   key: string;
@@ -45,7 +47,7 @@ type CrudPageProps = {
   seed: Record<string, any>[];
   actions?: Array<"add" | "edit" | "delete">;
   description?: string;
-  backend?: "local" | "supabase";
+  backend?: "local" | "supabase" | "convex";
   table?: string;
   ownerField?: string;
   ownerValue?: string | undefined;
@@ -84,9 +86,23 @@ export function CrudPage(props: CrudPageProps) {
   } = props;
 
   const demoOwner = !!ownerField && ownerValue === "demo@example.com";
+  const collection = table ?? storageKey;
 
   const [query, setQuery] = useState("");
+  
+  // Convex queries and mutations
+  const convexRows = useQuery(
+    api.rows.list,
+    backend === "convex" ? { collection } : "skip"
+  );
+  const addRow = useMutation(api.rows.add);
+  const updateRow = useMutation(api.rows.update);
+  const removeRow = useMutation(api.rows.remove);
+
   const [rows, setRows] = useState<Record<string, any>[]>(() => {
+    if (backend === "convex") {
+      return []; // Will be populated by Convex query
+    }
     if (backend === "supabase" && supabase && table) {
       // defer to fetch effect; show empty first render
       return [];
@@ -361,33 +377,19 @@ export function CrudPage(props: CrudPageProps) {
 
   async function remove(idx: number) {
     const record = rows[idx];
-    if (backend === "supabase" && table) {
-      // Change: only require auth if not demo owner
-      const check = await ensureSupabaseReady(!demoOwner);
-      if (!check.ok || !check.s) return;
+    
+    if (backend === "convex") {
       try {
-        if (record?.id === undefined || record?.id === null) {
+        if (!record?.id) {
           toast.error("Cannot delete: missing id");
           return;
         }
         setDeleting(String(record.id));
-        const { error } = await check.s.from(table).delete().eq("id", record.id);
-        if (error) {
-          // Detect missing table
-          const code = (error as any)?.code ?? (error as any)?.status;
-          const m = String((error as any)?.message || "").toLowerCase();
-          if (code === "PGRST204" || code === 404 || m.includes("not found")) {
-            setMissingTable(true);
-          }
-          throw error;
-        }
-        setRows((prev) => prev.filter((_, i) => i !== idx));
+        await removeRow({ collection, idStr: String(record.id) });
         toast.success("Deleted");
-        await fetchRows();
       } catch (e: any) {
         console.error(e);
-        const msg = parseSupabaseError(e);
-        toast.error(`Delete failed: ${msg}`);
+        toast.error(`Delete failed: ${e.message}`);
       } finally {
         setDeleting(null);
       }
@@ -416,59 +418,32 @@ export function CrudPage(props: CrudPageProps) {
     }
     if (saving) return;
 
-    if (backend === "supabase" && table) {
-      // Change: require auth only when owner is not demo@example.com
-      const requireAuth = !!ownerField && !demoOwner;
-      const check = await ensureSupabaseReady(requireAuth);
-      if (!check.ok || !check.s) return;
-
+    if (backend === "convex") {
       try {
         setSaving(true);
         const payload = { ...form };
         if (!payload.id) {
           payload.id = crypto.randomUUID();
         }
-        if (ownerField && ownerValue && payload[ownerField] == null) {
-          payload[ownerField] = ownerValue;
-        }
 
         if (editingIndex === null) {
-          const { error } = await check.s.from(table).insert(payload);
-          if (error) {
-            // Detect missing table
-            const code = (error as any)?.code ?? (error as any)?.status;
-            const m = String((error as any)?.message || "").toLowerCase();
-            if (code === "PGRST204" || code === 404 || m.includes("not found")) {
-              setMissingTable(true);
-            }
-            throw error;
-          }
+          await addRow({ collection, row: payload });
         } else {
           const current = rows[editingIndex];
-          if (current?.id === undefined || current?.id === null) {
+          if (!current?.id) {
             toast.error("Cannot update: missing id");
             return;
           }
-          const { error } = await check.s.from(table).update(payload).eq("id", current.id);
-          if (error) {
-            // Detect missing table
-            const code = (error as any)?.code ?? (error as any)?.status;
-            const m = String((error as any)?.message || "").toLowerCase();
-            if (code === "PGRST204" || code === 404 || m.includes("not found")) {
-              setMissingTable(true);
-            }
-            throw error;
-          }
+          await updateRow({ collection, idStr: String(current.id), row: payload });
         }
+        
         setOpen(false);
         setEditingIndex(null);
         setForm({});
         toast.success(editingIndex === null ? "Added" : "Updated");
-        await fetchRows();
       } catch (e: any) {
         console.error(e);
-        const msg = parseSupabaseError(e);
-        toast.error(`Save failed: ${msg}`);
+        toast.error(`Save failed: ${e.message}`);
       } finally {
         setSaving(false);
       }
@@ -511,6 +486,28 @@ export function CrudPage(props: CrudPageProps) {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   }
+
+  // Handle Convex data updates
+  useEffect(() => {
+    if (backend === "convex" && convexRows !== undefined) {
+      setRows(convexRows);
+      
+      // Auto-seed if empty
+      if (convexRows.length === 0 && seed.length > 0 && !hasSeededRef.current) {
+        hasSeededRef.current = true;
+        Promise.all(
+          seed.map(row => addRow({ 
+            collection, 
+            row: { ...row, id: row.id || crypto.randomUUID() }
+          }))
+        ).then(() => {
+          toast.success("Sample data added");
+        }).catch(err => {
+          console.error("Auto-seed failed:", err);
+        });
+      }
+    }
+  }, [backend, convexRows, seed, collection, addRow]);
 
   return (
     <Card className="gradient-card">

@@ -18,6 +18,8 @@ export default function AdminReports() {
             <CrudPage
               title="Reports"
               storageKey="admin_reports"
+              table="admin_reports"
+              backend="convex"
               description="Track generated reports and exports."
               columns={[
                 { key: "name", label: "Report", input: "text", required: true },

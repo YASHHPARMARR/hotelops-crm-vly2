@@ -19,6 +19,8 @@ export default function FrontDeskReservations() {
             <CrudPage
               title="Reservations"
               storageKey="reservations"
+              table="reservations"
+              backend="convex"
               description="Front Desk reservations with room assignment and status transitions."
               columns={[
                 { key: "guestName", label: "Guest", input: "text", required: true },
@@ -91,7 +93,6 @@ export default function FrontDeskReservations() {
                 { id: "r2", guestName: "Luis Fernandez", confirmation: "CNF-1002", roomType: "Standard Queen", roomNumber: "214", arrival: "2025-09-08", departure: "2025-09-10", adults: 1, children: 0, package: "Standard", paymentStatus: "Paid", status: "CheckedIn", balance: 0, source: "OTA", notes: "" },
                 { id: "r3", guestName: "Maya Lee", confirmation: "CNF-1003", roomType: "Suite", roomNumber: "", arrival: "2025-09-12", departure: "2025-09-15", adults: 2, children: 1, package: "Honeymoon", paymentStatus: "Pending", status: "Booked", balance: 650, source: "Corporate", notes: "Late arrival" },
               ]}
-              backend="local"
             />
           </CardContent>
         </Card>

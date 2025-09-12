@@ -18,6 +18,8 @@ export default function GuestDining() {
             <CrudPage
               title="Dining Orders"
               storageKey="guest_dining"
+              table="guest_dining"
+              backend="convex"
               description="Order food and track status."
               columns={[
                 { key: "roomNumber", label: "Room #", input: "text", required: true },
@@ -49,7 +51,6 @@ export default function GuestDining() {
               seed={[
                 { id: "gd1", roomNumber: "205", method: "Room Delivery", order: "Club Sandwich, Juice", total: 18.5, status: "Preparing" },
               ]}
-              backend="local"
             />
           </CardContent>
         </Card>

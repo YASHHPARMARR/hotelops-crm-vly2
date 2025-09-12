@@ -82,6 +82,14 @@ const schema = defineSchema(
       isActive: v.optional(v.boolean()),
     }).index("email", ["email"]),
 
+    // Generic app data table for realtime sync
+    app_rows: defineTable({
+      collection: v.string(),
+      idStr: v.string(),
+      data: v.record(v.string(), v.union(v.string(), v.number(), v.boolean(), v.null())),
+    }).index("by_collection", ["collection"])
+      .index("by_collection_and_idStr", ["collection", "idStr"]),
+
     // Guest management
     guests: defineTable({
       firstName: v.string(),

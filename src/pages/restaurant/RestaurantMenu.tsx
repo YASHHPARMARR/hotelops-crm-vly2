@@ -18,6 +18,8 @@ export default function RestaurantMenu() {
             <CrudPage
               title="Menu Items"
               storageKey="rest_menu"
+              table="rest_menu"
+              backend="convex"
               description="Manage menu items and availability."
               columns={[
                 { key: "name", label: "Item", input: "text", required: true },
@@ -38,13 +40,14 @@ export default function RestaurantMenu() {
                 { id: "rm1", name: "Cheeseburger", category: "Mains", price: 12.5, available: "Yes" },
                 { id: "rm2", name: "Caesar Salad", category: "Starters", price: 9.0, available: "Yes" },
               ]}
-              backend="local"
             />
             {/* Added: Tables availability */}
             <div className="mt-6">
               <CrudPage
                 title="Dining Tables"
                 storageKey="rest_tables"
+                table="rest_tables"
+                backend="convex"
                 description="Track table availability at the restaurant."
                 columns={[
                   { key: "tableNumber", label: "Table #", input: "text", required: true },
@@ -67,7 +70,6 @@ export default function RestaurantMenu() {
                   { id: "t1", tableNumber: "T1", capacity: 2, status: "Available", server: "Ivy" },
                   { id: "t2", tableNumber: "T2", capacity: 4, status: "Occupied", server: "Peter" },
                 ]}
-                backend="local"
               />
             </div>
             {/* Added: Raw materials stock */}
@@ -75,6 +77,8 @@ export default function RestaurantMenu() {
               <CrudPage
                 title="Raw Materials"
                 storageKey="rest_raw_materials"
+                table="rest_raw_materials"
+                backend="convex"
                 description="Track stock and reorder levels for restaurant supplies."
                 columns={[
                   { key: "item", label: "Item", input: "text", required: true },
@@ -99,7 +103,6 @@ export default function RestaurantMenu() {
                   { id: "rmat1", item: "Beef Patty", category: "Meat", quantity: 40, unit: "pcs", reorderLevel: 20, status: "In Stock", supplier: "FreshMeats Co" },
                   { id: "rmat2", item: "Lettuce", category: "Veg", quantity: 8, unit: "kg", reorderLevel: 5, status: "Low", supplier: "GreenFarm" },
                 ]}
-                backend="local"
               />
             </div>
           </CardContent>
