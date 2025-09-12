@@ -20,6 +20,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { supabaseSignIn, supabaseSignOut, supabaseSignUp, getSupabaseUserEmail } from "@/lib/supabaseClient";
 import { getSupabase } from "@/lib/supabaseClient";
+import { getSupabaseInitStatus, normalizeSupabaseError } from "@/lib/supabaseClient";
 
 interface AuthProps {
   redirectAfterAuth?: string;
@@ -36,8 +37,30 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
   const [useSupabase, setUseSupabase] = useState(false);
   const [sbEmail, setSbEmail] = useState("");
   const [sbPassword, setSbPassword] = useState("");
+  const [debugOpen, setDebugOpen] = useState(false);
+  const [sessionInfo, setSessionInfo] = useState<string | null>(null);
+  const [sbConnected, setSbConnected] = useState<boolean>(false);
+  const [sbStatusText, setSbStatusText] = useState<string>("");
 
-  // Helper: compute redirect path based on role precedence: staff role in Supabase -> demoRole -> default
+  function refreshSbStatus() {
+    try {
+      const status = getSupabaseInitStatus();
+      const parts: string[] = [];
+      parts.push(`SDK: ${status.missing.sdk ? "missing" : "ok"}`);
+      parts.push(`URL: ${status.missing.url ? "missing" : "ok"}`);
+      parts.push(`Anon Key: ${status.missing.anon ? "missing" : "ok"}`);
+      setSbStatusText(parts.join(" • "));
+      setSbConnected(!!getSupabase());
+    } catch {
+      setSbStatusText("Unable to read Supabase status");
+      setSbConnected(false);
+    }
+  }
+
+  useEffect(() => {
+    refreshSbStatus();
+  }, []);
+
   const roleToPath: Record<string, string> = {
     admin: "/admin",
     front_desk: "/front-desk",
@@ -330,6 +353,85 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
                             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                             Log in
                           </Button>
+                        </div>
+                        <div className="mt-4 rounded-md border border-border/60 bg-muted/30 p-3">
+                          <div className="flex items-center justify-between">
+                            <div className="text-xs font-medium text-muted-foreground">Supabase Debug</div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setDebugOpen((v) => !v);
+                                if (!debugOpen) refreshSbStatus();
+                              }}
+                            >
+                              {debugOpen ? "Hide" : "Show"}
+                            </Button>
+                          </div>
+                          {debugOpen && (
+                            <div className="mt-2 space-y-2 text-xs">
+                              <div className="flex flex-col gap-1">
+                                <div>Status: {sbStatusText || "Unknown"}</div>
+                                <div>Client: {sbConnected ? "initialized" : "not initialized"}</div>
+                                {sessionInfo ? <div className="text-muted-foreground break-words">{sessionInfo}</div> : null}
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={async () => {
+                                    try {
+                                      const s = getSupabase();
+                                      if (!s) {
+                                        setSessionInfo("No client. Go to Admin → Settings to configure URL and Anon key.");
+                                        return;
+                                      }
+                                      const { data, error } = await s.auth.getSession();
+                                      if (error) throw error;
+                                      const email = (await s.auth.getUser()).data?.user?.email ?? "none";
+                                      setSessionInfo(
+                                        `Session: ${data?.session ? "present" : "absent"} • Email: ${email}`
+                                      );
+                                    } catch (e: any) {
+                                      setSessionInfo(`Session check failed: ${normalizeSupabaseError(e)}`);
+                                    } finally {
+                                      refreshSbStatus();
+                                    }
+                                  }}
+                                >
+                                  Check session
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    refreshSbStatus();
+                                  }}
+                                >
+                                  Recheck status
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  className="neon-glow"
+                                  onClick={() => {
+                                    // Navigate to Admin Settings for keys and SQL
+                                    navigate("/admin/settings");
+                                  }}
+                                >
+                                  Open Admin Settings
+                                </Button>
+                              </div>
+                              <div className="text-muted-foreground">
+                                • If SDK/URL/Anon show "missing", set keys in Admin → Settings, then return here.
+                                <br />
+                                • If tables are missing on other pages, use that page's "Copy SQL to create &lt;table&gt;" then Refresh.
+                              </div>
+                            </div>
+                          )}
                         </div>
                         <Button
                           type="button"
