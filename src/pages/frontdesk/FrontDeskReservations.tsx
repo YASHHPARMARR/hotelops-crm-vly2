@@ -37,8 +37,11 @@ export default function FrontDeskReservations() {
     })();
   }, []);
 
-  // Prefer Supabase auth email (RLS) fallback to Convex user email
-  const ownerEmail = sbEmail || user?.email || undefined;
+  // Prefer Supabase auth email; in Demo or not logged in, force demo owner
+  const ownerEmail =
+    (demoOverride || !sbLoggedIn)
+      ? "demo@example.com"
+      : (sbEmail || user?.email || undefined);
 
   return (
     <AdminShell>

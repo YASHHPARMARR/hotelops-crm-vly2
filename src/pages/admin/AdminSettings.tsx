@@ -337,12 +337,22 @@ alter table if exists staff enable row level security;
 -- Ensure required columns exist before policies
 alter table if exists reservations add column if not exists owner text;
 
--- Reservations: Only owner (by email) can CRUD
+-- Reservations: Only owner (by email) can CRUD when authenticated
 drop policy if exists "Reservations owner can access" on reservations;
 create policy "Reservations owner can access" on reservations
 for all
+to authenticated
 using ( owner = auth.email() )
 with check ( owner = auth.email() );
+
+-- Reservations: Demo access without Supabase login
+-- Allows anon role to read/write rows owned by demo@example.com
+drop policy if exists "Reservations demo access" on reservations;
+create policy "Reservations demo access" on reservations
+for all
+to anon
+using ( owner = 'demo@example.com' )
+with check ( owner = 'demo@example.com' );
 
 -- Rooms: Allow read to authenticated; writes restricted to authenticated for demo
 drop policy if exists "Rooms read for auth" on rooms;
