@@ -682,64 +682,72 @@ export function CrudPage(props: CrudPageProps) {
       </CardContent>
 
       <Dialog open={open} onOpenChange={(v) => (!saving ? setOpen(v) : null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingIndex === null ? "Add" : "Edit"} {title.slice(0, -1)}</DialogTitle>
-            <DialogDescription>Fill out the fields below.</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-3 py-1">
-            {columns.map((c) => (
-              <div className="grid gap-1" key={c.key}>
-                <Label>
-                  {c.label} {c.required ? <span className="text-rose-400">*</span> : null}
-                </Label>
-                {c.input === "select" && c.options ? (
-                  <Select
-                    value={String(form[c.key] ?? "")}
-                    onValueChange={(v) => setForm((f) => ({ ...f, [c.key]: v }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={`Select ${c.label}`} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {c.options.map((o) => (
-                        <SelectItem key={o.value} value={o.value}>
-                          {o.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : c.input === "textarea" ? (
-                  <textarea
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    value={String(form[c.key] ?? "")}
-                    onChange={(e) => setForm((f) => ({ ...f, [c.key]: e.target.value }))}
-                    rows={3}
-                  />
-                ) : (
-                  <Input
-                    type={c.input === "number" ? "number" : c.input === "date" ? "date" : "text"}
-                    value={String(form[c.key] ?? "")}
-                    onChange={(e) =>
-                      setForm((f) => ({
-                        ...f,
-                        [c.key]: c.input === "number" ? Number(e.target.value) : e.target.value,
-                      }))
-                    }
-                    placeholder={c.label}
-                  />
-                )}
+        <DialogContent className="max-w-[95vw] w-screen h-[90vh] md:h-[85vh] p-0 overflow-hidden">
+          <div className="flex flex-col h-full">
+            <div className="px-6 pt-6">
+              <DialogHeader>
+                <DialogTitle>{editingIndex === null ? "Add" : "Edit"} {title.slice(0, -1)}</DialogTitle>
+                <DialogDescription>Fill out the fields below.</DialogDescription>
+              </DialogHeader>
+            </div>
+            <div className="px-6 pb-2 flex-1 overflow-y-auto">
+              <div className="grid gap-3 py-1">
+                {columns.map((c) => (
+                  <div className="grid gap-1" key={c.key}>
+                    <Label>
+                      {c.label} {c.required ? <span className="text-rose-400">*</span> : null}
+                    </Label>
+                    {c.input === "select" && c.options ? (
+                      <Select
+                        value={String(form[c.key] ?? "")}
+                        onValueChange={(v) => setForm((f) => ({ ...f, [c.key]: v }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={`Select ${c.label}`} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {c.options.map((o) => (
+                            <SelectItem key={o.value} value={o.value}>
+                              {o.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : c.input === "textarea" ? (
+                      <textarea
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        value={String(form[c.key] ?? "")}
+                        onChange={(e) => setForm((f) => ({ ...f, [c.key]: e.target.value }))}
+                        rows={3}
+                      />
+                    ) : (
+                      <Input
+                        type={c.input === "number" ? "number" : c.input === "date" ? "date" : "text"}
+                        value={String(form[c.key] ?? "")}
+                        onChange={(e) =>
+                          setForm((f) => ({
+                            ...f,
+                            [c.key]: c.input === "number" ? Number(e.target.value) : e.target.value,
+                          }))
+                        }
+                        placeholder={c.label}
+                      />
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+            <div className="px-6 pb-6">
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setOpen(false)} disabled={saving}>
+                  Cancel
+                </Button>
+                <Button className="neon-glow" onClick={submit} disabled={saving}>
+                  {saving ? "Saving..." : "Save"}
+                </Button>
+              </DialogFooter>
+            </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)} disabled={saving}>
-              Cancel
-            </Button>
-            <Button className="neon-glow" onClick={submit} disabled={saving}>
-              {saving ? "Saving..." : "Save"}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </Card>

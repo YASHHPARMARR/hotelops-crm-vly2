@@ -18,31 +18,80 @@ export default function AdminGuests() {
             <CrudPage
               title="Guests"
               storageKey="guests"
-              description="Search and manage guest profiles, loyalty, and preferences."
+              description="View and manage guest profiles and stays."
               columns={[
-                { key: "name", label: "Name", input: "text", required: true },
+                { key: "guest_id", label: "Guest ID", input: "text" },
+                { key: "full_name", label: "Full Name", input: "text", required: true },
+                { key: "gender", label: "Gender", input: "select", options: [
+                  { label: "Male", value: "Male" },
+                  { label: "Female", value: "Female" },
+                  { label: "Other", value: "Other" },
+                ], required: true },
+                { key: "dob", label: "Date of Birth", input: "date" },
                 { key: "email", label: "Email", input: "text", required: true },
-                { key: "phone", label: "Phone", input: "text" },
+                { key: "phone", label: "Phone", input: "text", required: true },
                 { key: "address", label: "Address", input: "textarea" },
-                { key: "loyalty", label: "Loyalty Level", input: "select", options: [
+                { key: "country", label: "Country", input: "text", required: true },
+                { key: "nationality", label: "Nationality", input: "text" },
+                { key: "id_number", label: "ID/Passport Number", input: "text" },
+                { key: "preferred_room_type", label: "Preferred Room Type", input: "select", options: [
+                  { label: "Single", value: "Single" },
+                  { label: "Double", value: "Double" },
+                  { label: "Suite", value: "Suite" },
+                  { label: "Deluxe", value: "Deluxe" },
+                ]},
+                { key: "special_requests", label: "Special Requests", input: "textarea" },
+                { key: "membership", label: "Membership", input: "select", options: [
                   { label: "None", value: "None" },
                   { label: "Silver", value: "Silver" },
                   { label: "Gold", value: "Gold" },
-                  { label: "Platinum", value: "Platinum" },
+                  { label: "VIP", value: "VIP" },
                 ]},
-                { key: "vip", label: "VIP", input: "select", options: [
-                  { label: "No", value: "No" },
-                  { label: "Yes", value: "Yes" },
-                ]},
+                { key: "loyalty_points", label: "Loyalty Points", input: "number" },
                 { key: "notes", label: "Notes", input: "textarea" },
+                { key: "created_at", label: "Created At", input: "date" },
               ]}
               seed={[
-                { id: "g1", name: "Ana Garcia", email: "ana@example.com", phone: "+1 555-0100", address: "100 Ocean Ave, Miami, FL", loyalty: "Gold", vip: "Yes", notes: "High floor" },
-                { id: "g2", name: "Luis Fernandez", email: "luis@example.com", phone: "+1 555-0101", address: "55 Palm St, Miami, FL", loyalty: "Silver", vip: "No", notes: "" },
-                { id: "g3", name: "Maya Lee", email: "maya@example.com", phone: "+1 555-0104", address: "88 Beach Rd, Miami, FL", loyalty: "Platinum", vip: "Yes", notes: "Allergies: peanuts" },
+                {
+                  id: "gst1",
+                  guest_id: "GST20250913001",
+                  full_name: "Alice Johnson",
+                  gender: "Female",
+                  dob: "1990-05-15",
+                  email: "alice@mail.com",
+                  phone: "+919876543210",
+                  address: "123 Street, City",
+                  country: "India",
+                  nationality: "Indian",
+                  id_number: "A1234567",
+                  preferred_room_type: "Deluxe",
+                  special_requests: "Allergic to peanuts",
+                  membership: "Gold",
+                  loyalty_points: 2500,
+                  notes: "Prefers sea view",
+                  created_at: "2025-09-13",
+                },
+                {
+                  id: "gst2",
+                  guest_id: "GST20250913002",
+                  full_name: "Luis Fernandez",
+                  gender: "Male",
+                  dob: "1987-11-02",
+                  email: "luis@example.com",
+                  phone: "+1 555-0101",
+                  address: "55 Palm St, Miami, FL",
+                  country: "USA",
+                  nationality: "American",
+                  id_number: "P987654",
+                  preferred_room_type: "Suite",
+                  special_requests: "",
+                  membership: "Silver",
+                  loyalty_points: 1200,
+                  notes: "",
+                  created_at: "2025-09-12",
+                },
               ]}
-              backend="supabase"
-              table="guests"
+              backend="local"
             />
           </CardContent>
         </Card>
