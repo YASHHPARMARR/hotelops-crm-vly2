@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router";
+import { useMemo } from "react";
 import {
   Bed,
   Calendar,
@@ -88,6 +89,16 @@ export default function Landing() {
   const { isLoading, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
+  // Parallax layers for subtle hotel visuals
+  const parallax = useMemo(
+    () => [
+      { src: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=1400&auto=format&fit=crop", className: "opacity-20 rotate-1" },
+      { src: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?q=80&w=1400&auto=format&fit=crop", className: "opacity-25 -rotate-2" },
+      { src: "https://images.unsplash.com/photo-1528909514045-2fa4ac7a08ba?q=80&w=1400&auto=format&fit=crop", className: "opacity-20 rotate-3" },
+    ],
+    []
+  );
+
   const handleGetStarted = () => {
     if (isAuthenticated && user) {
       // Redirect based on user role
@@ -128,7 +139,30 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* 3D Parallax Background */}
+      <div className="absolute inset-0 pointer-events-none perspective-1000">
+        <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-[1200px] h-[1200px] rounded-full bg-primary/10 blur-3xl" />
+        {parallax.map((l, i) => (
+          <motion.img
+            key={i}
+            src={l.src}
+            alt="luxury hotel"
+            className={`absolute rounded-3xl shadow-2xl mix-blend-luminosity ${l.className}`}
+            style={{
+              width: i === 0 ? 520 : i === 1 ? 440 : 380,
+              height: "auto",
+              top: i === 0 ? 80 : i === 1 ? 320 : 160,
+              left: i === 0 ? "8%" : i === 1 ? "68%" : "74%",
+            }}
+            initial={{ opacity: 0, y: 40, rotateX: -8, rotateY: 6, z: -50 }}
+            whileInView={{ opacity: 0.35, y: 0, rotateX: 0, rotateY: 0, z: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.9, delay: i * 0.15 }}
+          />
+        ))}
+      </div>
+
       {/* Navigation */}
       <nav className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -165,41 +199,83 @@ export default function Landing() {
       <section className="relative overflow-hidden py-20 lg:py-32">
         <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-card/20" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
+          <div className="grid lg:grid-cols-2 gap-10">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
+              className="space-y-6"
             >
-              <Badge variant="outline" className="mb-6 neon-border">
-                <Zap className="h-3 w-3 mr-1" />
-                Next-Generation Hotel Management
+              <Badge variant="outline" className="mb-2 neon-border">
+                Award-Winning Luxury
               </Badge>
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6">
-                Complete Hotel
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-foreground leading-tight">
+                Experience
                 <span className="block text-transparent bg-gradient-to-r from-primary via-blue-400 to-purple-400 bg-clip-text animate-glow">
-                  Operations Suite
+                  Elevated Hospitality
                 </span>
               </h1>
-              <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-                Streamline every aspect of your hotel operations with our comprehensive CRM platform. 
-                From reservations to housekeeping, restaurant to maintenance - all in one powerful system.
+              <p className="text-xl text-muted-foreground max-w-2xl">
+                Seamless bookings, curated dining, serene stays, and impeccable service. 
+                Crafted for premium hotels and resorts to delight every guest.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="flex flex-col sm:flex-row gap-4">
                 <Button size="lg" onClick={handleGetStarted} className="neon-glow text-lg px-8">
-                  {isAuthenticated ? "Go to Dashboard" : "Start Free Trial"}
+                  {isAuthenticated ? "Go to Dashboard" : "Book Your Stay"}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
                 <Button size="lg" variant="outline" className="text-lg px-8">
-                  Watch Demo
+                  Explore Suites
                 </Button>
+              </div>
+              <div className="flex items-center gap-6 pt-2 text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Star className="h-5 w-5 text-primary" />
+                  4.9/5 Guest Satisfaction
+                </div>
+                <div className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-primary" />
+                  Secure & Private
+                </div>
+              </div>
+            </motion.div>
+
+            {/* 3D Showcase Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.15 }}
+              className="relative perspective-1000"
+            >
+              <div className="preserve-3d w-full h-full">
+                <motion.div
+                  whileHover={{ rotateX: 6, rotateY: -8, scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 160, damping: 18 }}
+                  className="rounded-2xl gradient-card border border-border/50 p-4 shadow-xl"
+                >
+                  <img
+                    src="https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?q=80&w=1800&auto=format&fit=crop"
+                    alt="Hotel Lobby"
+                    className="rounded-xl object-cover w-full h-72 md:h-96"
+                  />
+                  <div className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="text-lg font-semibold">Grand Atrium Lobby</div>
+                      <Badge>5-Star</Badge>
+                    </div>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      Signature check-in, concierge, and lounge bar
+                    </div>
+                  </div>
+                </motion.div>
               </div>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Features Grid */}
+      {/* Features Grid with 3D tilt */}
       <section className="py-20 bg-card/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -209,10 +285,10 @@ export default function Landing() {
             className="text-center mb-16"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Everything You Need to Run Your Hotel
+              Tailored For Premium Hospitality
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Comprehensive modules designed for modern hotel operations with role-based access control
+              From reservations to room service—everything to elevate every stay
             </p>
           </motion.div>
 
@@ -223,12 +299,13 @@ export default function Landing() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ scale: 1.05 }}
+                transition={{ delay: index * 0.08 }}
+                whileHover={{ y: -4, rotateX: 2, rotateY: -2 }}
+                className="perspective-1000"
               >
-                <Card className="gradient-card border-border/50 h-full">
+                <Card className="gradient-card border-border/50 h-full preserve-3d">
                   <CardContent className="p-6">
-                    <feature.icon className={`h-12 w-12 ${feature.color} mb-4`} />
+                    <feature.icon className={`h-12 w-12 ${feature.color} mb-4 float-slow`} />
                     <h3 className="text-xl font-semibold text-foreground mb-2">
                       {feature.title}
                     </h3>

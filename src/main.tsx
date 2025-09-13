@@ -61,8 +61,11 @@ import GuestDining from "@/pages/guest/GuestDining.tsx";
 import GuestBills from "@/pages/guest/GuestBills.tsx";
 
 import { useAuth } from "./hooks/use-auth.ts";
+import { applyThemeToDocument, getTheme } from "@/lib/theme";
 
 const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
+
+applyThemeToDocument(getTheme());
 
 function RouteSyncer() {
   const location = useLocation();
