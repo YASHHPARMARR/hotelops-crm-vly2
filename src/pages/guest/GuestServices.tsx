@@ -35,6 +35,25 @@ type RequestRow = {
   requestedAt: number;
 };
 
+type Booking = {
+  id: string;
+  checkIn: string; // yyyy-mm-dd
+  checkOut: string; // yyyy-mm-dd
+  nights: number;
+  roomType: "Single" | "Double" | "Deluxe" | "Suite";
+  guests: number;
+  amount: number;
+  status: "Pending" | "Confirmed" | "Cancelled";
+  createdAt: number;
+};
+
+type BookingForm = {
+  checkIn: string;
+  checkOut: string;
+  roomType: "Single" | "Double" | "Deluxe" | "Suite";
+  guests: number;
+};
+
 const CATALOG: Array<ServiceItem> = [
   {
     id: "svc_housekeeping",
@@ -110,6 +129,7 @@ function loadLocal<T>(key: string, fallback: T): T {
     return fallback;
   }
 }
+
 function saveLocal<T>(key: string, value: T) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
@@ -119,8 +139,11 @@ function saveLocal<T>(key: string, value: T) {
 }
 
 const STORAGE_KEY = "guest_services";
+const BOOKINGS_KEY = "guest_bookings";
 
 export default function GuestServices() {
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const tomorrowIso = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const [requests, setRequests] = useState<RequestRow[]>(() => {
     const existing = loadLocal<RequestRow[]>(STORAGE_KEY, []);
     if (existing.length > 0) return existing;
@@ -132,16 +155,84 @@ export default function GuestServices() {
     return seed;
   });
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
+  const [bookings, setBookings] = useState<Booking[]>(() => {
+    return loadLocal<Booking[]>(BOOKINGS_KEY, []);
+  });
+  const [bookingForm, setBookingForm] = useState<BookingForm>({
+    checkIn: todayIso,
+    checkOut: tomorrowIso,
+    roomType: "Deluxe",
+    guests: 2,
+  });
 
   useEffect(() => {
-    saveLocal(STORAGE_KEY, requests);
-  }, [requests]);
+    saveLocal(BOOKINGS_KEY, bookings);
+  }, [bookings]);
 
-  const filtered = useMemo(() => {
-    if (filter === "all") return requests;
-    if (filter === "completed") return requests.filter((r) => r.status === "Completed");
-    return requests.filter((r) => r.status === "Requested" || r.status === "In Progress");
-  }, [requests, filter]);
+  function diffNights(checkIn: string, checkOut: string) {
+    try {
+      const a = new Date(checkIn);
+      const b = new Date(checkOut);
+      const ms = b.getTime() - a.getTime();
+      const nights = Math.ceil(ms / (1000 * 60 * 60 * 24));
+      return Number.isFinite(nights) ? Math.max(0, nights) : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  const PRICE_PER_NIGHT: Record<Booking["roomType"], number> = {
+    Single: 80,
+    Double: 110,
+    Deluxe: 160,
+    Suite: 240,
+  };
+
+  const formNights = useMemo(
+    () => diffNights(bookingForm.checkIn, bookingForm.checkOut),
+    [bookingForm.checkIn, bookingForm.checkOut],
+  );
+  const formAmount = useMemo(
+    () => formNights * PRICE_PER_NIGHT[bookingForm.roomType],
+    [formNights, bookingForm.roomType],
+  );
+
+  function addBooking() {
+    if (!bookingForm.checkIn || !bookingForm.checkOut) {
+      toast.error("Please select dates");
+      return;
+    }
+    if (new Date(bookingForm.checkOut) <= new Date(bookingForm.checkIn)) {
+      toast.error("Check-out must be after check-in");
+      return;
+    }
+    if (bookingForm.guests <= 0) {
+      toast.error("Guests must be at least 1");
+      return;
+    }
+    const nights = diffNights(bookingForm.checkIn, bookingForm.checkOut);
+    const amount = nights * PRICE_PER_NIGHT[bookingForm.roomType];
+    const row: Booking = {
+      id: crypto.randomUUID(),
+      checkIn: bookingForm.checkIn,
+      checkOut: bookingForm.checkOut,
+      nights,
+      roomType: bookingForm.roomType,
+      guests: bookingForm.guests,
+      amount,
+      status: "Confirmed",
+      createdAt: Date.now(),
+    };
+    setBookings((prev) => [row, ...prev]);
+    toast.success("Stay booked successfully");
+  }
+
+  function cancelBooking(id: string) {
+    setBookings((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, status: "Cancelled" } : b)),
+    );
+    toast("Booking cancelled");
+  }
 
   function addRequest(svc: ServiceItem) {
     const row: RequestRow = {
@@ -180,6 +271,25 @@ export default function GuestServices() {
     }
   }
 
+  function bookingStatusBadgeClass(s: Booking["status"]) {
+    switch (s) {
+      case "Pending":
+        return "bg-amber-500/15 text-amber-300";
+      case "Confirmed":
+        return "bg-emerald-500/15 text-emerald-300";
+      case "Cancelled":
+        return "bg-rose-500/15 text-rose-300";
+      default:
+        return "bg-secondary text-secondary-foreground";
+    }
+  }
+
+  const filtered = useMemo(() => {
+    if (filter === "all") return requests;
+    if (filter === "completed") return requests.filter((r) => r.status === "Completed");
+    return requests.filter((r) => r.status === "Requested" || r.status === "In Progress");
+  }, [requests, filter]);
+
   return (
     <AdminShell>
       <div className="space-y-8">
@@ -193,31 +303,150 @@ export default function GuestServices() {
             <div className="absolute -top-24 -right-16 w-72 h-72 bg-primary/10 blur-3xl rounded-full" />
             <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-accent/10 blur-3xl rounded-full" />
           </div>
-          <div className="relative p-6 md:p-8 flex flex-col lg:flex-row items-center gap-6">
-            <div className="flex-1 space-y-3">
+          <div className="relative p-6 md:p-8 grid lg:grid-cols-2 gap-6 items-stretch">
+            <div className="space-y-3">
               <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
                 <Sparkles className="h-4 w-4 text-primary" />
-                Premium Guest Services
+                Book Your Stay
               </div>
               <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-                How can we make your stay more comfortable?
+                Reserve a beautiful room with ease
               </h1>
               <p className="text-muted-foreground">
-                Request housekeeping, dining, laundry, and more — all from your suite.
+                Select your dates, room type, and guests. Your reservation is saved instantly.
               </p>
-              <div className="flex flex-wrap gap-2 pt-1">
-                <Badge variant="secondary">24/7 Concierge</Badge>
-                <Badge variant="secondary">Fast Service</Badge>
-                <Badge variant="secondary">Contactless</Badge>
+              <div className="grid sm:grid-cols-2 gap-3 pt-2">
+                <div className="grid gap-1">
+                  <div className="text-xs text-muted-foreground">Check-in</div>
+                  <input
+                    type="date"
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={bookingForm.checkIn}
+                    onChange={(e) =>
+                      setBookingForm((f) => ({ ...f, checkIn: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="grid gap-1">
+                  <div className="text-xs text-muted-foreground">Check-out</div>
+                  <input
+                    type="date"
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={bookingForm.checkOut}
+                    onChange={(e) =>
+                      setBookingForm((f) => ({ ...f, checkOut: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="grid gap-1">
+                  <div className="text-xs text-muted-foreground">Room Type</div>
+                  <select
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={bookingForm.roomType}
+                    onChange={(e) =>
+                      setBookingForm((f) => ({
+                        ...f,
+                        roomType: e.target.value as Booking["roomType"],
+                      }))
+                    }
+                  >
+                    <option value="Single">Single</option>
+                    <option value="Double">Double</option>
+                    <option value="Deluxe">Deluxe</option>
+                    <option value="Suite">Suite</option>
+                  </select>
+                </div>
+                <div className="grid gap-1">
+                  <div className="text-xs text-muted-foreground">Guests</div>
+                  <input
+                    type="number"
+                    min={1}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={bookingForm.guests}
+                    onChange={(e) =>
+                      setBookingForm((f) => ({
+                        ...f,
+                        guests: Number(e.target.value || 1),
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <Badge variant="secondary">Nights: {formNights}</Badge>
+                <Badge variant="secondary">
+                  Rate: ${PRICE_PER_NIGHT[bookingForm.roomType]}/night
+                </Badge>
+                <Badge className="bg-primary/15 text-primary">Total: ${formAmount}</Badge>
+              </div>
+
+              <div className="pt-2">
+                <Button className="neon-glow" onClick={addBooking}>
+                  Reserve Now
+                </Button>
               </div>
             </div>
             <img
-              src="https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?q=80&w=1400&auto=format&fit=crop"
-              alt="Hotel Service"
-              className="w-full max-w-[420px] rounded-xl object-cover shadow-lg"
+              src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=1400&auto=format&fit=crop"
+              alt="Luxury Room"
+              className="w-full h-full max-h-[360px] rounded-xl object-cover shadow-lg"
             />
           </div>
         </motion.div>
+
+        {/* My Bookings */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-foreground">My Bookings</h2>
+            <div className="text-sm text-muted-foreground">
+              Manage and track your reservations
+            </div>
+          </div>
+          <Card className="gradient-card border-border/60">
+            <CardContent className="p-4 space-y-3">
+              {bookings.length === 0 ? (
+                <div className="text-center text-muted-foreground py-10">
+                  No bookings yet. Create your first reservation above.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {bookings.map((b) => (
+                    <motion.div
+                      key={b.id}
+                      initial={{ opacity: 0, y: 8 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.2 }}
+                      className="flex flex-col md:flex-row md:items-center gap-3 rounded-lg border border-border/60 bg-card/60 p-3"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <div className="font-medium text-foreground">
+                            {b.roomType} • {b.guests} {b.guests > 1 ? "guests" : "guest"}
+                          </div>
+                          <Badge className={bookingStatusBadgeClass(b.status)}>{b.status}</Badge>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {b.checkIn} → {b.checkOut} • {b.nights} night{b.nights !== 1 ? "s" : ""} • Booked{" "}
+                          {new Date(b.createdAt).toLocaleString()}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 md:justify-end">
+                        <Badge variant="secondary">Total: ${b.amount}</Badge>
+                        {b.status !== "Cancelled" && (
+                          <Button size="sm" variant="destructive" onClick={() => cancelBooking(b.id)}>
+                            Cancel
+                          </Button>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Service Catalog */}
         <div className="space-y-3">
