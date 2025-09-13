@@ -63,10 +63,7 @@ import GuestBills from "@/pages/guest/GuestBills.tsx";
 import { useAuth } from "./hooks/use-auth.ts";
 import { applyThemeToDocument, getTheme } from "@/lib/theme";
 
-const convexUrl =
-  (import.meta.env.VITE_CONVEX_URL as string) ||
-  localStorage.getItem("convexUrl") ||
-  "https://dynamic-labrador-171.convex.cloud";
+const convexUrl = "https://dynamic-labrador-171.convex.cloud";
 
 const convex = new ConvexReactClient(convexUrl);
 
