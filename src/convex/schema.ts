@@ -382,7 +382,7 @@ const schema = defineSchema(
 
     // Add: Guest self-service bookings (frontend simplified flow)
     guestBookings: defineTable({
-      userId: v.id("users"),
+      userId: v.string(),
       checkInDate: v.string(),
       checkOutDate: v.string(),
       roomType: v.string(),
@@ -397,7 +397,7 @@ const schema = defineSchema(
 
     // Add: Guest self-service requests
     guestServiceRequests: defineTable({
-      userId: v.id("users"),
+      userId: v.string(),
       label: v.string(),
       description: v.string(),
       eta: v.string(),
@@ -406,6 +406,44 @@ const schema = defineSchema(
     })
       .index("by_user", ["userId"])
       .index("by_status", ["status"]),
+
+    // Add: Guest in-room dining orders (Convex-backed)
+    guestDiningOrders: defineTable({
+      userId: v.string(),
+      roomNumber: v.string(),
+      method: v.string(), // Dine-in | Pickup | Room Delivery
+      order: v.string(), // free-text order description
+      total: v.number(),
+      status: v.string(), // Placed | Preparing | Delivered | Cancelled
+      createdAt: v.number(),
+    })
+      .index("by_user", ["userId"])
+      .index("by_status", ["status"]),
+
+    // Add: Guest charges for Bills page (Convex-backed)
+    guestCharges: defineTable({
+      userId: v.string(),
+      date: v.string(), // yyyy-mm-dd
+      item: v.string(),
+      room: v.optional(v.string()),
+      category: v.string(), // Room Night | Dining | Minibar | Spa | Taxes & Fees
+      amount: v.number(),
+      createdAt: v.number(),
+    })
+      .index("by_user", ["userId"])
+      .index("by_category", ["category"]),
+
+    // Add: Guest payments for Bills page (Convex-backed)
+    guestPayments: defineTable({
+      userId: v.string(),
+      date: v.string(), // yyyy-mm-dd
+      method: v.string(), // Visa | Mastercard | Amex | UPI | Cash
+      ref: v.optional(v.string()),
+      amount: v.number(),
+      createdAt: v.number(),
+    })
+      .index("by_user", ["userId"])
+      .index("by_method", ["method"]),
   },
   {
     schemaValidation: false,

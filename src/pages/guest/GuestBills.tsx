@@ -2,6 +2,13 @@ import { AdminShell } from "@/components/layouts/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CrudPage } from "@/components/CrudPage";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { toast } from "sonner";
 
 export default function GuestBills() {
   return (
@@ -21,32 +28,7 @@ export default function GuestBills() {
               <CardTitle>Current Charges</CardTitle>
             </CardHeader>
             <CardContent>
-              <CrudPage
-                title="Charges"
-                storageKey="guest_charges"
-                description="Line items for your stay. Add, edit, or remove items."
-                columns={[
-                  { key: "date", label: "Date", input: "date", required: true, widthClass: "w-[140px]" },
-                  { key: "item", label: "Description", input: "text", required: true },
-                  { key: "room", label: "Room #", input: "text" },
-                  { key: "category", label: "Category", input: "select", options: [
-                    { label: "Room Night", value: "Room Night" },
-                    { label: "Dining", value: "Dining" },
-                    { label: "Minibar", value: "Minibar" },
-                    { label: "Spa", value: "Spa" },
-                    { label: "Taxes & Fees", value: "Taxes & Fees" },
-                  ] },
-                  { key: "amount", label: "Amount ($)", input: "number", required: true, widthClass: "w-[140px]" },
-                ]}
-                seed={[
-                  { id: "c1", date: "2025-08-28", item: "Room Night 1", room: "1208", category: "Room Night", amount: 245.00 },
-                  { id: "c2", date: "2025-08-28", item: "Room Service - Club Sandwich", room: "1208", category: "Dining", amount: 16.00 },
-                  { id: "c3", date: "2025-08-28", item: "Minibar", room: "1208", category: "Minibar", amount: 12.00 },
-                  { id: "c4", date: "2025-08-28", item: "Taxes & Fees", room: "1208", category: "Taxes & Fees", amount: 38.75 },
-                ]}
-                backend="supabase"
-                table="charges"
-              />
+              <ChargesManager />
             </CardContent>
           </Card>
 
@@ -55,32 +37,305 @@ export default function GuestBills() {
               <CardTitle>Payment History</CardTitle>
             </CardHeader>
             <CardContent>
-              <CrudPage
-                title="Payments"
-                storageKey="guest_payments"
-                description="Your payments applied to this stay."
-                columns={[
-                  { key: "date", label: "Date", input: "date", required: true, widthClass: "w-[140px]" },
-                  { key: "method", label: "Method", input: "select", options: [
-                    { label: "Visa", value: "Visa" },
-                    { label: "Mastercard", value: "Mastercard" },
-                    { label: "Amex", value: "Amex" },
-                    { label: "UPI", value: "UPI" },
-                    { label: "Cash", value: "Cash" },
-                  ], required: true },
-                  { key: "ref", label: "Ref / Last4", input: "text" },
-                  { key: "amount", label: "Amount ($)", input: "number", required: true, widthClass: "w-[140px]" },
-                ]}
-                seed={[
-                  { id: "p1", date: "2025-08-28", method: "Visa", ref: "•••• 4242", amount: 100.00 },
-                ]}
-                backend="supabase"
-                table="payments"
-              />
+              <PaymentsManager />
             </CardContent>
           </Card>
         </div>
       </div>
     </AdminShell>
+  );
+}
+
+function ChargesManager() {
+  const charges = useQuery((api as any).guest.listGuestCharges) ?? [];
+  const addCharge = useMutation((api as any).guest.addGuestCharge);
+  const delCharge = useMutation((api as any).guest.deleteGuestCharge);
+  // Seed demo financials if empty for this user (idempotent)
+  const seedFinancials = useMutation((api as any).guest.seedGuestFinancialsDemo);
+
+  useEffect(() => {
+    if ((charges?.length ?? 0) === 0) {
+      seedFinancials({}).catch(() => {});
+    }
+  }, [charges?.length, seedFinancials]);
+
+  const [form, setForm] = useState({
+    date: new Date().toISOString().slice(0, 10),
+    item: "",
+    room: "",
+    category: "Room Night",
+    amount: 0,
+  });
+
+  async function add() {
+    try {
+      if (!form.date || !form.item || !form.category) {
+        toast.error("Please fill all required fields");
+        return;
+      }
+      if (Number(form.amount) <= 0) {
+        toast.error("Amount must be greater than 0");
+        return;
+      }
+      await addCharge({
+        date: form.date,
+        item: form.item,
+        room: form.room || undefined,
+        category: form.category,
+        amount: Number(form.amount),
+      });
+      toast.success("Charge added");
+      setForm((f) => ({ ...f, item: "", amount: 0 }));
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to add charge");
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="grid md:grid-cols-5 gap-3">
+        <div className="grid gap-1">
+          <div className="text-xs text-muted-foreground">Date</div>
+          <Input
+            type="date"
+            value={form.date}
+            onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
+          />
+        </div>
+        <div className="grid gap-1 md:col-span-2">
+          <div className="text-xs text-muted-foreground">Description</div>
+          <Input
+            value={form.item}
+            onChange={(e) => setForm((f) => ({ ...f, item: e.target.value }))}
+            placeholder="Room Night 1"
+          />
+        </div>
+        <div className="grid gap-1">
+          <div className="text-xs text-muted-foreground">Room #</div>
+          <Input
+            value={form.room}
+            onChange={(e) => setForm((f) => ({ ...f, room: e.target.value }))}
+            placeholder="1208"
+          />
+        </div>
+        <div className="grid gap-1">
+          <div className="text-xs text-muted-foreground">Amount ($)</div>
+          <Input
+            type="number"
+            min={0}
+            value={String(form.amount)}
+            onChange={(e) => setForm((f) => ({ ...f, amount: Number(e.target.value || 0) }))}
+            placeholder="245.00"
+          />
+        </div>
+        <div className="grid gap-1 md:col-span-2">
+          <div className="text-xs text-muted-foreground">Category</div>
+          <Select
+            value={form.category}
+            onValueChange={(v) => setForm((f) => ({ ...f, category: v }))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Room Night">Room Night</SelectItem>
+              <SelectItem value="Dining">Dining</SelectItem>
+              <SelectItem value="Minibar">Minibar</SelectItem>
+              <SelectItem value="Spa">Spa</SelectItem>
+              <SelectItem value="Taxes & Fees">Taxes & Fees</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="md:col-span-3 flex items-end">
+          <Button className="neon-glow" onClick={add}>Add Charge</Button>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-card/60">
+            <tr className="text-left">
+              <th className="p-3">Date</th>
+              <th className="p-3">Description</th>
+              <th className="p-3">Room</th>
+              <th className="p-3">Category</th>
+              <th className="p-3">Amount</th>
+              <th className="p-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {charges.map((c: any) => (
+              <tr key={c._id} className="border-t border-border/60">
+                <td className="p-3">{c.date}</td>
+                <td className="p-3">{c.item}</td>
+                <td className="p-3">{c.room ?? "-"}</td>
+                <td className="p-3">{c.category}</td>
+                <td className="p-3">${c.amount}</td>
+                <td className="p-3 text-right">
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={async () => {
+                      try {
+                        await delCharge({ chargeId: c._id });
+                        toast.success("Deleted");
+                      } catch (e: any) {
+                        toast.error(e?.message ?? "Failed to delete");
+                      }
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </td>
+              </tr>
+            ))}
+            {charges.length === 0 && (
+              <tr>
+                <td className="p-5 text-center text-muted-foreground" colSpan={6}>
+                  No charges yet.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function PaymentsManager() {
+  const payments = useQuery((api as any).guest.listGuestPayments) ?? [];
+  const addPayment = useMutation((api as any).guest.addGuestPayment);
+  const delPayment = useMutation((api as any).guest.deleteGuestPayment);
+
+  const [form, setForm] = useState({
+    date: new Date().toISOString().slice(0, 10),
+    method: "Visa",
+    ref: "",
+    amount: 0,
+  });
+
+  async function add() {
+    try {
+      if (!form.date || !form.method) {
+        toast.error("Please fill all required fields");
+        return;
+      }
+      if (Number(form.amount) <= 0) {
+        toast.error("Amount must be greater than 0");
+        return;
+      }
+      await addPayment({
+        date: form.date,
+        method: form.method,
+        ref: form.ref || undefined,
+        amount: Number(form.amount),
+      });
+      toast.success("Payment added");
+      setForm((f) => ({ ...f, ref: "", amount: 0 }));
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to add payment");
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="grid md:grid-cols-5 gap-3">
+        <div className="grid gap-1">
+          <div className="text-xs text-muted-foreground">Date</div>
+          <Input
+            type="date"
+            value={form.date}
+            onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
+          />
+        </div>
+        <div className="grid gap-1">
+          <div className="text-xs text-muted-foreground">Method</div>
+          <Select
+            value={form.method}
+            onValueChange={(v) => setForm((f) => ({ ...f, method: v }))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select method" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Visa">Visa</SelectItem>
+              <SelectItem value="Mastercard">Mastercard</SelectItem>
+              <SelectItem value="Amex">Amex</SelectItem>
+              <SelectItem value="UPI">UPI</SelectItem>
+              <SelectItem value="Cash">Cash</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid gap-1 md:col-span-2">
+          <div className="text-xs text-muted-foreground">Ref / Last4</div>
+          <Input
+            value={form.ref}
+            onChange={(e) => setForm((f) => ({ ...f, ref: e.target.value }))}
+            placeholder="•••• 4242"
+          />
+        </div>
+        <div className="grid gap-1">
+          <div className="text-xs text-muted-foreground">Amount ($)</div>
+          <Input
+            type="number"
+            min={0}
+            value={String(form.amount)}
+            onChange={(e) => setForm((f) => ({ ...f, amount: Number(e.target.value || 0) }))}
+            placeholder="100.00"
+          />
+        </div>
+        <div className="md:col-span-5">
+          <Button className="neon-glow" onClick={add}>Add Payment</Button>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-card/60">
+            <tr className="text-left">
+              <th className="p-3">Date</th>
+              <th className="p-3">Method</th>
+              <th className="p-3">Ref</th>
+              <th className="p-3">Amount</th>
+              <th className="p-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {payments.map((p: any) => (
+              <tr key={p._id} className="border-t border-border/60">
+                <td className="p-3">{p.date}</td>
+                <td className="p-3">{p.method}</td>
+                <td className="p-3">{p.ref ?? "-"}</td>
+                <td className="p-3">${p.amount}</td>
+                <td className="p-3 text-right">
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={async () => {
+                      try {
+                        await delPayment({ paymentId: p._id });
+                        toast.success("Deleted");
+                      } catch (e: any) {
+                        toast.error(e?.message ?? "Failed to delete");
+                      }
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </td>
+              </tr>
+            ))}
+            {payments.length === 0 && (
+              <tr>
+                <td className="p-5 text-center text-muted-foreground" colSpan={5}>
+                  No payments yet.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }

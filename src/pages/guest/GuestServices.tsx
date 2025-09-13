@@ -17,7 +17,7 @@ import {
   CheckCircle2,
   X,
 } from "lucide-react";
-import { useMemo, useState, type ComponentType } from "react";
+import { useMemo, useState, type ComponentType, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
@@ -139,16 +139,24 @@ export default function GuestServices() {
   const todayIso = new Date().toISOString().slice(0, 10);
   const tomorrowIso = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-  // Fetch from Convex
-  const bookings = useQuery((api as any).guest.listBookings) ?? [];
-  const requests = useQuery((api as any).guest.listRequests) ?? [];
+  // Fetch from Convex (use typed API instead of any)
+  const bookings = useQuery(api.guest.listBookings) ?? [];
+  const requests = useQuery(api.guest.listRequests) ?? [];
 
-  // Mutations
-  const createBooking = useMutation((api as any).guest.createBooking);
-  const cancelBookingMut = useMutation((api as any).guest.cancelBooking);
-  const createRequestMut = useMutation((api as any).guest.createRequest);
-  const completeRequestMut = useMutation((api as any).guest.completeRequest);
-  const cancelRequestMut = useMutation((api as any).guest.cancelRequest);
+  // Mutations (use typed API)
+  const createBooking = useMutation(api.guest.createBooking);
+  const cancelBookingMut = useMutation(api.guest.cancelBooking);
+  const createRequestMut = useMutation(api.guest.createRequest);
+  const completeRequestMut = useMutation(api.guest.completeRequest);
+  const cancelRequestMut = useMutation(api.guest.cancelRequest);
+
+  // Seed demo data once per session if empty to ensure DB has records
+  const seedGuestDemo = useMutation(api.guest.seedGuestDemo);
+  useEffect(() => {
+    if ((bookings?.length ?? 0) === 0) {
+      seedGuestDemo({}).catch(() => {});
+    }
+  }, [bookings?.length, seedGuestDemo]);
 
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
   const [bookingForm, setBookingForm] = useState<BookingForm>({
