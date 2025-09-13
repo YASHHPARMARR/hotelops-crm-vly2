@@ -138,33 +138,35 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
     }
   };
 
-  const handleGuestLogin = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      console.log("Attempting anonymous sign in...");
-      await signIn("anonymous");
-      console.log("Anonymous sign in successful");
-      const redirect = redirectAfterAuth || "/";
-      navigate(redirect);
-    } catch (error) {
-      console.error("Guest login error:", error);
-      console.error("Error details:", JSON.stringify(error, null, 2));
-      setError(`Failed to sign in as guest: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      setIsLoading(false);
-    }
-  };
-
   const handleGuestLoginWithRole = async (role: keyof typeof roleToPath) => {
     setIsLoading(true);
     setError(null);
     try {
-      await signIn("anonymous");
+      // Do NOT sign in; enable demo mode via localStorage
       localStorage.setItem("demoRole", role);
-      navigate(roleToPath[role] || "/");
+      const dest = roleToPath[role] || "/";
+      // Navigate directly to the chosen dashboard
+      navigate(dest);
     } catch (error) {
       console.error("Guest login error:", error);
-      setError(`Failed to sign in as guest: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setError(`Failed to continue as guest: ${error instanceof Error ? error.message : "Unknown error"}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGuestLogin = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      // Default to guest dashboard for quick explore
+      localStorage.setItem("demoRole", "guest");
+      const redirect = redirectAfterAuth || roleToPath["guest"] || "/";
+      navigate(redirect);
+    } catch (error) {
+      console.error("Guest login error:", error);
+      setError(`Failed to continue as guest: ${error instanceof Error ? error.message : "Unknown error"}`);
+    } finally {
       setIsLoading(false);
     }
   };

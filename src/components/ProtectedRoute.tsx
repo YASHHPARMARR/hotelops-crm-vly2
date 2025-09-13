@@ -24,6 +24,10 @@ export function ProtectedRoute({
   const { isLoading, isAuthenticated, user } = useAuth();
   const location = useLocation();
 
+  // NEW: read demo role from localStorage for unauthenticated demo access
+  const demoRole = typeof window !== "undefined" ? (localStorage.getItem("demoRole") as Role | null) : null;
+  const effectiveRole: Role | undefined = (user?.role as Role | undefined) ?? (demoRole as Role | undefined);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -35,17 +39,18 @@ export function ProtectedRoute({
     );
   }
 
-  if (!isAuthenticated) {
+  // If not authenticated, allow demo access if a demoRole is present
+  if (!isAuthenticated && !demoRole) {
     return <Navigate to={fallbackPath} state={{ from: location }} replace />;
   }
 
-  // Check role requirement
-  if (requiredRole && user?.role !== requiredRole) {
+  // Check role requirement using effectiveRole (user role or demo role)
+  if (requiredRole && effectiveRole !== requiredRole) {
     return <Navigate to="/unauthorized" replace />;
   }
 
-  // Check permission requirement
-  if (requiredPermission && !can(user?.role, requiredPermission.action, requiredPermission.resource)) {
+  // Check permission requirement using effectiveRole
+  if (requiredPermission && !can(effectiveRole, requiredPermission.action, requiredPermission.resource)) {
     return <Navigate to="/unauthorized" replace />;
   }
 
