@@ -17,7 +17,9 @@ import {
   CheckCircle2,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useState, type ComponentType } from "react";
+import { useMemo, useState, type ComponentType } from "react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 type ServiceItem = {
   id: string;
@@ -120,54 +122,41 @@ const CATALOG: Array<ServiceItem> = [
   },
 ];
 
-function loadLocal<T>(key: string, fallback: T): T {
-  try {
-    const v = localStorage.getItem(key);
-    if (!v) return fallback;
-    return JSON.parse(v) as T;
-  } catch {
-    return fallback;
+function bookingStatusBadgeClass(s: string) {
+  switch (s) {
+    case "Pending":
+      return "bg-amber-500/15 text-amber-300";
+    case "Confirmed":
+      return "bg-emerald-500/15 text-emerald-300";
+    case "Cancelled":
+      return "bg-rose-500/15 text-rose-300";
+    default:
+      return "bg-secondary text-secondary-foreground";
   }
 }
-
-function saveLocal<T>(key: string, value: T) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // ignore
-  }
-}
-
-const STORAGE_KEY = "guest_services";
-const BOOKINGS_KEY = "guest_bookings";
 
 export default function GuestServices() {
   const todayIso = new Date().toISOString().slice(0, 10);
   const tomorrowIso = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  const [requests, setRequests] = useState<RequestRow[]>(() => {
-    const existing = loadLocal<RequestRow[]>(STORAGE_KEY, []);
-    if (existing.length > 0) return existing;
-    const seed: RequestRow[] = [
-      { id: "gs1", request: "Laundry Pickup", eta: "6 pm", status: "Requested", requestedAt: Date.now() - 1000 * 60 * 60 },
-      { id: "gs2", request: "Extra Pillows", eta: "15 min", status: "In Progress", requestedAt: Date.now() - 1000 * 60 * 30 },
-    ];
-    saveLocal(STORAGE_KEY, seed);
-    return seed;
-  });
+
+  // Fetch from Convex
+  const bookings = useQuery((api as any).guest.listBookings) ?? [];
+  const requests = useQuery((api as any).guest.listRequests) ?? [];
+
+  // Mutations
+  const createBooking = useMutation((api as any).guest.createBooking);
+  const cancelBookingMut = useMutation((api as any).guest.cancelBooking);
+  const createRequestMut = useMutation((api as any).guest.createRequest);
+  const completeRequestMut = useMutation((api as any).guest.completeRequest);
+  const cancelRequestMut = useMutation((api as any).guest.cancelRequest);
+
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
-  const [bookings, setBookings] = useState<Booking[]>(() => {
-    return loadLocal<Booking[]>(BOOKINGS_KEY, []);
-  });
   const [bookingForm, setBookingForm] = useState<BookingForm>({
     checkIn: todayIso,
     checkOut: tomorrowIso,
     roomType: "Deluxe",
     guests: 2,
   });
-
-  useEffect(() => {
-    saveLocal(BOOKINGS_KEY, bookings);
-  }, [bookings]);
 
   function diffNights(checkIn: string, checkOut: string) {
     try {
@@ -197,7 +186,7 @@ export default function GuestServices() {
     [formNights, bookingForm.roomType],
   );
 
-  function addBooking() {
+  async function addBooking() {
     if (!bookingForm.checkIn || !bookingForm.checkOut) {
       toast.error("Please select dates");
       return;
@@ -212,48 +201,60 @@ export default function GuestServices() {
     }
     const nights = diffNights(bookingForm.checkIn, bookingForm.checkOut);
     const amount = nights * PRICE_PER_NIGHT[bookingForm.roomType];
-    const row: Booking = {
-      id: crypto.randomUUID(),
-      checkIn: bookingForm.checkIn,
-      checkOut: bookingForm.checkOut,
-      nights,
-      roomType: bookingForm.roomType,
-      guests: bookingForm.guests,
-      amount,
-      status: "Confirmed",
-      createdAt: Date.now(),
-    };
-    setBookings((prev) => [row, ...prev]);
-    toast.success("Stay booked successfully");
+    try {
+      await createBooking({
+        checkInDate: bookingForm.checkIn,
+        checkOutDate: bookingForm.checkOut,
+        roomType: bookingForm.roomType,
+        guests: bookingForm.guests,
+        nights,
+        amount,
+      });
+      toast.success("Stay booked successfully");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to book");
+    }
   }
 
-  function cancelBooking(id: string) {
-    setBookings((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, status: "Cancelled" } : b)),
-    );
-    toast("Booking cancelled");
+  async function cancelBooking(id: string) {
+    try {
+      await cancelBookingMut({ bookingId: id as any });
+      toast("Booking cancelled");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to cancel");
+    }
   }
 
-  function addRequest(svc: ServiceItem) {
-    const row: RequestRow = {
-      id: crypto.randomUUID(),
-      request: svc.label,
-      eta: svc.eta,
-      status: svc.id === "svc_wifi" ? "In Progress" : "Requested",
-      requestedAt: Date.now(),
-    };
-    setRequests((prev) => [row, ...prev]);
-    toast.success(`${svc.label} requested`);
+  async function addRequest(svc: ServiceItem) {
+    try {
+      await createRequestMut({
+        label: svc.label,
+        description: svc.description,
+        eta: svc.eta,
+        presetId: svc.id,
+      });
+      toast.success(`${svc.label} requested`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to request");
+    }
   }
 
-  function markComplete(id: string) {
-    setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status: "Completed" } : r)));
-    toast.success("Marked as completed");
+  async function markComplete(id: string) {
+    try {
+      await completeRequestMut({ requestId: id as any });
+      toast.success("Marked as completed");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to complete");
+    }
   }
 
-  function cancel(id: string) {
-    setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status: "Cancelled" } : r)));
-    toast("Cancelled");
+  async function cancel(id: string) {
+    try {
+      await cancelRequestMut({ requestId: id as any });
+      toast("Cancelled");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to cancel");
+    }
   }
 
   function statusBadgeClass(s: RequestRow["status"]) {
@@ -271,23 +272,10 @@ export default function GuestServices() {
     }
   }
 
-  function bookingStatusBadgeClass(s: Booking["status"]) {
-    switch (s) {
-      case "Pending":
-        return "bg-amber-500/15 text-amber-300";
-      case "Confirmed":
-        return "bg-emerald-500/15 text-emerald-300";
-      case "Cancelled":
-        return "bg-rose-500/15 text-rose-300";
-      default:
-        return "bg-secondary text-secondary-foreground";
-    }
-  }
-
   const filtered = useMemo(() => {
     if (filter === "all") return requests;
-    if (filter === "completed") return requests.filter((r) => r.status === "Completed");
-    return requests.filter((r) => r.status === "Requested" || r.status === "In Progress");
+    if (filter === "completed") return requests.filter((r: any) => r.status === "Completed");
+    return requests.filter((r: any) => r.status === "Requested" || r.status === "In Progress");
   }, [requests, filter]);
 
   return (
@@ -411,9 +399,9 @@ export default function GuestServices() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {bookings.map((b) => (
+                  {bookings.map((b: any) => (
                     <motion.div
-                      key={b.id}
+                      key={b._id}
                       initial={{ opacity: 0, y: 8 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
@@ -428,14 +416,14 @@ export default function GuestServices() {
                           <Badge className={bookingStatusBadgeClass(b.status)}>{b.status}</Badge>
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {b.checkIn} → {b.checkOut} • {b.nights} night{b.nights !== 1 ? "s" : ""} • Booked{" "}
+                          {b.checkInDate} → {b.checkOutDate} • {b.nights} night{b.nights !== 1 ? "s" : ""} • Booked{" "}
                           {new Date(b.createdAt).toLocaleString()}
                         </div>
                       </div>
                       <div className="flex items-center gap-2 md:justify-end">
                         <Badge variant="secondary">Total: ${b.amount}</Badge>
                         {b.status !== "Cancelled" && (
-                          <Button size="sm" variant="destructive" onClick={() => cancelBooking(b.id)}>
+                          <Button size="sm" variant="destructive" onClick={() => cancelBooking(b._id)}>
                             Cancel
                           </Button>
                         )}
@@ -529,9 +517,9 @@ export default function GuestServices() {
                 <div className="text-center text-muted-foreground py-12">No requests yet.</div>
               ) : (
                 <div className="space-y-3">
-                  {filtered.map((r, idx) => (
+                  {filtered.map((r: any, idx: number) => (
                     <motion.div
-                      key={r.id}
+                      key={r._id}
                       initial={{ opacity: 0, y: 10 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
@@ -543,7 +531,7 @@ export default function GuestServices() {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <div className="font-medium text-foreground">{r.request}</div>
+                          <div className="font-medium text-foreground">{r.label}</div>
                           <Badge className={statusBadgeClass(r.status)}>{r.status}</Badge>
                         </div>
                         <div className="text-xs text-muted-foreground">
@@ -552,13 +540,13 @@ export default function GuestServices() {
                       </div>
                       <div className="flex items-center gap-2">
                         {r.status !== "Completed" && r.status !== "Cancelled" && (
-                          <Button size="sm" variant="outline" onClick={() => markComplete(r.id)}>
+                          <Button size="sm" variant="outline" onClick={() => markComplete(r._id)}>
                             <CheckCircle2 className="h-4 w-4 mr-1" />
                             Done
                           </Button>
                         )}
                         {r.status !== "Cancelled" && r.status !== "Completed" && (
-                          <Button size="sm" variant="destructive" onClick={() => cancel(r.id)}>
+                          <Button size="sm" variant="destructive" onClick={() => cancel(r._id)}>
                             <X className="h-4 w-4 mr-1" />
                             Cancel
                           </Button>

@@ -379,6 +379,33 @@ const schema = defineSchema(
       userAgent: v.optional(v.string()),
     }).index("by_user", ["userId"])
       .index("by_action", ["action"]),
+
+    // Add: Guest self-service bookings (frontend simplified flow)
+    guestBookings: defineTable({
+      userId: v.id("users"),
+      checkInDate: v.string(),
+      checkOutDate: v.string(),
+      roomType: v.string(),
+      guests: v.number(),
+      nights: v.number(),
+      amount: v.number(),
+      status: v.string(), // Pending | Confirmed | Cancelled
+      createdAt: v.number(),
+    })
+      .index("by_user", ["userId"])
+      .index("by_status", ["status"]),
+
+    // Add: Guest self-service requests
+    guestServiceRequests: defineTable({
+      userId: v.id("users"),
+      label: v.string(),
+      description: v.string(),
+      eta: v.string(),
+      status: v.string(), // Requested | In Progress | Completed | Cancelled
+      requestedAt: v.number(),
+    })
+      .index("by_user", ["userId"])
+      .index("by_status", ["status"]),
   },
   {
     schemaValidation: false,
