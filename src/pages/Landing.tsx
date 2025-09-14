@@ -23,6 +23,14 @@ const particleSeeds = Array.from({ length: 28 }).map((_, i) => ({
   duration: 8 + Math.random() * 8,
 }));
 
+const heroImages = [
+  "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?q=80&w=2000&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1568495248636-6432b97bd949?q=80&w=2000&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1560448075-bb4caa6c1f2c?q=80&w=2000&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1551776235-dde6d4829808?q=80&w=2000&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1600585154526-990dced4db0d?q=80&w=2000&auto=format&fit=crop",
+];
+
 const features = [
   {
     icon: Bed,
@@ -186,6 +194,16 @@ export default function Landing() {
 
   const [roomFilter, setRoomFilter] = useState<"All" | "Deluxe" | "Suite" | "Presidential">("All");
   const filteredRooms = rooms.filter((r) => roomFilter === "All" ? true : r.category === roomFilter);
+
+  const [heroIndex, setHeroIndex] = useState(0);
+
+  // cycle hero images every 2s
+  useEffect(() => {
+    const id = setInterval(() => {
+      setHeroIndex((i) => (i + 1) % heroImages.length);
+    }, 2000);
+    return () => clearInterval(id);
+  }, []);
 
   const handleScrollToAbout = () => {
     const el = document.getElementById("about");
@@ -388,6 +406,18 @@ export default function Landing() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden py-20 lg:py-32">
+        {/* Background slideshow: big hero image crossfade */}
+        <div className="absolute inset-0 -z-10 overflow-hidden">
+          {heroImages.map((src, i) => (
+            <img
+              key={i}
+              src={src}
+              alt="Grand Horizon background"
+              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out"
+              style={{ opacity: heroIndex === i ? 1 : 0 } as any}
+            />
+          ))}
+        </div>
         <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-card/10" />
         {/* restore background design */}
         <div className="absolute inset-0 pointer-events-none bokeh-bg" />
@@ -400,7 +430,7 @@ export default function Landing() {
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9 }}
+              transition={{ duration: 0.55 }}
               className="space-y-6"
             >
               <Badge variant="outline" className="mb-2 border-indigo-400/50 text-indigo-300">
@@ -445,7 +475,7 @@ export default function Landing() {
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.85, delay: 0.2 }}
+              transition={{ duration: 0.5, delay: 0.15 }}
               className="relative perspective-1000"
             >
               <div className="preserve-3d w-full h-full">
@@ -499,7 +529,7 @@ export default function Landing() {
             initial={{ opacity: 0, rotateY: -15, y: 20 }}
             whileInView={{ opacity: 1, rotateY: 0, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.9 }}
+            transition={{ duration: 0.55 }}
             className="relative w-full aspect-square rounded-3xl bg-gradient-to-br from-indigo-300/10 to-violet-500/10 border border-indigo-400/30 preserve-3d flex items-center justify-center"
           >
             <div className="absolute inset-6 rounded-2xl border border-amber-300/30" />
@@ -520,7 +550,7 @@ export default function Landing() {
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.85 }}
+            transition={{ duration: 0.5 }}
           >
             <Badge variant="outline" className="neon-border-emerald mb-3">Our Legacy</Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Our Legacy of Timeless Hospitality</h2>
@@ -649,7 +679,7 @@ export default function Landing() {
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.9 }}
+            transition={{ duration: 0.55 }}
             className="text-center mb-10"
           >
             <h2 className="text-3xl md:text-4xl font-bold">Fine Dining Experience</h2>
@@ -745,7 +775,7 @@ export default function Landing() {
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.9 }}
+            transition={{ duration: 0.55 }}
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold">Amenities & Experiences</h2>
@@ -920,6 +950,7 @@ export default function Landing() {
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.55 }}
             className="text-center mb-10"
           >
             <h2 className="text-3xl md:text-4xl font-bold">Guest Testimonials</h2>
