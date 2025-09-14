@@ -22,7 +22,7 @@ const palettes: Array<PalettePreview> = [
     key: "neon",
     name: "Neon Pulse",
     description: "Bold neon greens, pink accents, high contrast",
-    swatches: ["#0f0", "#ff0080", "#111", "#1a1a1a", "#6ee7b7"],
+    swatches: ["#39ff14", "#ff0080", "#111315", "#1a1a1a", "#6ee7b7"],
   },
   {
     key: "ocean",
@@ -65,6 +65,64 @@ const palettes: Array<PalettePreview> = [
     name: "Rose Blush",
     description: "Rosy accents over subtle backgrounds",
     swatches: ["#0f0f12", "#fb7185", "#fda4af", "#0b0b0e", "#fecdd3"],
+  },
+
+  // New light themes
+  {
+    key: "beige",
+    name: "Beige",
+    description: "Light, warm neutrals with indigo accents",
+    swatches: ["#f2ead9", "#6366f1", "#e7d3b0", "#d4d4d8", "#1f2937"],
+  },
+  {
+    key: "ivory",
+    name: "Ivory",
+    description: "Ultra-light base with soft blue accents",
+    swatches: ["#fafaf0", "#60a5fa", "#c8c6b8", "#e5e7eb", "#334155"],
+  },
+  {
+    key: "lavender",
+    name: "Lavender",
+    description: "Light violet base with soft magenta accents",
+    swatches: ["#f3e8ff", "#a78bfa", "#f472b6", "#ede9fe", "#312e81"],
+  },
+  {
+    key: "pearl",
+    name: "Pearl",
+    description: "Clean, airy whites with indigo hue",
+    swatches: ["#f6f9ff", "#6366f1", "#bfdbfe", "#e2e8f0", "#0f172a"],
+  },
+  {
+    key: "sky",
+    name: "Sky",
+    description: "Light, airy blue with teal accent",
+    swatches: ["#eef6ff", "#60a5fa", "#22d3ee", "#cfe8ff", "#1f2937"],
+  },
+  {
+    key: "mocha",
+    name: "Mocha",
+    description: "Warm latte base with caramel accents",
+    swatches: ["#f5ebe0", "#b08968", "#d4a373", "#e6ccb2", "#1f2937"],
+  },
+  {
+    key: "mint",
+    name: "Mint",
+    description: "Fresh green base with cool blue accent",
+    swatches: ["#e9fff5", "#34d399", "#60a5fa", "#a7f3d0", "#1f2937"],
+  },
+
+  // New dark themes
+  {
+    key: "onyx",
+    name: "Onyx",
+    description: "Dark neutral with indigo/violet glow",
+    swatches: ["#0b0c0d", "#6366f1", "#a78bfa", "#111827", "#1f2937"],
+  },
+  {
+    key: "amethyst",
+    name: "Amethyst",
+    description: "Deep purple with magenta-violet accent",
+    swatches: ["#1a1124", "#a78bfa", "#f472b6", "#312e81", "#0f172a"],
   },
 ];
 
