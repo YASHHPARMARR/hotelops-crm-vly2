@@ -227,8 +227,8 @@ export default function Landing() {
             <svg width="160" height="160" viewBox="0 0 200 200" className="drop-shadow-[0_0_24px_#34d399]">
               <defs>
                 <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#34d399" />
-                  <stop offset="100%" stopColor="#fbbf24" />
+                  <stop offset="0%" stopColor="#6366f1" />
+                  <stop offset="100%" stopColor="#a78bfa" />
                 </linearGradient>
               </defs>
               <circle cx="100" cy="100" r="70" fill="none" stroke="url(#g)" strokeWidth="3" className="stroke-dash-animate" />
@@ -257,7 +257,7 @@ export default function Landing() {
 
       {/* 3D Parallax Background (subtle emerald aura + layered images) */}
       <div className="absolute inset-0 pointer-events-none perspective-1000">
-        <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-[1200px] h-[1200px] rounded-full bg-emerald-500/10 blur-3xl" />
+        <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-[1200px] h-[1200px] rounded-full bg-indigo-500/10 blur-3xl" />
         {parallax.map((l, i) => (
           <motion.img
             key={i}
@@ -348,11 +348,11 @@ export default function Landing() {
               </div>
               <div className="flex items-center gap-6 pt-2 text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-emerald-400" />
+                  <Star className="h-5 w-5 text-indigo-400" />
                   4.9/5 Guest Satisfaction
                 </div>
                 <div className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-emerald-400" />
+                  <Shield className="h-5 w-5 text-indigo-400" />
                   Secure & Private
                 </div>
               </div>
@@ -375,7 +375,7 @@ export default function Landing() {
                   <div className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="text-lg font-semibold">Grand Atrium Lobby</div>
-                      <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30">5-Star</Badge>
+                      <Badge className="bg-indigo-500/20 text-indigo-300 border-indigo-500/30">5-Star</Badge>
                     </div>
                     <div className="text-sm text-muted-foreground mt-1">
                       Signature check-in, concierge, and lounge bar
@@ -479,21 +479,21 @@ export default function Landing() {
                               <div className="text-sm text-muted-foreground">{room.category}</div>
                             </div>
                             <div className="text-right">
-                              <div className="text-emerald-300 font-semibold">${room.price}/night</div>
+                              <div className="text-indigo-300 font-semibold">${room.price}/night</div>
                               <Button size="sm" className="mt-2 neon-glow-emerald" onClick={handleGetStarted}>Book</Button>
                             </div>
                           </div>
                         </div>
                         {/* Back */}
-                        <div className="absolute inset-0 backface-hidden rotate-y-180 rounded-2xl p-4 flex flex-col justify-between bg-black/60 backdrop-blur border border-emerald-500/20">
+                        <div className="absolute inset-0 backface-hidden rotate-y-180 rounded-2xl p-4 flex flex-col justify-between bg-black/60 backdrop-blur border border-indigo-500/20">
                           <div>
                             <div className="text-lg font-semibold">{room.name}</div>
                             <div className="text-sm text-muted-foreground mb-3">Premium amenities, skyline view, curated minibar, butler-on-call.</div>
-                            <div className="text-sm text-emerald-300">360° Preview</div>
-                            <div className="mt-2 aspect-video rounded-lg overflow-hidden border border-emerald-500/20">
+                            <div className="text-sm text-indigo-300">360° Preview</div>
+                            <div className="mt-2 aspect-video rounded-lg overflow-hidden border border-indigo-500/20">
                               <iframe
                                 className="w-full h-full"
-                                src="https://sketchfab.com/models/7w7pAfK3LjjXNMTvEihQ7rC3q6d/embed"
+                                src="https://sketchfab.com/models/11fa3ac64ef64cc0a6208e54d792f2d3/embed"
                                 title="Room 360 preview"
                                 allow="autoplay; fullscreen; xr-spatial-tracking"
                                 allowFullScreen
@@ -501,7 +501,7 @@ export default function Landing() {
                             </div>
                           </div>
                           <div className="flex items-center justify-between">
-                            <div className="text-amber-300 font-semibold">${room.price}/night</div>
+                            <div className="text-indigo-300 font-semibold">${room.price}/night</div>
                             <Button className="neon-glow-emerald" onClick={handleGetStarted}>Reserve</Button>
                           </div>
                         </div>
@@ -520,7 +520,7 @@ export default function Landing() {
       {/* SVG wave divider */}
       <div className="wave-divider">
         <svg viewBox="0 0 1440 120" preserveAspectRatio="none" className="w-full h-[80px]">
-          <path d="M0,64 C240,96 480,0 720,32 C960,64 1200,128 1440,64 L1440,120 L0,120 Z" className="fill-emerald-900/20" />
+          <path d="M0,64 C240,96 480,0 720,32 C960,64 1200,128 1440,64 L1440,120 L0,120 Z" className="fill-indigo-900/20" />
         </svg>
       </div>
 
@@ -564,7 +564,7 @@ export default function Landing() {
         </div>
         <div className="pointer-events-none absolute inset-0 -z-0">
           {diningIcons.map(({ Icon, className }, i) => (
-            <Icon key={i} className={`absolute ${className} text-emerald-300/60 animate-slow-float drop-shadow-[0_0_12px_#34d399]`} />
+            <Icon key={i} className={`absolute ${className} text-indigo-300/60 animate-slow-float drop-shadow-[0_0_12px_#6366f1]`} />
           ))}
         </div>
       </section>
@@ -591,7 +591,7 @@ export default function Landing() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.04 }}
-                className="rounded-xl border border-emerald-500/30 p-4 text-center gradient-card hover:shadow-lg hover:scale-[1.03] transition-all hologram-card"
+                className="rounded-xl border border-indigo-500/30 p-4 text-center gradient-card hover:shadow-lg hover:scale-[1.03] transition-all hologram-card"
               >
                 <div className="text-sm font-medium">{a}</div>
               </motion.div>
@@ -614,20 +614,20 @@ export default function Landing() {
           </motion.div>
 
           <div className="grid lg:grid-cols-2 gap-6">
-            <motion.div whileHover={{ scale: 1.01 }} className="rounded-2xl overflow-hidden border border-emerald-500/30 gradient-card aspect-video group">
+            <motion.div whileHover={{ scale: 1.01 }} className="rounded-2xl overflow-hidden border border-indigo-500/30 gradient-card aspect-video group">
               <iframe
-                title="3D Globe"
+                title="3D Tour A"
                 className="w-full h-full transition-transform duration-500 group-hover:scale-[1.02]"
-                src="https://sketchfab.com/models/5c1b0a8f221b4c1a8dc25f861e9f952a/embed"
+                src="https://sketchfab.com/models/11fa3ac64ef64cc0a6208e54d792f2d3/embed"
                 allow="autoplay; fullscreen; xr-spatial-tracking"
                 allowFullScreen
               />
             </motion.div>
-            <motion.div whileHover={{ scale: 1.01 }} className="rounded-2xl overflow-hidden border border-emerald-500/30 gradient-card aspect-video group">
+            <motion.div whileHover={{ scale: 1.01 }} className="rounded-2xl overflow-hidden border border-indigo-500/30 gradient-card aspect-video group">
               <iframe
-                title="Lobby 3D"
+                title="3D Tour B"
                 className="w-full h-full transition-transform duration-500 group-hover:scale-[1.02]"
-                src="https://sketchfab.com/models/7w7pAfK3LjjXNMTvEihQ7rC3q6d/embed"
+                src="https://sketchfab.com/models/11fa3ac64ef64cc0a6208e54d792f2d3/embed"
                 allow="autoplay; fullscreen; xr-spatial-tracking"
                 allowFullScreen
               />
@@ -636,93 +636,6 @@ export default function Landing() {
           <div className="text-center mt-4">
             <Button className="neon-glow-emerald" onClick={handleGetStarted}>Enter Virtual Tour</Button>
           </div>
-        </div>
-      </section>
-
-      {/* Luxury Fleet 3D Preview */}
-      <section id="fleet-3d" className="py-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-8"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold">Luxury Fleet 3D</h2>
-            <p className="text-muted-foreground">Explore our chauffeur-driven comfort in 3D</p>
-          </motion.div>
-
-          <motion.div whileHover={{ scale: 1.01 }} className="rounded-2xl overflow-hidden border border-emerald-500/30 gradient-card aspect-video group">
-            <iframe
-              title="Toyota Corolla Altis 2018"
-              className="w-full h-full transition-transform duration-500 group-hover:scale-[1.02]"
-              src="https://sketchfab.com/models/11fa3ac64ef64cc0a6208e54d792f2d3/embed"
-              allow="autoplay; fullscreen; xr-spatial-tracking"
-              allowFullScreen
-            />
-          </motion.div>
-          <div className="text-center mt-4">
-            <Button className="neon-glow-emerald" onClick={handleGetStarted}>Request Airport Transfer</Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Guest Testimonials – hologram cards + bokeh */}
-      <section id="testimonials" className="py-20 bg-card/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-10"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold">Guest Testimonials</h2>
-            <p className="text-muted-foreground">Stories etched in gold</p>
-          </motion.div>
-
-          <Carousel>
-            <CarouselContent>
-              {testimonials.map((t) => (
-                <CarouselItem key={t.name} className="md:basis-1/2 lg:basis-1/3">
-                  <div className="p-2">
-                    <div className="rounded-2xl border border-border/50 gradient-card p-5 h-full flex flex-col">
-                      <div className="flex items-center gap-3">
-                        <img src={t.img} alt={t.name} className="w-12 h-12 rounded-full object-cover" />
-                        <div>
-                          <div className="font-semibold">{t.name}</div>
-                          <div className="text-amber-300">{Array.from({ length: t.rating }).map((_, i) => "★").join("")}</div>
-                        </div>
-                      </div>
-                      <div className="text-muted-foreground mt-3">" {t.quote} "</div>
-                    </div>
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-          </Carousel>
-        </div>
-      </section>
-
-      {/* Event & Wedding Showcase */}
-      <section id="events" className="py-20 relative overflow-hidden">
-        <img
-          src="https://images.unsplash.com/photo-1528605248644-14dd04022da1?q=80&w=1600&auto=format&fit=crop"
-          alt="Events"
-          className="absolute inset-0 -z-10 w-full h-full object-cover opacity-20"
-        />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.h2
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-3xl md:text-4xl font-bold mb-3"
-          >
-            Where Moments Become Memories
-          </motion.h2>
-          <p className="text-muted-foreground mb-6">Grand celebrations, crafted to perfection</p>
-          <Button variant="outline" className="neon-glow" onClick={handleGetStarted}>Plan Your Event</Button>
         </div>
       </section>
 
@@ -766,7 +679,7 @@ export default function Landing() {
         className="fixed right-4 md:right-8 bottom-4 md:bottom-8 z-50 pointer-events-none"
         style={{ y, rotate, transformStyle: "preserve-3d" }}
       >
-        <div className="relative w-20 h-28 md:w-24 md:h-32 rounded-2xl bg-gradient-to-br from-emerald-400 to-amber-400 shadow-2xl border border-white/20 will-change-transform">
+        <div className="relative w-20 h-28 md:w-24 md:h-32 rounded-2xl bg-gradient-to-br from-indigo-400 to-violet-400 shadow-2xl border border-white/20 will-change-transform">
           <div className="absolute inset-[6px] rounded-xl bg-black/20 backdrop-blur-sm border border-white/20" />
           <div className="absolute inset-0 flex items-center justify-center text-black font-extrabold tracking-wide">
             GH
