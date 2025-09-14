@@ -542,3 +542,85 @@
   --border: oklch(91% 0.01 230);
   --ring: var(--primary);
 }
+
+/* New Themes */
+
+/* Onyx (dark, neutral with indigo/violet accents) */
+:root[data-theme="onyx"] {
+  --background: oklch(9% 0.01 250);
+  --foreground: oklch(97% 0.01 250);
+  --card: oklch(11% 0.01 250);
+  --card-foreground: var(--foreground);
+  --primary: oklch(72% 0.20 255); /* indigo */
+  --primary-foreground: oklch(12% 0.01 250);
+  --accent: oklch(70% 0.20 305); /* violet-pink */
+  --accent-foreground: var(--foreground);
+  --muted: oklch(17% 0.01 250);
+  --muted-foreground: oklch(70% 0.01 250);
+  --border: oklch(15% 0.01 250);
+  --ring: var(--primary);
+}
+
+/* Amethyst (dark, purple-forward) */
+:root[data-theme="amethyst"] {
+  --background: oklch(12% 0.03 300);
+  --foreground: oklch(96% 0.02 300);
+  --card: oklch(14% 0.03 300);
+  --card-foreground: var(--foreground);
+  --primary: oklch(74% 0.22 300); /* violet */
+  --primary-foreground: oklch(14% 0.02 300);
+  --accent: oklch(72% 0.22 320); /* magenta-violet */
+  --accent-foreground: var(--foreground);
+  --muted: oklch(18% 0.02 300);
+  --muted-foreground: oklch(72% 0.02 300);
+  --border: oklch(16% 0.02 300);
+  --ring: var(--primary);
+}
+
+/* Sky (light, airy blue) */
+:root[data-theme="sky"] {
+  --background: oklch(96% 0.015 230);
+  --foreground: oklch(22% 0.02 230);
+  --card: oklch(98% 0.01 230);
+  --card-foreground: var(--foreground);
+  --primary: oklch(68% 0.18 230); /* sky/indigo */
+  --primary-foreground: oklch(20% 0.02 230);
+  --accent: oklch(82% 0.12 200); /* cyan-teal */
+  --accent-foreground: var(--foreground);
+  --muted: oklch(92% 0.01 230);
+  --muted-foreground: oklch(42% 0.02 230);
+  --border: oklch(90% 0.01 230);
+  --ring: var(--primary);
+}
+
+/* Mocha (light, warm latte) */
+:root[data-theme="mocha"] {
+  --background: oklch(94% 0.04 65);
+  --foreground: oklch(26% 0.03 65);
+  --card: oklch(97% 0.03 65);
+  --card-foreground: var(--foreground);
+  --primary: oklch(68% 0.12 40); /* warm brown accent */
+  --primary-foreground: oklch(22% 0.03 40);
+  --accent: oklch(78% 0.10 75); /* caramel */
+  --accent-foreground: var(--foreground);
+  --muted: oklch(90% 0.02 65);
+  --muted-foreground: oklch(44% 0.02 65);
+  --border: oklch(88% 0.02 65);
+  --ring: var(--primary);
+}
+
+/* Mint (light, fresh green with cool accent) */
+:root[data-theme="mint"] {
+  --background: oklch(96% 0.02 150);
+  --foreground: oklch(22% 0.02 150);
+  --card: oklch(98% 0.01 150);
+  --card-foreground: var(--foreground);
+  --primary: oklch(70% 0.14 165); /* mint green */
+  --primary-foreground: oklch(20% 0.02 165);
+  --accent: oklch(80% 0.10 220); /* cool blue accent */
+  --accent-foreground: var(--foreground);
+  --muted: oklch(92% 0.01 150);
+  --muted-foreground: oklch(40% 0.02 150);
+  --border: oklch(90% 0.01 150);
+  --ring: var(--primary);
+}

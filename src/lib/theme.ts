@@ -11,7 +11,12 @@ export type AppTheme =
   | "beige"
   | "ivory"
   | "lavender"
-  | "pearl";
+  | "pearl"
+  | "onyx"
+  | "amethyst"
+  | "sky"
+  | "mocha"
+  | "mint";
 
 export function getTheme(): AppTheme {
   const t = (typeof window !== "undefined" && localStorage.getItem(THEME_STORAGE_KEY)) as AppTheme | null;
@@ -28,6 +33,11 @@ export function getTheme(): AppTheme {
     "ivory",
     "lavender",
     "pearl",
+    "onyx",
+    "amethyst",
+    "sky",
+    "mocha",
+    "mint",
   ];
   if (t && allowed.includes(t)) return t;
   return "neon";
@@ -49,7 +59,7 @@ export function applyThemeToDocument(theme: AppTheme) {
   root.setAttribute("data-theme", theme);
 
   // Toggle dark base only for dark themes to avoid mixed light/dark experience
-  const lightThemes: AppTheme[] = ["pastel", "sand", "beige", "ivory", "lavender", "pearl"];
+  const lightThemes: AppTheme[] = ["pastel", "sand", "beige", "ivory", "lavender", "pearl", "sky", "mocha", "mint"];
   if (lightThemes.includes(theme)) {
     root.classList.remove("dark");
   } else {
@@ -71,6 +81,11 @@ export function cycleTheme(current?: AppTheme): AppTheme {
     "ivory",
     "lavender",
     "pearl",
+    "sky",
+    "mocha",
+    "mint",
+    "onyx",
+    "amethyst",
   ];
   const idx = order.indexOf(current ?? getTheme());
   return order[(idx + 1) % order.length];
