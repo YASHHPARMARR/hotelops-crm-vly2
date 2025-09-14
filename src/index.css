@@ -280,7 +280,7 @@
   }
   
   .gradient-card {
-    background: linear-gradient(135deg, oklch(0.08 0 0) 0%, oklch(0.12 0 0) 100%);
+    background: var(--card);
   }
   
   /* Custom scrollbar */
@@ -305,11 +305,11 @@
 
 /* Animation classes */
 .animate-fade-in {
-  animation: fadeIn 0.3s ease-in-out;
+  animation: fadeIn 0.6s ease-in-out;
 }
 
 .animate-slide-up {
-  animation: slideUp 0.3s ease-out;
+  animation: slideUp 0.6s ease-out;
 }
 
 .animate-glow {
@@ -481,4 +481,64 @@
 /* Ripple button press */
 .ripple-btn:active {
   transform: translateY(1px) scale(0.99);
+}
+
+:root[data-theme="beige"] {
+  --background: oklch(94% 0.03 80);
+  --foreground: oklch(24% 0.03 80);
+  --card: oklch(97% 0.02 80);
+  --card-foreground: var(--foreground);
+  --primary: oklch(70% 0.16 240); /* indigo-blue */
+  --primary-foreground: oklch(20% 0.03 240);
+  --accent: oklch(78% 0.10 80); /* warm beige accent */
+  --accent-foreground: var(--foreground);
+  --muted: oklch(90% 0.02 80);
+  --muted-foreground: oklch(40% 0.02 80);
+  --border: oklch(88% 0.02 80);
+  --ring: var(--primary);
+}
+
+:root[data-theme="ivory"] {
+  --background: oklch(98% 0.01 95);
+  --foreground: oklch(20% 0.02 95);
+  --card: oklch(99% 0.005 95);
+  --card-foreground: var(--foreground);
+  --primary: oklch(68% 0.18 230); /* sky/indigo */
+  --primary-foreground: oklch(20% 0.02 230);
+  --accent: oklch(85% 0.06 80); /* soft warm accent */
+  --accent-foreground: var(--foreground);
+  --muted: oklch(94% 0.01 95);
+  --muted-foreground: oklch(42% 0.02 95);
+  --border: oklch(92% 0.01 95);
+  --ring: var(--primary);
+}
+
+:root[data-theme="lavender"] {
+  --background: oklch(95% 0.03 300);
+  --foreground: oklch(22% 0.03 300);
+  --card: oklch(98% 0.02 300);
+  --card-foreground: var(--foreground);
+  --primary: oklch(72% 0.18 300); /* violet */
+  --primary-foreground: oklch(18% 0.02 300);
+  --accent: oklch(80% 0.10 320);
+  --accent-foreground: var(--foreground);
+  --muted: oklch(92% 0.02 300);
+  --muted-foreground: oklch(40% 0.02 300);
+  --border: oklch(90% 0.02 300);
+  --ring: var(--primary);
+}
+
+:root[data-theme="pearl"] {
+  --background: oklch(97% 0.01 230);
+  --foreground: oklch(22% 0.02 230);
+  --card: oklch(99% 0.005 230);
+  --card-foreground: var(--foreground);
+  --primary: oklch(68% 0.16 260); /* indigo */
+  --primary-foreground: oklch(16% 0.02 260);
+  --accent: oklch(86% 0.06 240); /* faint blue */
+  --accent-foreground: var(--foreground);
+  --muted: oklch(93% 0.01 230);
+  --muted-foreground: oklch(40% 0.02 230);
+  --border: oklch(91% 0.01 230);
+  --ring: var(--primary);
 }

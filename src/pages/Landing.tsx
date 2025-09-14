@@ -226,8 +226,23 @@ export default function Landing() {
       onMouseMove={handleMouseMove}
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+      transition={{ duration: 0.8, ease: "easeOut" }}
     >
+      {/* Custom cursor & click ripples overlay */}
+      <div className="pointer-events-none fixed inset-0 z-[9999]">
+        <div
+          className="custom-cursor"
+          style={{ left: mouse.x - 8, top: mouse.y - 8 } as any}
+        />
+        {clickRipple.map((r) => (
+          <span
+            key={r.id}
+            className="click-ripple"
+            style={{ left: r.x - 12, top: r.y - 12 } as any}
+          />
+        ))}
+      </div>
+
       {/* Loader: logo line-draw → doors open */}
       {showLoader && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black">
@@ -268,7 +283,7 @@ export default function Landing() {
             initial={{ opacity: 0, y: 40, rotateX: -8, rotateY: 6, z: -50 }}
             whileInView={{ opacity: 0.35, y: 0, rotateX: 0, rotateY: 0, z: 0 }}
             viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.9, delay: i * 0.15 }}
+            transition={{ duration: 1.2, delay: i * 0.18 }}
           />
         ))}
         {particleSeeds.map((p) => (
@@ -323,13 +338,20 @@ export default function Landing() {
       {/* Hero Section */}
       <section className="relative overflow-hidden py-20 lg:py-32">
         <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-card/10" />
+        {/* restore background design */}
+        <div className="absolute inset-0 pointer-events-none bokeh-bg" />
         {/* lens flares */}
         <div className="pointer-events-none absolute -top-10 -left-10 w-80 h-80 rounded-full bg-indigo-400/10 blur-[80px]" />
         <div className="pointer-events-none absolute top-20 right-10 w-72 h-72 rounded-full bg-violet-400/10 blur-[72px]" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-10">
             {/* Left: Cinematic heading */}
-            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.9 }}
+              className="space-y-6"
+            >
               <Badge variant="outline" className="mb-2 border-indigo-400/50 text-indigo-300">
                 Signature Stays
               </Badge>
@@ -368,7 +390,13 @@ export default function Landing() {
             </motion.div>
 
             {/* Right: 3D showcase + glass booking form overlay */}
-            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.15 }} className="relative perspective-1000">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.85, delay: 0.2 }}
+              className="relative perspective-1000"
+            >
               <div className="preserve-3d w-full h-full">
                 <motion.div
                   whileHover={{ rotateX: 6, rotateY: -8, scale: 1.02 }}
@@ -420,7 +448,7 @@ export default function Landing() {
             initial={{ opacity: 0, rotateY: -15, y: 20 }}
             whileInView={{ opacity: 1, rotateY: 0, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.7 }}
+            transition={{ duration: 0.9 }}
             className="relative w-full aspect-square rounded-3xl bg-gradient-to-br from-indigo-300/10 to-violet-500/10 border border-indigo-400/30 preserve-3d flex items-center justify-center"
           >
             <div className="absolute inset-6 rounded-2xl border border-amber-300/30" />
@@ -441,7 +469,7 @@ export default function Landing() {
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.85 }}
           >
             <Badge variant="outline" className="neon-border-emerald mb-3">Our Legacy</Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Our Legacy of Timeless Hospitality</h2>
@@ -482,10 +510,10 @@ export default function Landing() {
                   <div className="p-1">
                     <div className="relative h-80 preserve-3d group [transform-style:preserve-3d] [perspective:1200px]">
                       {/* Card container with depth hover */}
-                      <div className="absolute inset-0 rounded-2xl border border-border/50 gradient-card transition-transform duration-500 transition-[transform,box-shadow,filter] will-change-transform hover:shadow-2xl hover:shadow-indigo-700/25 hover:ring-2 hover:ring-indigo-400/40 group-hover:-rotate-y-180 [transform-style:preserve-3d]">
+                      <div className="absolute inset-0 rounded-2xl border border-border/50 gradient-card transition-transform duration-700 ease-out transition-[transform,box-shadow,filter] will-change-transform hover:shadow-2xl hover:shadow-indigo-700/25 hover:ring-2 hover:ring-indigo-400/40 group-hover:-rotate-y-180 [transform-style:preserve-3d]">
                         {/* Front */}
                         <div className="absolute inset-0 backface-hidden overflow-hidden rounded-2xl">
-                          <img src={room.img} alt={room.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                          <img src={room.img} alt={room.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                           <div className="absolute bottom-0 p-4 w-full flex items-center justify-between">
                             <div>
