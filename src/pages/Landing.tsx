@@ -1,4 +1,4 @@
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -214,9 +214,7 @@ export default function Landing() {
     }
   };
 
-  const { scrollYProgress } = useScroll();
-  const rotate = useTransform(scrollYProgress, [0, 1], [0, 360]);
-  const y = useTransform(scrollYProgress, [0, 1], [0, -120]);
+  // Removed scroll-based floating emblem animations
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden" onMouseMove={handleMouseMove}>
@@ -405,16 +403,17 @@ export default function Landing() {
           <motion.div
             initial={{ opacity: 0, rotateY: -15, y: 20 }}
             whileInView={{ opacity: 1, rotateY: 0, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.7 }}
-            className="relative w-full aspect-square rounded-3xl bg-gradient-to-br from-amber-200/10 to-amber-500/10 border border-amber-400/20 preserve-3d flex items-center justify-center"
+            className="relative w-full aspect-square rounded-3xl bg-gradient-to-br from-indigo-300/10 to-violet-500/10 border border-indigo-400/30 preserve-3d flex items-center justify-center"
           >
             <div className="absolute inset-6 rounded-2xl border border-amber-300/30" />
             <motion.div
               whileHover={{ rotateX: 8, rotateY: -8, scale: 1.03 }}
-              className="w-40 h-40 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 shadow-xl flex items-center justify-center text-3xl font-bold text-black"
+              className="w-40 h-40 rounded-full border-4 border-indigo-400/60 shadow-xl flex items-center justify-center animate-spin"
+              style={{ animationDuration: "8s" } as any}
             >
-              GH
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-400 to-violet-400 shadow" />
             </motion.div>
             <video
               className="absolute -z-10 inset-0 w-full h-full object-cover rounded-3xl opacity-20"
@@ -425,15 +424,14 @@ export default function Landing() {
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.6 }}
           >
             <Badge variant="outline" className="neon-border-emerald mb-3">Our Legacy</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Grand Horizon Hotels</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Our Legacy of Timeless Hospitality</h2>
             <p className="text-lg text-muted-foreground mb-6">
-              Inspired by the timeless elegance of Taj and the modern sophistication of Hyatt,
-              Grand Horizon blends heritage with innovation—delivering bespoke experiences and
-              unrivaled hospitality at every turn.
+              Where heritage meets modern luxury. Crafted experiences, refined service,
+              and a century-inspired ethos—brought to life in blue–purple opulence.
             </p>
             <div className="flex gap-3">
               <Button onClick={handleGetStarted} className="neon-glow-emerald">Book Your Escape</Button>
@@ -547,13 +545,20 @@ export default function Landing() {
               {restaurants.map((r) => (
                 <CarouselItem key={r.name} className="md:basis-1/2 lg:basis-1/3">
                   <div className="p-1">
-                    <div className="rounded-2xl overflow-hidden border border-border/50 gradient-card">
+                    <motion.div
+                      initial={{ opacity: 0, y: 24 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.3 }}
+                      whileHover={{ rotateX: 2, rotateY: -2, scale: 1.02 }}
+                      transition={{ type: "spring", stiffness: 220, damping: 18 }}
+                      className="rounded-2xl overflow-hidden border border-indigo-500/30 gradient-card shadow-lg"
+                    >
                       <img src={r.img} alt={r.name} className="w-full h-64 object-cover" />
                       <div className="p-4 flex items-center justify-between">
                         <div className="text-lg font-semibold">{r.name}</div>
                         <Button size="sm" variant="outline">Reserve</Button>
                       </div>
-                    </div>
+                    </motion.div>
                   </div>
                 </CarouselItem>
               ))}
@@ -584,18 +589,25 @@ export default function Landing() {
           </motion.div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {[ "Spa", "Infinity Pool", "Wellness", "Business Lounge", "Events", "Safari", "Golf", "Kids Club", "Private Dining", "Chauffeur", "Gym", "Salon" ].map((a, i) => (
-              <motion.div
-                key={a}
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.04 }}
-                className="rounded-xl border border-indigo-500/30 p-4 text-center gradient-card hover:shadow-lg hover:scale-[1.03] transition-all hologram-card"
-              >
-                <div className="text-sm font-medium">{a}</div>
-              </motion.div>
-            ))}
+            { [ "Spa", "Infinity Pool", "Wellness", "Business Lounge", "Events", "Safari", "Golf", "Kids Club", "Private Dining", "Chauffeur", "Gym", "Salon" ].map((label, i) => {
+                const Icon = [Star, Zap, Shield, Globe, Car, UtensilsCrossed][i % 6];
+                return (
+                  <motion.div
+                    key={label}
+                    initial={{ opacity: 0, y: 16, scale: 0.98 }}
+                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                    viewport={{ once: true, amount: 0.2 }}
+                    transition={{ delay: i * 0.03 }}
+                    className="rounded-xl border border-indigo-500/30 p-4 text-center gradient-card hover:shadow-lg hover:scale-[1.04] transition-all"
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <Icon className="h-5 w-5 text-indigo-300" />
+                      <div className="text-sm font-medium">{label}</div>
+                    </div>
+                  </motion.div>
+                );
+              })
+            }
           </div>
         </div>
       </section>
@@ -673,21 +685,6 @@ export default function Landing() {
           </div>
         </div>
       </footer>
-
-      {/* Floating 3D emblem – already present; adjust color accents */}
-      <motion.div
-        className="fixed right-4 md:right-8 bottom-4 md:bottom-8 z-50 pointer-events-none"
-        style={{ y, rotate, transformStyle: "preserve-3d" }}
-      >
-        <div className="relative w-20 h-28 md:w-24 md:h-32 rounded-2xl bg-gradient-to-br from-indigo-400 to-violet-400 shadow-2xl border border-white/20 will-change-transform">
-          <div className="absolute inset-[6px] rounded-xl bg-black/20 backdrop-blur-sm border border-white/20" />
-          <div className="absolute inset-0 flex items-center justify-center text-black font-extrabold tracking-wide">
-            GH
-          </div>
-          <div className="absolute -top-2 -left-2 w-8 h-8 rounded-full bg-amber-300/80 blur-md" />
-          <div className="absolute -bottom-3 -right-3 w-10 h-10 rounded-full bg-yellow-400/80 blur-lg" />
-        </div>
-      </motion.div>
     </div>
   );
 }
