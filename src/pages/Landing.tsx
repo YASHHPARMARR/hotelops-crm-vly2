@@ -214,15 +214,19 @@ export default function Landing() {
     }
   };
 
-  // Removed scroll-based floating emblem animations
-
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden" onMouseMove={handleMouseMove}>
+    <motion.div
+      className="min-h-screen bg-background relative overflow-hidden"
+      onMouseMove={handleMouseMove}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+    >
       {/* Loader: logo line-draw → doors open */}
       {showLoader && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black">
           <div className="relative">
-            <svg width="160" height="160" viewBox="0 0 200 200" className="drop-shadow-[0_0_24px_#34d399]">
+            <svg width="160" height="160" viewBox="0 0 200 200" className="drop-shadow-[0_0_24px_#818cf8]">
               <defs>
                 <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#6366f1" />
@@ -238,22 +242,7 @@ export default function Landing() {
         </div>
       )}
 
-      {/* Custom cursor + click ripples */}
-      <div className="pointer-events-none fixed inset-0 z-[998]">
-        <div
-          className="custom-cursor"
-          style={{ transform: `translate(${mouse.x - 8}px, ${mouse.y - 8}px)` }}
-        />
-        {clickRipple.map((r) => (
-          <span
-            key={r.id}
-            className="click-ripple"
-            style={{ left: r.x - 12, top: r.y - 12 }}
-          />
-        ))}
-      </div>
-
-      {/* 3D Parallax Background (subtle emerald aura + layered images) */}
+      {/* 3D Parallax Background (subtle indigo/violet aura + layered images) */}
       <div className="absolute inset-0 pointer-events-none perspective-1000">
         <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-[1200px] h-[1200px] rounded-full bg-indigo-500/10 blur-3xl" />
         {parallax.map((l, i) => (
@@ -291,19 +280,22 @@ export default function Landing() {
         ))}
       </div>
 
-      {/* Navigation – emerald + gold accent */}
+      {/* Navigation */}
       <nav className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center neon-glow-emerald bg-gradient-to-br from-emerald-500 to-emerald-400">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-indigo-500 to-violet-500 shadow-[0_0_24px_rgba(99,102,241,0.35)]">
                 <span className="text-black font-bold text-lg">H</span>
               </div>
               <span className="text-2xl font-bold text-foreground">Grand Horizon</span>
             </motion.div>
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-4">
               {!isLoading && (
-                <Button onClick={handleGetStarted} className="neon-glow-emerald">
+                <Button
+                  onClick={handleGetStarted}
+                  className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-[0_0_24px_rgba(99,102,241,0.35)] hover:shadow-[0_0_36px_rgba(139,92,246,0.45)]"
+                >
                   Book Now
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -313,18 +305,18 @@ export default function Landing() {
         </div>
       </nav>
 
-      {/* Hero Section – cinematic parallax + glass booking form */}
+      {/* Hero Section */}
       <section className="relative overflow-hidden py-20 lg:py-32">
         <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-card/10" />
         {/* lens flares */}
-        <div className="pointer-events-none absolute -top-10 -left-10 w-80 h-80 rounded-full bg-emerald-400/10 blur-[80px]" />
-        <div className="pointer-events-none absolute top-20 right-10 w-72 h-72 rounded-full bg-amber-300/10 blur-[72px]" />
+        <div className="pointer-events-none absolute -top-10 -left-10 w-80 h-80 rounded-full bg-indigo-400/10 blur-[80px]" />
+        <div className="pointer-events-none absolute top-20 right-10 w-72 h-72 rounded-full bg-violet-400/10 blur-[72px]" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-10">
             {/* Left: Cinematic heading */}
             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="space-y-6">
-              <Badge variant="outline" className="mb-2 neon-border-emerald">
-                Emerald Luxury
+              <Badge variant="outline" className="mb-2 border-indigo-400/50 text-indigo-300">
+                Signature Stays
               </Badge>
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-foreground leading-tight tracking-wide">
                 Where Luxury Meets
@@ -336,7 +328,11 @@ export default function Landing() {
                 Book immersive stays, savor fine dining, and explore curated experiences—crafted with emerald elegance and golden warmth.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" onClick={handleGetStarted} className="neon-glow-emerald text-lg px-8">
+                <Button
+                  size="lg"
+                  onClick={handleGetStarted}
+                  className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-lg px-8 shadow-[0_0_30px_rgba(99,102,241,0.35)] hover:shadow-[0_0_40px_rgba(139,92,246,0.45)]"
+                >
                   {isAuthenticated ? "Go to Dashboard" : "Book Now"}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
@@ -388,7 +384,12 @@ export default function Landing() {
                     <Input type="date" aria-label="Check-out" placeholder="Check-out" />
                     <Input type="number" min={1} aria-label="Guests" placeholder="Guests" />
                     <Input type="number" min={1} aria-label="Rooms" placeholder="Rooms" />
-                    <Button className="neon-glow-emerald" onClick={handleGetStarted}>Search</Button>
+                    <Button
+                      className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-[0_0_24px_rgba(99,102,241,0.35)] hover:shadow-[0_0_36px_rgba(139,92,246,0.45)]"
+                      onClick={handleGetStarted}
+                    >
+                      Search
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -441,7 +442,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Luxury Rooms & Suites – 3D carousel + flip-on-hover */}
+      {/* Luxury Rooms & Suites */}
       <section id="rooms" className="py-20 bg-card/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-10">
@@ -466,7 +467,7 @@ export default function Landing() {
                   <div className="p-1">
                     <div className="relative h-80 preserve-3d group [transform-style:preserve-3d] [perspective:1200px]">
                       {/* Card container with depth hover */}
-                      <div className="absolute inset-0 rounded-2xl border border-border/50 gradient-card transition-transform duration-500 group-hover:-rotate-y-180 [transform-style:preserve-3d]">
+                      <div className="absolute inset-0 rounded-2xl border border-border/50 gradient-card transition-transform duration-500 transition-[transform,box-shadow,filter] will-change-transform hover:shadow-2xl hover:shadow-indigo-700/25 hover:ring-2 hover:ring-indigo-400/40 group-hover:-rotate-y-180 [transform-style:preserve-3d]">
                         {/* Front */}
                         <div className="absolute inset-0 backface-hidden overflow-hidden rounded-2xl">
                           <img src={room.img} alt={room.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
@@ -478,7 +479,13 @@ export default function Landing() {
                             </div>
                             <div className="text-right">
                               <div className="text-indigo-300 font-semibold">${room.price}/night</div>
-                              <Button size="sm" className="mt-2 neon-glow-emerald" onClick={handleGetStarted}>Book</Button>
+                              <Button
+                                size="sm"
+                                className="mt-2 bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-[0_0_18px_rgba(99,102,241,0.35)] hover:shadow-[0_0_24px_rgba(139,92,246,0.45)]"
+                                onClick={handleGetStarted}
+                              >
+                                Book
+                              </Button>
                             </div>
                           </div>
                         </div>
@@ -500,7 +507,12 @@ export default function Landing() {
                           </div>
                           <div className="flex items-center justify-between">
                             <div className="text-indigo-300 font-semibold">${room.price}/night</div>
-                            <Button className="neon-glow-emerald" onClick={handleGetStarted}>Reserve</Button>
+                            <Button
+                              className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-[0_0_18px_rgba(99,102,241,0.35)] hover:shadow-[0_0_24px_rgba(139,92,246,0.45)]"
+                              onClick={handleGetStarted}
+                            >
+                              Reserve
+                            </Button>
                           </div>
                         </div>
                       </div>
@@ -522,7 +534,7 @@ export default function Landing() {
         </svg>
       </div>
 
-      {/* Fine Dining Experience – video bg + floating icons */}
+      {/* Fine Dining Experience */}
       <section id="dining" className="py-20 relative">
         <video
           className="absolute inset-0 w-full h-full object-cover opacity-10 -z-10"
@@ -574,7 +586,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Amenities & Experiences – holographic glowing icons + aurora */}
+      {/* Amenities & Experiences */}
       <section id="amenities" className="py-20 bg-card/20 relative">
         <div className="absolute inset-0 -z-10 pointer-events-none aurora-bg" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -612,7 +624,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Virtual Tour – 3D globe + smooth zoom */}
+      {/* Virtual Tour */}
       <section id="virtual-tour" className="py-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -646,25 +658,35 @@ export default function Landing() {
             </motion.div>
           </div>
           <div className="text-center mt-4">
-            <Button className="neon-glow-emerald" onClick={handleGetStarted}>Enter Virtual Tour</Button>
+            <Button
+              className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-[0_0_24px_rgba(99,102,241,0.35)] hover:shadow-[0_0_36px_rgba(139,92,246,0.45)]"
+              onClick={handleGetStarted}
+            >
+              Enter Virtual Tour
+            </Button>
           </div>
         </div>
       </section>
 
-      {/* Booking CTA – sticky glass footer */}
+      {/* Booking CTA */}
       <div className="fixed bottom-0 left-0 right-0 z-40 px-4 pb-4">
-        <div className="mx-auto max-w-5xl neon-glass border-t border-emerald-500/20">
+        <div className="mx-auto max-w-5xl neon-glass border-t border-indigo-500/20">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3 p-3">
             <Input type="date" aria-label="Check-in" placeholder="Check-in" />
             <Input type="date" aria-label="Check-out" placeholder="Check-out" />
             <Input type="number" min={1} aria-label="Guests" placeholder="Guests" />
             <Input type="number" min={1} aria-label="Rooms" placeholder="Rooms" />
-            <Button className="neon-glow-emerald ripple-btn" onClick={handleGetStarted}>Check Availability</Button>
+            <Button
+              className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white ripple-btn shadow-[0_0_24px_rgba(99,102,241,0.35)] hover:shadow-[0_0_36px_rgba(139,92,246,0.45)]"
+              onClick={handleGetStarted}
+            >
+              Check Availability
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Footer – keep, aligns with theme */}
+      {/* Footer */}
       <footer className="border-t border-border/50 py-12 bg-card/20 relative overflow-hidden">
         <img
           src="https://images.unsplash.com/photo-1525362081669-2b476bb628c3?q=80&w=1600&auto=format&fit=crop"
@@ -685,6 +707,6 @@ export default function Landing() {
           </div>
         </div>
       </footer>
-    </div>
+    </motion.div>
   );
 }

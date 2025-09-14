@@ -21,7 +21,10 @@ export function setTheme(theme: AppTheme) {
 
 export function applyThemeToDocument(theme: AppTheme) {
   if (typeof document === "undefined") return;
-  document.documentElement.setAttribute("data-theme", theme);
+  const root = document.documentElement;
+  // Always enforce dark base to avoid mixed light/dark appearance
+  root.classList.add("dark");
+  root.setAttribute("data-theme", theme);
 }
 
 export function cycleTheme(current?: AppTheme): AppTheme {
