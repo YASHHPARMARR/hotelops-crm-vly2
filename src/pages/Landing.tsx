@@ -545,6 +545,15 @@ export default function Landing() {
                                 title="Room 360 preview"
                                 allow="autoplay; fullscreen; xr-spatial-tracking"
                                 allowFullScreen
+                                frameBorder={0}
+                                {...{
+                                  mozallowfullscreen: "true",
+                                  webkitallowfullscreen: "true",
+                                  "xr-spatial-tracking": "",
+                                  "execution-while-out-of-viewport": "",
+                                  "execution-while-not-rendered": "",
+                                  "web-share": "",
+                                } as any}
                               />
                             </div>
                           </div>
@@ -735,6 +744,15 @@ export default function Landing() {
                 src="https://sketchfab.com/models/11fa3ac64ef64cc0a6208e54d792f2d3/embed"
                 allow="autoplay; fullscreen; xr-spatial-tracking"
                 allowFullScreen
+                frameBorder={0}
+                {...{
+                  mozallowfullscreen: "true",
+                  webkitallowfullscreen: "true",
+                  "xr-spatial-tracking": "",
+                  "execution-while-out-of-viewport": "",
+                  "execution-while-not-rendered": "",
+                  "web-share": "",
+                } as any}
               />
             </motion.div>
             <motion.div whileHover={{ scale: 1.01 }} className="rounded-2xl overflow-hidden border border-indigo-500/30 gradient-card aspect-video group">
@@ -744,6 +762,15 @@ export default function Landing() {
                 src="https://sketchfab.com/models/11fa3ac64ef64cc0a6208e54d792f2d3/embed"
                 allow="autoplay; fullscreen; xr-spatial-tracking"
                 allowFullScreen
+                frameBorder={0}
+                {...{
+                  mozallowfullscreen: "true",
+                  webkitallowfullscreen: "true",
+                  "xr-spatial-tracking": "",
+                  "execution-while-out-of-viewport": "",
+                  "execution-while-not-rendered": "",
+                  "web-share": "",
+                } as any}
               />
             </motion.div>
           </div>
