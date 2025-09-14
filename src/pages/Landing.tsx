@@ -639,6 +639,34 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Luxury Fleet 3D Preview */}
+      <section id="fleet-3d" className="py-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-8"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold">Luxury Fleet 3D</h2>
+            <p className="text-muted-foreground">Explore our chauffeur-driven comfort in 3D</p>
+          </motion.div>
+
+          <motion.div whileHover={{ scale: 1.01 }} className="rounded-2xl overflow-hidden border border-emerald-500/30 gradient-card aspect-video group">
+            <iframe
+              title="Toyota Corolla Altis 2018"
+              className="w-full h-full transition-transform duration-500 group-hover:scale-[1.02]"
+              src="https://sketchfab.com/models/11fa3ac64ef64cc0a6208e54d792f2d3/embed"
+              allow="autoplay; fullscreen; xr-spatial-tracking"
+              allowFullScreen
+            />
+          </motion.div>
+          <div className="text-center mt-4">
+            <Button className="neon-glow-emerald" onClick={handleGetStarted}>Request Airport Transfer</Button>
+          </div>
+        </div>
+      </section>
+
       {/* Guest Testimonials – hologram cards + bokeh */}
       <section id="testimonials" className="py-20 bg-card/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
