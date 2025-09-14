@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,65 +26,65 @@ import {
 
 const features = [
   {
-    icon: Calendar,
-    title: "Smart Reservations",
-    description: "AI-powered booking system with real-time availability and dynamic pricing",
-    color: "text-blue-400",
-  },
-  {
     icon: Bed,
-    title: "Room Management",
-    description: "Comprehensive room status tracking with housekeeping integration",
-    color: "text-green-400",
-  },
-  {
-    icon: Users,
-    title: "Guest Experience",
-    description: "Personalized guest portal with concierge services and digital amenities",
-    color: "text-purple-400",
+    title: "Luxury Suites",
+    description: "Spacious, elegant suites crafted for sheer indulgence",
+    color: "text-amber-300",
   },
   {
     icon: UtensilsCrossed,
-    title: "Restaurant POS",
-    description: "Full-featured restaurant management with room service integration",
-    color: "text-orange-400",
+    title: "Fine Dining",
+    description: "Award-winning culinary experiences & curated wine lists",
+    color: "text-orange-300",
   },
   {
-    icon: Shield,
-    title: "Security & Safety",
-    description: "Incident tracking, visitor management, and safety protocols",
-    color: "text-red-400",
+    icon: Star,
+    title: "Spa & Wellness",
+    description: "Holistic therapies, sauna, steam & infinity pool access",
+    color: "text-yellow-300",
   },
   {
-    icon: Wrench,
-    title: "Maintenance Hub",
-    description: "Preventive maintenance scheduling with asset management",
-    color: "text-yellow-400",
+    icon: Globe,
+    title: "Prime Locations",
+    description: "Central addresses with breathtaking skyline views",
+    color: "text-blue-300",
   },
   {
     icon: Car,
-    title: "Transport Services",
-    description: "Fleet management with automated pickup/drop scheduling",
-    color: "text-cyan-400",
+    title: "Airport Transfers",
+    description: "Luxury chauffeur services & private pick-up/drop",
+    color: "text-cyan-300",
+  },
+  {
+    icon: Shield,
+    title: "Private & Safe",
+    description: "Discreet security with world-class safety standards",
+    color: "text-red-300",
+  },
+  {
+    icon: Calendar,
+    title: "Flexible Stays",
+    description: "Early check-in, late check-out & extended stays",
+    color: "text-green-300",
   },
   {
     icon: Package,
-    title: "Inventory Control",
-    description: "Smart inventory tracking with automated reordering",
-    color: "text-pink-400",
+    title: "Tailored Experiences",
+    description: "Romance, family, business & wellness packages",
+    color: "text-pink-300",
   },
 ];
 
 const roles = [
-  { name: "Admin", description: "Full system access", users: "1-5" },
-  { name: "Front Desk", description: "Reservations & check-in", users: "5-15" },
-  { name: "Housekeeping", description: "Room status & tasks", users: "10-30" },
-  { name: "Restaurant", description: "Orders & menu", users: "5-20" },
-  { name: "Security", description: "Incidents & badges", users: "3-10" },
-  { name: "Maintenance", description: "Repairs & assets", users: "2-8" },
-  { name: "Transport", description: "Vehicles & trips", users: "2-5" },
-  { name: "Inventory", description: "Stock & suppliers", users: "1-3" },
-  { name: "Guest", description: "Self-service portal", users: "Unlimited" },
+  { name: "Spa & Wellness", description: "Signature rituals & therapies", users: "Daily" },
+  { name: "Fine Dining", description: "Chefs' tasting menus & pairings", users: "7 Venues" },
+  { name: "Business Lounge", description: "Executive lounge & meeting rooms", users: "24/7" },
+  { name: "Events & Weddings", description: "Grand ballrooms & terrace lawns", users: "Year-round" },
+  { name: "Chauffeur", description: "Mercedes & BMW fleet access", users: "On-Demand" },
+  { name: "Family Friendly", description: "Kids' club & family suites", users: "All Ages" },
+  { name: "Romantic Escapes", description: "Private dining & curated stays", users: "Couples" },
+  { name: "Infinity Pool", description: "Sunset skyline swims", users: "Heated" },
+  { name: "Art & Culture", description: "Curated city experiences", users: "Concierge" },
 ];
 
 // New datasets for premium sections
@@ -185,6 +185,10 @@ export default function Landing() {
     }
   };
 
+  const { scrollYProgress } = useScroll();
+  const rotate = useTransform(scrollYProgress, [0, 1], [0, 360]);
+  const y = useTransform(scrollYProgress, [0, 1], [0, -120]);
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* 3D Parallax Background */}
@@ -222,8 +226,7 @@ export default function Landing() {
               <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/60 rounded-xl flex items-center justify-center neon-glow">
                 <span className="text-primary-foreground font-bold text-lg">H</span>
               </div>
-              <span className="text-2xl font-bold text-foreground">HotelOps</span>
-              <Badge variant="secondary" className="ml-2">CRM</Badge>
+              <span className="text-2xl font-bold text-foreground">Grand Horizon</span>
             </motion.div>
             
             <motion.div
@@ -233,7 +236,7 @@ export default function Landing() {
             >
               {!isLoading && (
                 <Button onClick={handleGetStarted} className="neon-glow">
-                  {isAuthenticated ? "Dashboard" : "Get Started"}
+                  Book Now
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               )}
@@ -604,7 +607,7 @@ export default function Landing() {
       </section>
 
       {/* Features Grid with 3D tilt */}
-      <section className="py-20 bg-card/20">
+      <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -613,10 +616,10 @@ export default function Landing() {
             className="text-center mb-16"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Tailored For Premium Hospitality
+              Signature Experiences
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              From reservations to room service—everything to elevate every stay
+              Curated moments—from spa rituals to skyline dining—crafted for you
             </p>
           </motion.div>
 
@@ -658,10 +661,10 @@ export default function Landing() {
             className="text-center mb-16"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Role-Based Access Control
+              Experiences For Every Journey
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Secure, hierarchical permissions system designed for hotel operations
+              Wellness. Business. Romance. Family—an experience for every traveler
             </p>
           </motion.div>
 
@@ -698,10 +701,10 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {[
-              { number: "500+", label: "Hotels Worldwide", icon: Globe },
-              { number: "99.9%", label: "Uptime Guarantee", icon: CheckCircle },
-              { number: "24/7", label: "Support Available", icon: Star },
-              { number: "50+", label: "Integrations", icon: Zap },
+              { number: "320", label: "Luxury Rooms & Suites", icon: Bed },
+              { number: "7", label: "Award-Winning Restaurants", icon: UtensilsCrossed },
+              { number: "1,200+", label: "Spa Treatments Monthly", icon: Star },
+              { number: "98%", label: "Guest Satisfaction", icon: CheckCircle },
             ].map((stat, index) => (
               <motion.div
                 key={stat.label}
@@ -759,14 +762,29 @@ export default function Landing() {
               <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/60 rounded-lg flex items-center justify-center">
                 <span className="text-primary-foreground font-bold">H</span>
               </div>
-              <span className="text-xl font-bold text-foreground">HotelOps</span>
+              <span className="text-xl font-bold text-foreground">Grand Horizon</span>
             </div>
             <div className="text-muted-foreground">
-              © 2024 HotelOps CRM. All rights reserved.
+              © 2024 Grand Horizon Hotels. All rights reserved.
             </div>
           </div>
         </div>
       </footer>
+
+      {/* Floating 3D emblem */}
+      <motion.div
+        className="fixed right-4 md:right-8 bottom-4 md:bottom-8 z-50 pointer-events-none"
+        style={{ y, rotate, transformStyle: "preserve-3d" }}
+      >
+        <div className="relative w-20 h-28 md:w-24 md:h-32 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-500 shadow-2xl border border-white/20 will-change-transform">
+          <div className="absolute inset-[6px] rounded-xl bg-black/20 backdrop-blur-sm border border-white/20" />
+          <div className="absolute inset-0 flex items-center justify-center text-black font-extrabold tracking-wide">
+            GH
+          </div>
+          <div className="absolute -top-2 -left-2 w-8 h-8 rounded-full bg-amber-300/80 blur-md" />
+          <div className="absolute -bottom-3 -right-3 w-10 h-10 rounded-full bg-yellow-400/80 blur-lg" />
+        </div>
+      </motion.div>
     </div>
   );
 }
