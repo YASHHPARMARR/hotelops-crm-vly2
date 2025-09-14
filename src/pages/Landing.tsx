@@ -210,6 +210,11 @@ export default function Landing() {
     if (el) el.scrollIntoView({ behavior: "smooth" });
   };
 
+  const handleScrollToRooms = () => {
+    const el = document.getElementById("rooms");
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  };
+
   // Parallax layers for subtle hotel visuals
   const parallax = useMemo(
     () => [
@@ -405,7 +410,7 @@ export default function Landing() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 lg:py-32">
+      <section className="relative overflow-hidden py-28 lg:py-40">
         {/* Background slideshow: big hero image crossfade */}
         <div className="absolute inset-0 -z-10 overflow-hidden">
           {heroImages.map((src, i) => (
@@ -418,107 +423,56 @@ export default function Landing() {
             />
           ))}
         </div>
-        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-card/10" />
+        {/* Dark overlay for readability */}
+        <div className="absolute inset-0 bg-black/45" />
+        {/* subtle gradient tint to keep blue–purple brand */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-transparent to-background/30" />
+
         {/* restore background design */}
         <div className="absolute inset-0 pointer-events-none bokeh-bg" />
         {/* lens flares */}
         <div className="pointer-events-none absolute -top-10 -left-10 w-80 h-80 rounded-full bg-indigo-400/10 blur-[80px]" />
         <div className="pointer-events-none absolute top-20 right-10 w-72 h-72 rounded-full bg-violet-400/10 blur-[72px]" />
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-10">
-            {/* Left: Cinematic heading */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55 }}
-              className="space-y-6"
-            >
-              <Badge variant="outline" className="mb-2 border-indigo-400/50 text-indigo-300">
-                Signature Stays
-              </Badge>
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-foreground leading-tight tracking-wide">
-                Where Luxury Meets
-                <span className="block cinematic-streak">
-                  Cinematic Hospitality
-                </span>
-              </h1>
-              <p className="text-xl text-muted-foreground max-w-2xl">
-                Book immersive stays, savor fine dining, and explore curated experiences—crafted with emerald elegance and golden warmth.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button
-                  size="lg"
-                  onClick={handleGetStarted}
-                  className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-lg px-8 shadow-[0_0_30px_rgba(99,102,241,0.35)] hover:shadow-[0_0_40px_rgba(139,92,246,0.45)]"
-                >
-                  {isAuthenticated ? "Go to Dashboard" : "Book Now"}
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-                <Button size="lg" variant="outline" className="text-lg px-8" onClick={handleScrollToAbout}>
-                  Explore Our World
-                </Button>
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, ease: "easeOut" }}
+            className="flex flex-col items-center text-center gap-6"
+          >
+            <Badge variant="outline" className="border-indigo-400/50 text-indigo-300">
+              Signature Stays
+            </Badge>
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight tracking-wide">
+              Experience Luxury Redefined
+            </h1>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl">
+              Welcome to Grand Horizon, where exceptional service meets unparalleled comfort in the heart of the city.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button
+                size="lg"
+                onClick={handleScrollToRooms}
+                className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-lg px-8 shadow-[0_0_30px_rgba(99,102,241,0.35)] hover:shadow-[0_0_40px_rgba(139,92,246,0.45)]"
+              >
+                Explore Rooms
+              </Button>
+              <Button size="lg" variant="outline" className="text-lg px-8" onClick={handleGetStarted}>
+                Book Now
+              </Button>
+            </div>
+            <div className="flex items-center gap-6 pt-2 text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Star className="h-5 w-5 text-indigo-300" />
+                4.9/5 Guest Satisfaction
               </div>
-              <div className="flex items-center gap-6 pt-2 text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-indigo-400" />
-                  4.9/5 Guest Satisfaction
-                </div>
-                <div className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-indigo-400" />
-                  Secure & Private
-                </div>
+              <div className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-indigo-300" />
+                Secure & Private
               </div>
-            </motion.div>
-
-            {/* Right: 3D showcase + glass booking form overlay */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.15 }}
-              className="relative perspective-1000"
-            >
-              <div className="preserve-3d w-full h-full">
-                <motion.div
-                  whileHover={{ rotateX: 6, rotateY: -8, scale: 1.02 }}
-                  transition={{ type: "spring", stiffness: 160, damping: 18 }}
-                  className="rounded-2xl gradient-card border border-border/50 p-4 shadow-xl"
-                  style={{ translateX: px(0.015), translateY: py(0.01) } as any}
-                >
-                  <img
-                    src="https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?q=80&w=1800&auto=format&fit=crop"
-                    alt="Hotel Lobby"
-                    className="rounded-xl object-cover w-full h-72 md:h-96"
-                  />
-                  <div className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="text-lg font-semibold">Grand Atrium Lobby</div>
-                      <Badge className="bg-indigo-500/20 text-indigo-300">5-Star</Badge>
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      Signature check-in, concierge, and lounge bar
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* Glassmorphism booking form overlay */}
-                <div className="absolute -bottom-6 left-6 right-6 md:left-auto md:right-0 md:w-[80%] neon-glass">
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 p-4">
-                    <Input type="date" aria-label="Check-in" placeholder="Check-in" />
-                    <Input type="date" aria-label="Check-out" placeholder="Check-out" />
-                    <Input type="number" min={1} aria-label="Guests" placeholder="Guests" />
-                    <Input type="number" min={1} aria-label="Rooms" placeholder="Rooms" />
-                    <Button
-                      className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-[0_0_24px_rgba(99,102,241,0.35)] hover:shadow-[0_0_36px_rgba(139,92,246,0.45)]"
-                      onClick={handleGetStarted}
-                    >
-                      Search
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
