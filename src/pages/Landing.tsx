@@ -97,9 +97,9 @@ const rooms = [
 ];
 
 const restaurants = [
-  { name: "Ivory Grill", img: "https://images.unsplash.com/photo-1541542684-4a6485c0c8c5?q=80&w=1600&auto=format&fit=crop" },
-  { name: "Lotus Bar", img: "https://images.unsplash.com/photo-1528605248644-14dd04022da1?q=80&w=1600&auto=format&fit=crop" },
-  { name: "Marble Cafe", img: "https://images.unsplash.com/photo-1544148103-0773bf10d330?q=80&w=1600&auto=format&fit=crop" },
+  { name: "Ivory Grill", img: "https://images.unsplash.com/photo-1541542684-4a6485c0c8c5?q=80&w=1600&auto=format&fit=crop", tagline: "Chef's tasting menus, aged steaks & rare wines", rating: 5 },
+  { name: "Lotus Bar", img: "https://images.unsplash.com/photo-1528605248644-14dd04022da1?q=80&w=1600&auto=format&fit=crop", tagline: "Signature cocktails, DJ nights & skyline views", rating: 5 },
+  { name: "Marble Cafe", img: "https://images.unsplash.com/photo-1544148103-0773bf10d330?q=80&w=1600&auto=format&fit=crop", tagline: "Artisanal brews, patisserie & brunch classics", rating: 4 },
 ];
 
 const testimonials = [
@@ -127,6 +127,57 @@ const events = [
   { title: "Grand Ballroom Wedding", img: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1600&auto=format&fit=crop", desc: "Lavish ceremonies with bespoke decor & orchestration" },
   { title: "Sky Terrace Reception", img: "https://images.unsplash.com/photo-1470229538611-16ba8c7ffbd7?q=80&w=1600&auto=format&fit=crop", desc: "Sunset cityscapes, gourmet menus & craft cocktails" },
   { title: "Executive Conference", img: "https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=1600&auto=format&fit=crop", desc: "State-of-the-art AV, concierge coordination & privacy" },
+];
+
+const amenitiesData = [
+  {
+    label: "Spa & Wellness",
+    img: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?q=80&w=1600&auto=format&fit=crop",
+    Icon: Star,
+    blurb: "Holistic rituals, sauna & infinity pool access",
+  },
+  {
+    label: "Infinity Pool",
+    img: "https://images.unsplash.com/photo-1496417263034-38ec4f0b665a?q=80&w=1600&auto=format&fit=crop",
+    Icon: Zap,
+    blurb: "Sunset skyline swims with loungers & cabanas",
+  },
+  {
+    label: "Business Lounge",
+    img: "https://images.unsplash.com/photo-1507209696998-3c532be9b2b1?q=80&w=1600&auto=format&fit=crop",
+    Icon: Globe,
+    blurb: "Private meeting rooms, concierge & barista",
+  },
+  {
+    label: "Events & Weddings",
+    img: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1600&auto=format&fit=crop",
+    Icon: Shield,
+    blurb: "Grand ballrooms, terrace lawns & planning",
+  },
+  {
+    label: "Private Dining",
+    img: "https://images.unsplash.com/photo-1514512364185-4c2b4e9b7d89?q=80&w=1600&auto=format&fit=crop",
+    Icon: UtensilsCrossed,
+    blurb: "Curated menus in candlelit alcoves",
+  },
+  {
+    label: "Chauffeur",
+    img: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=1600&auto=format&fit=crop",
+    Icon: Car,
+    blurb: "On-demand luxury fleet & airport transfers",
+  },
+  {
+    label: "Kids Club",
+    img: "https://images.unsplash.com/photo-1529078155058-5d716f45d604?q=80&w=1600&auto=format&fit=crop",
+    Icon: Star,
+    blurb: "Creative playrooms & family-friendly stays",
+  },
+  {
+    label: "Gym & Salon",
+    img: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1600&auto=format&fit=crop",
+    Icon: Shield,
+    blurb: "Personal trainers, stylists & treatment suites",
+  },
 ];
 
 export default function Landing() {
@@ -598,29 +649,77 @@ export default function Landing() {
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.9 }}
             className="text-center mb-10"
           >
             <h2 className="text-3xl md:text-4xl font-bold">Fine Dining Experience</h2>
-            <p className="text-muted-foreground">Gourmet signatures with a modern twist</p>
+            <p className="text-muted-foreground">Immersive gastronomy with live ambience, tilts and glow</p>
           </motion.div>
 
+          {/* Elevated cinematic dining cards */}
           <Carousel className="w-full">
             <CarouselContent>
-              {restaurants.map((r) => (
+              {restaurants.map((r, idx) => (
                 <CarouselItem key={r.name} className="md:basis-1/2 lg:basis-1/3">
                   <div className="p-1">
                     <motion.div
-                      initial={{ opacity: 0, y: 24 }}
-                      whileInView={{ opacity: 1, y: 0 }}
+                      initial={{ opacity: 0, y: 28, scale: 0.98 }}
+                      whileInView={{ opacity: 1, y: 0, scale: 1 }}
                       viewport={{ once: true, amount: 0.3 }}
-                      whileHover={{ rotateX: 2, rotateY: -2, scale: 1.02 }}
-                      transition={{ type: "spring", stiffness: 220, damping: 18 }}
-                      className="rounded-2xl overflow-hidden border border-indigo-500/30 gradient-card shadow-lg"
+                      whileHover={{ rotateX: 3, rotateY: -3, scale: 1.02 }}
+                      transition={{ type: "spring", stiffness: 200, damping: 18, delay: idx * 0.03 }}
+                      className="relative overflow-hidden rounded-2xl border border-indigo-500/30 gradient-card shadow-xl group preserve-3d"
                     >
-                      <img src={r.img} alt={r.name} className="w-full h-64 object-cover" />
-                      <div className="p-4 flex items-center justify-between">
-                        <div className="text-lg font-semibold">{r.name}</div>
-                        <Button size="sm" variant="outline">Reserve</Button>
+                      {/* Glow ring behind */}
+                      <div className="absolute -inset-24 rounded-full bg-indigo-500/10 blur-3xl group-hover:bg-indigo-500/20 transition-colors duration-500" />
+                      {/* Main image with subtle ken-burns on hover */}
+                      <div className="relative h-64 overflow-hidden">
+                        <img
+                          src={r.img}
+                          alt={r.name}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                        {/* Floating deco icon */}
+                        <UtensilsCrossed className="absolute top-3 left-3 h-5 w-5 text-indigo-300 drop-shadow-[0_0_8px_#6366f1] opacity-90" />
+                        {/* Chef's pick ribbon */}
+                        <div className="absolute top-3 right-3 px-2 py-1 rounded-md text-xs bg-indigo-500/20 border border-indigo-500/30 text-indigo-200">
+                          Chef's Pick
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="relative p-5">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="text-lg font-semibold">{r.name}</div>
+                            <div className="text-sm text-muted-foreground">{r.tagline}</div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: r.rating }).map((_, i) => (
+                              <Star key={i} className="h-4 w-4 text-indigo-300" />
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="mt-4 flex items-center justify-between">
+                          <Button variant="outline" size="sm">
+                            View Menu
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-[0_0_18px_rgba(99,102,241,0.35)] hover:shadow-[0_0_24px_rgba(139,92,246,0.45)]"
+                            onClick={handleGetStarted}
+                          >
+                            Reserve
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Hover shimmer accent */}
+                      <div className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                        <div className="absolute -inset-12 bg-gradient-to-r from-indigo-500/0 via-indigo-500/20 to-indigo-500/0 blur-2xl rotate-12" />
                       </div>
                     </motion.div>
                   </div>
@@ -646,32 +745,61 @@ export default function Landing() {
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.9 }}
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold">Amenities & Experiences</h2>
-            <p className="text-muted-foreground">Spa, Wellness, Business Lounge, Events, and more</p>
+            <p className="text-muted-foreground">Immersive, visual, and interactive — beyond just icons</p>
           </motion.div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            { [ "Spa", "Infinity Pool", "Wellness", "Business Lounge", "Events", "Safari", "Golf", "Kids Club", "Private Dining", "Chauffeur", "Gym", "Salon" ].map((label, i) => {
-                const Icon = [Star, Zap, Shield, Globe, Car, UtensilsCrossed][i % 6];
-                return (
-                  <motion.div
-                    key={label}
-                    initial={{ opacity: 0, y: 16, scale: 0.98 }}
-                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                    viewport={{ once: true, amount: 0.2 }}
-                    transition={{ delay: i * 0.03 }}
-                    className="rounded-xl border border-indigo-500/30 p-4 text-center gradient-card hover:shadow-lg hover:scale-[1.04] transition-all"
-                  >
-                    <div className="flex flex-col items-center gap-2">
-                      <Icon className="h-5 w-5 text-indigo-300" />
-                      <div className="text-sm font-medium">{label}</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            {amenitiesData.map((a, i) => (
+              <motion.div
+                key={a.label}
+                initial={{ opacity: 0, y: 16, scale: 0.98 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ delay: i * 0.04, duration: 0.7 }}
+                whileHover={{ scale: 1.02 }}
+                className="relative rounded-2xl overflow-hidden border border-indigo-500/30 gradient-card group"
+              >
+                {/* Background image */}
+                <div className="absolute inset-0">
+                  <img
+                    src={a.img}
+                    alt={a.label}
+                    className="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                </div>
+
+                {/* Content */}
+                <div className="relative p-5 h-48 flex flex-col justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl neon-glass border border-indigo-500/30 flex items-center justify-center">
+                      <a.Icon className="h-5 w-5 text-indigo-300" />
                     </div>
-                  </motion.div>
-                );
-              })
-            }
+                    <div className="font-semibold">{a.label}</div>
+                  </div>
+                  <div className="text-sm text-indigo-200/90 opacity-90 group-hover:opacity-100 transition-opacity duration-300">
+                    {a.blurb}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Button variant="outline" size="sm">Explore</Button>
+                    <Button
+                      size="sm"
+                      className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-[0_0_18px_rgba(99,102,241,0.35)] hover:shadow-[0_0_24px_rgba(139,92,246,0.45)]"
+                      onClick={handleGetStarted}
+                    >
+                      Book
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Ambient halo on hover */}
+                <div className="pointer-events-none absolute -inset-20 rounded-full bg-indigo-500/10 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
