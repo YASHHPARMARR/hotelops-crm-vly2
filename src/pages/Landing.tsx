@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { useNavigate } from "react-router";
 import { useMemo, useState, useEffect, useRef } from "react";
-import { ArrowRight, Bed, Calendar, Car, Globe, Package, Shield, Star, UtensilsCrossed, Zap } from "lucide-react";
+import { ArrowRight, Bed, Calendar, Car, Globe, Package, Shield, Star, UtensilsCrossed, Zap, Phone, Mail, MapPin } from "lucide-react";
 
 const diningIcons = [
   { Icon: UtensilsCrossed, className: "top-10 left-10" },
@@ -121,6 +121,12 @@ const testimonials = [
     img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=800&auto=format&fit=crop",
     rating: 5,
   },
+];
+
+const events = [
+  { title: "Grand Ballroom Wedding", img: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1600&auto=format&fit=crop", desc: "Lavish ceremonies with bespoke decor & orchestration" },
+  { title: "Sky Terrace Reception", img: "https://images.unsplash.com/photo-1470229538611-16ba8c7ffbd7?q=80&w=1600&auto=format&fit=crop", desc: "Sunset cityscapes, gourmet menus & craft cocktails" },
+  { title: "Executive Conference", img: "https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=1600&auto=format&fit=crop", desc: "State-of-the-art AV, concierge coordination & privacy" },
 ];
 
 export default function Landing() {
@@ -289,6 +295,15 @@ export default function Landing() {
                 <span className="text-black font-bold text-lg">H</span>
               </div>
               <span className="text-2xl font-bold text-foreground">Grand Horizon</span>
+              <div className="hidden md:flex items-center gap-6 ml-8 text-sm text-muted-foreground">
+                <a href="#about" className="hover:text-indigo-300 transition-colors">About</a>
+                <a href="#rooms" className="hover:text-indigo-300 transition-colors">Rooms</a>
+                <a href="#dining" className="hover:text-indigo-300 transition-colors">Dining</a>
+                <a href="#amenities" className="hover:text-indigo-300 transition-colors">Amenities</a>
+                <a href="#events" className="hover:text-indigo-300 transition-colors">Events</a>
+                <a href="#virtual-tour" className="hover:text-indigo-300 transition-colors">Virtual Tour</a>
+                <a href="#contact" className="hover:text-indigo-300 transition-colors">Contact</a>
+              </div>
             </motion.div>
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-4">
               {!isLoading && (
@@ -369,7 +384,7 @@ export default function Landing() {
                   <div className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="text-lg font-semibold">Grand Atrium Lobby</div>
-                      <Badge className="bg-indigo-500/20 text-indigo-300 border-indigo-500/30">5-Star</Badge>
+                      <Badge className="bg-indigo-500/20 text-indigo-300">5-Star</Badge>
                     </div>
                     <div className="text-sm text-muted-foreground mt-1">
                       Signature check-in, concierge, and lounge bar
@@ -624,6 +639,53 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Events & Weddings */}
+      <section id="events" className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-10"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold">Events & Weddings</h2>
+            <p className="text-muted-foreground">Grand venues, curated menus, and a dedicated planner</p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {events.map((ev, i) => (
+              <motion.div
+                key={ev.title}
+                initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ delay: i * 0.06 }}
+                className="rounded-2xl overflow-hidden border border-indigo-500/30 gradient-card group"
+              >
+                <div className="relative h-64">
+                  <img src={ev.img} alt={ev.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+                  <div className="absolute bottom-0 p-4">
+                    <div className="text-lg font-semibold">{ev.title}</div>
+                    <div className="text-sm text-muted-foreground">{ev.desc}</div>
+                  </div>
+                </div>
+                <div className="p-4 flex items-center justify-between">
+                  <Badge className="bg-indigo-500/20 text-indigo-300 border-indigo-500/30">Signature</Badge>
+                  <Button
+                    size="sm"
+                    className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white"
+                    onClick={handleGetStarted}
+                  >
+                    Plan Your Event
+                  </Button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Virtual Tour */}
       <section id="virtual-tour" className="py-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -668,6 +730,55 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Testimonials */}
+      <section id="testimonials" className="py-20 bg-card/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-10"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold">Guest Testimonials</h2>
+            <p className="text-muted-foreground">Stories from unforgettable stays</p>
+          </motion.div>
+
+          <Carousel className="w-full">
+            <CarouselContent>
+              {testimonials.map((t) => (
+                <CarouselItem key={t.name} className="md:basis-1/2 lg:basis-1/3">
+                  <div className="p-1">
+                    <motion.div
+                      initial={{ opacity: 0, y: 24 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.3 }}
+                      whileHover={{ scale: 1.02 }}
+                      transition={{ type: "spring", stiffness: 220, damping: 18 }}
+                      className="rounded-2xl border border-indigo-500/30 gradient-card p-4 h-full"
+                    >
+                      <div className="flex items-center gap-3">
+                        <img src={t.img} alt={t.name} className="h-12 w-12 rounded-full border border-indigo-500/40 object-cover" />
+                        <div>
+                          <div className="font-semibold">{t.name}</div>
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: t.rating }).map((_, i) => (
+                              <Star key={i} className="h-4 w-4 text-indigo-300" />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-sm text-muted-foreground mt-3">{t.quote}</div>
+                    </motion.div>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
+        </div>
+      </section>
+
       {/* Booking CTA */}
       <div className="fixed bottom-0 left-0 right-0 z-40 px-4 pb-4">
         <div className="mx-auto max-w-5xl neon-glass border-t border-indigo-500/20">
@@ -687,13 +798,53 @@ export default function Landing() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 py-12 bg-card/20 relative overflow-hidden">
+      <footer id="contact" className="border-t border-border/50 py-12 bg-card/20 relative overflow-hidden">
         <img
           src="https://images.unsplash.com/photo-1525362081669-2b476bb628c3?q=80&w=1600&auto=format&fit=crop"
           alt="Black marble"
           className="absolute inset-0 w-full h-full object-cover opacity-10 -z-10"
         />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+            <div className="col-span-2 md:col-span-1">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/60 rounded-lg flex items-center justify-center">
+                  <span className="text-primary-foreground font-bold">H</span>
+                </div>
+                <span className="text-xl font-bold text-foreground">Grand Horizon</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Where luxury meets cinematic hospitality in the heart of the city.
+              </p>
+            </div>
+            <div>
+              <div className="font-semibold mb-3">Explore</div>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="#rooms" className="hover:text-indigo-300">Rooms & Suites</a></li>
+                <li><a href="#dining" className="hover:text-indigo-300">Fine Dining</a></li>
+                <li><a href="#amenities" className="hover:text-indigo-300">Amenities</a></li>
+                <li><a href="#events" className="hover:text-indigo-300">Events & Weddings</a></li>
+                <li><a href="#virtual-tour" className="hover:text-indigo-300">Virtual Tour</a></li>
+              </ul>
+            </div>
+            <div>
+              <div className="font-semibold mb-3">Guests</div>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-center gap-2"><Phone className="h-4 w-4 text-indigo-300" /> +1 (555) 012-3456</li>
+                <li className="flex items-center gap-2"><Mail className="h-4 w-4 text-indigo-300" /> concierge@grandhorizon.com</li>
+                <li className="flex items-center gap-2"><MapPin className="h-4 w-4 text-indigo-300" /> 100 Skyline Ave, Downtown</li>
+              </ul>
+            </div>
+            <div>
+              <div className="font-semibold mb-3">Contact</div>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-center gap-2"><Phone className="h-4 w-4 text-indigo-300" /> +1 (555) 012-3456</li>
+                <li className="flex items-center gap-2"><Mail className="h-4 w-4 text-indigo-300" /> concierge@grandhorizon.com</li>
+                <li className="flex items-center gap-2"><MapPin className="h-4 w-4 text-indigo-300" /> 100 Skyline Ave, Downtown</li>
+              </ul>
+            </div>
+          </div>
+
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center gap-3 mb-4 md:mb-0">
               <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/60 rounded-lg flex items-center justify-center">
