@@ -6,23 +6,22 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { useNavigate } from "react-router";
-import { useMemo, useState } from "react";
-import {
-  Bed,
-  Calendar,
-  Shield,
-  Wrench,
-  Car,
-  Package,
-  UtensilsCrossed,
-  Users,
-  BarChart3,
-  ArrowRight,
-  CheckCircle,
-  Star,
-  Globe,
-  Zap,
-} from "lucide-react";
+import { useMemo, useState, useEffect, useRef } from "react";
+import { ArrowRight, Bed, Calendar, Car, Globe, Package, Shield, Star, UtensilsCrossed, Zap } from "lucide-react";
+
+const diningIcons = [
+  { Icon: UtensilsCrossed, className: "top-10 left-10" },
+  { Icon: Star, className: "top-20 right-16" },
+  { Icon: Zap, className: "bottom-16 left-1/3" },
+];
+
+const particleSeeds = Array.from({ length: 28 }).map((_, i) => ({
+  id: i,
+  left: `${Math.random() * 100}%`,
+  size: Math.random() * 4 + 2,
+  delay: Math.random() * 5,
+  duration: 8 + Math.random() * 8,
+}));
 
 const features = [
   {
@@ -146,6 +145,36 @@ export default function Landing() {
     []
   );
 
+  const [showLoader, setShowLoader] = useState(true);
+  const [mouse, setMouse] = useState({ x: 0, y: 0 });
+  const [clickRipple, setClickRipple] = useState<{ x: number; y: number; id: number }[]>([]);
+  const rippleId = useRef(0);
+
+  useEffect(() => {
+    const t = setTimeout(() => setShowLoader(false), 1200);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      const id = rippleId.current++;
+      setClickRipple((prev) => [...prev, { x: e.clientX, y: e.clientY, id }]);
+      setTimeout(() => {
+        setClickRipple((prev) => prev.filter((r) => r.id !== id));
+      }, 600);
+    };
+    window.addEventListener("click", onClick);
+    return () => window.removeEventListener("click", onClick);
+  }, []);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    setMouse({ x: e.clientX, y: e.clientY });
+  };
+
+  // Helper for small parallax shift
+  const px = (f: number) => (mouse.x - window.innerWidth / 2) * f;
+  const py = (f: number) => (mouse.y - window.innerHeight / 2) * f;
+
   const handleGetStarted = () => {
     if (isAuthenticated && user) {
       // Redirect based on user role
@@ -190,10 +219,45 @@ export default function Landing() {
   const y = useTransform(scrollYProgress, [0, 1], [0, -120]);
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* 3D Parallax Background */}
+    <div className="min-h-screen bg-background relative overflow-hidden" onMouseMove={handleMouseMove}>
+      {/* Loader: logo line-draw → doors open */}
+      {showLoader && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black">
+          <div className="relative">
+            <svg width="160" height="160" viewBox="0 0 200 200" className="drop-shadow-[0_0_24px_#34d399]">
+              <defs>
+                <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#34d399" />
+                  <stop offset="100%" stopColor="#fbbf24" />
+                </linearGradient>
+              </defs>
+              <circle cx="100" cy="100" r="70" fill="none" stroke="url(#g)" strokeWidth="3" className="stroke-dash-animate" />
+              <path d="M70 120 L100 60 L130 120 Z" fill="none" stroke="url(#g)" strokeWidth="3" className="stroke-dash-animate" />
+              <text x="50%" y="54%" textAnchor="middle" fill="#e5e7eb" fontSize="28" fontWeight="800" letterSpacing="2">GH</text>
+            </svg>
+            <div className="absolute inset-0 animate-doors" />
+          </div>
+        </div>
+      )}
+
+      {/* Custom cursor + click ripples */}
+      <div className="pointer-events-none fixed inset-0 z-[998]">
+        <div
+          className="custom-cursor"
+          style={{ transform: `translate(${mouse.x - 8}px, ${mouse.y - 8}px)` }}
+        />
+        {clickRipple.map((r) => (
+          <span
+            key={r.id}
+            className="click-ripple"
+            style={{ left: r.x - 12, top: r.y - 12 }}
+          />
+        ))}
+      </div>
+
+      {/* 3D Parallax Background (subtle emerald aura + layered images) */}
       <div className="absolute inset-0 pointer-events-none perspective-1000">
-        <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-[1200px] h-[1200px] rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-[1200px] h-[1200px] rounded-full bg-emerald-500/10 blur-3xl" />
         {parallax.map((l, i) => (
           <motion.img
             key={i}
@@ -205,37 +269,43 @@ export default function Landing() {
               height: "auto",
               top: i === 0 ? 80 : i === 1 ? 320 : 160,
               left: i === 0 ? "8%" : i === 1 ? "68%" : "74%",
-            }}
+              translateX: px(0.01 + i * 0.004),
+              translateY: py(0.01 + i * 0.003),
+            } as any}
             initial={{ opacity: 0, y: 40, rotateX: -8, rotateY: 6, z: -50 }}
             whileInView={{ opacity: 0.35, y: 0, rotateX: 0, rotateY: 0, z: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.9, delay: i * 0.15 }}
           />
         ))}
+        {particleSeeds.map((p) => (
+          <span
+            key={p.id}
+            className="particle"
+            style={{
+              left: p.left,
+              width: p.size,
+              height: p.size,
+              animationDelay: `${p.delay}s`,
+              animationDuration: `${p.duration}s`,
+            } as any}
+          />
+        ))}
       </div>
 
-      {/* Navigation */}
+      {/* Navigation – emerald + gold accent */}
       <nav className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-3"
-            >
-              <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/60 rounded-xl flex items-center justify-center neon-glow">
-                <span className="text-primary-foreground font-bold text-lg">H</span>
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center neon-glow-emerald bg-gradient-to-br from-emerald-500 to-emerald-400">
+                <span className="text-black font-bold text-lg">H</span>
               </div>
               <span className="text-2xl font-bold text-foreground">Grand Horizon</span>
             </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-4"
-            >
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-4">
               {!isLoading && (
-                <Button onClick={handleGetStarted} className="neon-glow">
+                <Button onClick={handleGetStarted} className="neon-glow-emerald">
                   Book Now
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -245,32 +315,30 @@ export default function Landing() {
         </div>
       </nav>
 
-      {/* Hero Section */}
+      {/* Hero Section – cinematic parallax + glass booking form */}
       <section className="relative overflow-hidden py-20 lg:py-32">
-        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-card/20" />
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-card/10" />
+        {/* lens flares */}
+        <div className="pointer-events-none absolute -top-10 -left-10 w-80 h-80 rounded-full bg-emerald-400/10 blur-[80px]" />
+        <div className="pointer-events-none absolute top-20 right-10 w-72 h-72 rounded-full bg-amber-300/10 blur-[72px]" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-10">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="space-y-6"
-            >
-              <Badge variant="outline" className="mb-2 neon-border">
-                Award-Winning Luxury
+            {/* Left: Cinematic heading */}
+            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="space-y-6">
+              <Badge variant="outline" className="mb-2 neon-border-emerald">
+                Emerald Luxury
               </Badge>
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-foreground leading-tight">
-                Experience
-                <span className="block text-transparent bg-gradient-to-r from-primary via-blue-400 to-purple-400 bg-clip-text animate-glow">
-                  Elevated Hospitality
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-foreground leading-tight tracking-wide">
+                Where Luxury Meets
+                <span className="block cinematic-streak">
+                  Cinematic Hospitality
                 </span>
               </h1>
               <p className="text-xl text-muted-foreground max-w-2xl">
-                Seamless bookings, curated dining, serene stays, and impeccable service. 
-                Crafted for premium hotels and resorts to delight every guest.
+                Book immersive stays, savor fine dining, and explore curated experiences—crafted with emerald elegance and golden warmth.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" onClick={handleGetStarted} className="neon-glow text-lg px-8">
+                <Button size="lg" onClick={handleGetStarted} className="neon-glow-emerald text-lg px-8">
                   {isAuthenticated ? "Go to Dashboard" : "Book Now"}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
@@ -280,29 +348,24 @@ export default function Landing() {
               </div>
               <div className="flex items-center gap-6 pt-2 text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-primary" />
+                  <Star className="h-5 w-5 text-emerald-400" />
                   4.9/5 Guest Satisfaction
                 </div>
                 <div className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-primary" />
+                  <Shield className="h-5 w-5 text-emerald-400" />
                   Secure & Private
                 </div>
               </div>
             </motion.div>
 
-            {/* 3D Showcase Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.15 }}
-              className="relative perspective-1000"
-            >
+            {/* Right: 3D showcase + glass booking form overlay */}
+            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.15 }} className="relative perspective-1000">
               <div className="preserve-3d w-full h-full">
                 <motion.div
                   whileHover={{ rotateX: 6, rotateY: -8, scale: 1.02 }}
                   transition={{ type: "spring", stiffness: 160, damping: 18 }}
                   className="rounded-2xl gradient-card border border-border/50 p-4 shadow-xl"
+                  style={{ translateX: px(0.015), translateY: py(0.01) } as any}
                 >
                   <img
                     src="https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?q=80&w=1800&auto=format&fit=crop"
@@ -312,13 +375,24 @@ export default function Landing() {
                   <div className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="text-lg font-semibold">Grand Atrium Lobby</div>
-                      <Badge>5-Star</Badge>
+                      <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30">5-Star</Badge>
                     </div>
                     <div className="text-sm text-muted-foreground mt-1">
                       Signature check-in, concierge, and lounge bar
                     </div>
                   </div>
                 </motion.div>
+
+                {/* Glassmorphism booking form overlay */}
+                <div className="absolute -bottom-6 left-6 right-6 md:left-auto md:right-0 md:w-[80%] neon-glass">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 p-4">
+                    <Input type="date" aria-label="Check-in" placeholder="Check-in" />
+                    <Input type="date" aria-label="Check-out" placeholder="Check-out" />
+                    <Input type="number" min={1} aria-label="Guests" placeholder="Guests" />
+                    <Input type="number" min={1} aria-label="Rooms" placeholder="Rooms" />
+                    <Button className="neon-glow-emerald" onClick={handleGetStarted}>Search</Button>
+                  </div>
+                </div>
               </div>
             </motion.div>
           </div>
@@ -354,7 +428,7 @@ export default function Landing() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <Badge variant="outline" className="neon-border mb-3">Our Legacy</Badge>
+            <Badge variant="outline" className="neon-border-emerald mb-3">Our Legacy</Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Grand Horizon Hotels</h2>
             <p className="text-lg text-muted-foreground mb-6">
               Inspired by the timeless elegance of Taj and the modern sophistication of Hyatt,
@@ -362,25 +436,20 @@ export default function Landing() {
               unrivaled hospitality at every turn.
             </p>
             <div className="flex gap-3">
-              <Button onClick={handleGetStarted} className="neon-glow">Book Your Escape</Button>
+              <Button onClick={handleGetStarted} className="neon-glow-emerald">Book Your Escape</Button>
               <Button variant="outline">Our Story</Button>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* Luxury Rooms & Suites */}
+      {/* Luxury Rooms & Suites – 3D carousel + flip-on-hover */}
       <section id="rooms" className="py-20 bg-card/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-10"
-          >
+          <motion.div initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-10">
             <div>
               <h2 className="text-3xl md:text-4xl font-bold">Rooms & Suites</h2>
-              <p className="text-muted-foreground">Curated luxury with 3D tilt and hover reveals</p>
+              <p className="text-muted-foreground">Cinematic carousel with 3D flip reveals</p>
             </div>
             <div className="flex gap-2">
               {(["All", "Deluxe", "Suite", "Presidential"] as const).map((f) => (
@@ -391,36 +460,71 @@ export default function Landing() {
             </div>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredRooms.map((room, i) => (
-              <motion.div
-                key={room.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.06 }}
-                whileHover={{ y: -6, rotateX: 2, rotateY: -2 }}
-                className="relative group preserve-3d rounded-2xl overflow-hidden border border-border/50 gradient-card"
-              >
-                <img src={room.img} alt={room.name} className="w-full h-64 object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="absolute bottom-0 p-4 w-full flex items-center justify-between">
-                  <div>
-                    <div className="text-lg font-semibold">{room.name}</div>
-                    <div className="text-sm text-muted-foreground">{room.category}</div>
+          {/* 3D rotating carousel using existing shadcn Carousel */}
+          <Carousel className="w-full">
+            <CarouselContent>
+              {filteredRooms.map((room) => (
+                <CarouselItem key={room.name} className="md:basis-1/2 lg:basis-1/3">
+                  <div className="p-1">
+                    <div className="relative h-80 preserve-3d group [transform-style:preserve-3d] [perspective:1200px]">
+                      {/* Card container with depth hover */}
+                      <div className="absolute inset-0 rounded-2xl border border-border/50 gradient-card transition-transform duration-500 group-hover:-rotate-y-180 [transform-style:preserve-3d]">
+                        {/* Front */}
+                        <div className="absolute inset-0 backface-hidden overflow-hidden rounded-2xl">
+                          <img src={room.img} alt={room.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                          <div className="absolute bottom-0 p-4 w-full flex items-center justify-between">
+                            <div>
+                              <div className="text-lg font-semibold">{room.name}</div>
+                              <div className="text-sm text-muted-foreground">{room.category}</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-emerald-300 font-semibold">${room.price}/night</div>
+                              <Button size="sm" className="mt-2 neon-glow-emerald" onClick={handleGetStarted}>Book</Button>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Back */}
+                        <div className="absolute inset-0 backface-hidden rotate-y-180 rounded-2xl p-4 flex flex-col justify-between bg-black/60 backdrop-blur border border-emerald-500/20">
+                          <div>
+                            <div className="text-lg font-semibold">{room.name}</div>
+                            <div className="text-sm text-muted-foreground mb-3">Premium amenities, skyline view, curated minibar, butler-on-call.</div>
+                            <div className="text-sm text-emerald-300">360° Preview</div>
+                            <div className="mt-2 aspect-video rounded-lg overflow-hidden border border-emerald-500/20">
+                              <iframe
+                                className="w-full h-full"
+                                src="https://sketchfab.com/models/7w7pAfK3LjjXNMTvEihQ7rC3q6d/embed"
+                                title="Room 360 preview"
+                                allow="autoplay; fullscreen; xr-spatial-tracking"
+                                allowFullScreen
+                              />
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="text-amber-300 font-semibold">${room.price}/night</div>
+                            <Button className="neon-glow-emerald" onClick={handleGetStarted}>Reserve</Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-amber-300 font-semibold">${room.price}/night</div>
-                    <Button size="sm" className="mt-2 neon-glow" onClick={handleGetStarted}>Book</Button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
         </div>
       </section>
 
-      {/* Fine Dining Experience */}
+      {/* SVG wave divider */}
+      <div className="wave-divider">
+        <svg viewBox="0 0 1440 120" preserveAspectRatio="none" className="w-full h-[80px]">
+          <path d="M0,64 C240,96 480,0 720,32 C960,64 1200,128 1440,64 L1440,120 L0,120 Z" className="fill-emerald-900/20" />
+        </svg>
+      </div>
+
+      {/* Fine Dining Experience – video bg + floating icons */}
       <section id="dining" className="py-20 relative">
         <video
           className="absolute inset-0 w-full h-full object-cover opacity-10 -z-10"
@@ -458,14 +562,16 @@ export default function Landing() {
             <CarouselNext />
           </Carousel>
         </div>
+        <div className="pointer-events-none absolute inset-0 -z-0">
+          {diningIcons.map(({ Icon, className }, i) => (
+            <Icon key={i} className={`absolute ${className} text-emerald-300/60 animate-slow-float drop-shadow-[0_0_12px_#34d399]`} />
+          ))}
+        </div>
       </section>
 
-      {/* Amenities & Experiences */}
+      {/* Amenities & Experiences – holographic glowing icons + aurora */}
       <section id="amenities" className="py-20 bg-card/20 relative">
-        <div className="absolute inset-0 -z-10 pointer-events-none">
-          <div className="w-64 h-64 rounded-full bg-amber-500/10 blur-3xl absolute -top-10 left-10" />
-          <div className="w-64 h-64 rounded-full bg-amber-300/10 blur-3xl absolute bottom-10 right-10" />
-        </div>
+        <div className="absolute inset-0 -z-10 pointer-events-none aurora-bg" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 15 }}
@@ -485,7 +591,7 @@ export default function Landing() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.04 }}
-                className="rounded-xl border border-border/50 p-4 text-center gradient-card hover:shadow-lg"
+                className="rounded-xl border border-emerald-500/30 p-4 text-center gradient-card hover:shadow-lg hover:scale-[1.03] transition-all hologram-card"
               >
                 <div className="text-sm font-medium">{a}</div>
               </motion.div>
@@ -494,7 +600,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Virtual Tour */}
+      {/* Virtual Tour – 3D globe + smooth zoom */}
       <section id="virtual-tour" className="py-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -504,24 +610,36 @@ export default function Landing() {
             className="text-center mb-8"
           >
             <h2 className="text-3xl md:text-4xl font-bold">Virtual Tour</h2>
-            <p className="text-muted-foreground">Explore our lobby in 3D</p>
+            <p className="text-muted-foreground">Interactive 3D globe and lobby walkthrough</p>
           </motion.div>
-          <div className="rounded-2xl overflow-hidden border border-border/50 gradient-card aspect-video">
-            <iframe
-              title="Virtual Tour"
-              className="w-full h-full"
-              src="https://sketchfab.com/models/7w7pAfK3LjjXNMTvEihQ7rC3q6d/embed"
-              allow="autoplay; fullscreen; xr-spatial-tracking"
-              allowFullScreen
-            />
+
+          <div className="grid lg:grid-cols-2 gap-6">
+            <motion.div whileHover={{ scale: 1.01 }} className="rounded-2xl overflow-hidden border border-emerald-500/30 gradient-card aspect-video group">
+              <iframe
+                title="3D Globe"
+                className="w-full h-full transition-transform duration-500 group-hover:scale-[1.02]"
+                src="https://sketchfab.com/models/5c1b0a8f221b4c1a8dc25f861e9f952a/embed"
+                allow="autoplay; fullscreen; xr-spatial-tracking"
+                allowFullScreen
+              />
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.01 }} className="rounded-2xl overflow-hidden border border-emerald-500/30 gradient-card aspect-video group">
+              <iframe
+                title="Lobby 3D"
+                className="w-full h-full transition-transform duration-500 group-hover:scale-[1.02]"
+                src="https://sketchfab.com/models/7w7pAfK3LjjXNMTvEihQ7rC3q6d/embed"
+                allow="autoplay; fullscreen; xr-spatial-tracking"
+                allowFullScreen
+              />
+            </motion.div>
           </div>
           <div className="text-center mt-4">
-            <Button className="neon-glow" onClick={handleGetStarted}>Take Virtual Tour</Button>
+            <Button className="neon-glow-emerald" onClick={handleGetStarted}>Enter Virtual Tour</Button>
           </div>
         </div>
       </section>
 
-      {/* Guest Testimonials */}
+      {/* Guest Testimonials – hologram cards + bokeh */}
       <section id="testimonials" className="py-20 bg-card/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -547,7 +665,7 @@ export default function Landing() {
                           <div className="text-amber-300">{Array.from({ length: t.rating }).map((_, i) => "★").join("")}</div>
                         </div>
                       </div>
-                      <div className="text-muted-foreground mt-3">“{t.quote}”</div>
+                      <div className="text-muted-foreground mt-3">" {t.quote} "</div>
                     </div>
                   </div>
                 </CarouselItem>
@@ -580,176 +698,20 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Booking CTA */}
-      <section id="booking" className="py-20 bg-card/20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="rounded-2xl border border-border/50 gradient-card p-6"
-          >
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-              <div>
-                <h3 className="text-2xl font-bold">Check Availability</h3>
-                <p className="text-muted-foreground">Your luxury escape awaits</p>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3 w-full md:w-auto">
-                <Input type="date" aria-label="Check-in" placeholder="Check-in" />
-                <Input type="date" aria-label="Check-out" placeholder="Check-out" />
-                <Input type="number" min={1} aria-label="Guests" placeholder="Guests" />
-                <Input type="number" min={1} aria-label="Rooms" placeholder="Rooms" />
-                <Button className="neon-glow" onClick={handleGetStarted}>Check Availability</Button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Features Grid with 3D tilt */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Signature Experiences
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Curated moments—from spa rituals to skyline dining—crafted for you
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.08 }}
-                whileHover={{ y: -4, rotateX: 2, rotateY: -2 }}
-                className="perspective-1000"
-              >
-                <Card className="gradient-card border-border/50 h-full preserve-3d">
-                  <CardContent className="p-6">
-                    <feature.icon className={`h-12 w-12 ${feature.color} mb-4 float-slow`} />
-                    <h3 className="text-xl font-semibold text-foreground mb-2">
-                      {feature.title}
-                    </h3>
-                    <p className="text-muted-foreground">
-                      {feature.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+      {/* Booking CTA – sticky glass footer */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 px-4 pb-4">
+        <div className="mx-auto max-w-5xl neon-glass border-t border-emerald-500/20">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 p-3">
+            <Input type="date" aria-label="Check-in" placeholder="Check-in" />
+            <Input type="date" aria-label="Check-out" placeholder="Check-out" />
+            <Input type="number" min={1} aria-label="Guests" placeholder="Guests" />
+            <Input type="number" min={1} aria-label="Rooms" placeholder="Rooms" />
+            <Button className="neon-glow-emerald ripple-btn" onClick={handleGetStarted}>Check Availability</Button>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* Role-Based Access */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Experiences For Every Journey
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Wellness. Business. Romance. Family—an experience for every traveler
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {roles.map((role, index) => (
-              <motion.div
-                key={role.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Card className="gradient-card border-border/50">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-lg font-semibold text-foreground">
-                        {role.name}
-                      </h3>
-                      <Badge variant="secondary">{role.users}</Badge>
-                    </div>
-                    <p className="text-muted-foreground">
-                      {role.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="py-20 bg-card/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            {[
-              { number: "320", label: "Luxury Rooms & Suites", icon: Bed },
-              { number: "7", label: "Award-Winning Restaurants", icon: UtensilsCrossed },
-              { number: "1,200+", label: "Spa Treatments Monthly", icon: Star },
-              { number: "98%", label: "Guest Satisfaction", icon: CheckCircle },
-            ].map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="text-center"
-              >
-                <stat.icon className="h-8 w-8 text-primary mx-auto mb-4" />
-                <div className="text-3xl font-bold text-foreground mb-2">
-                  {stat.number}
-                </div>
-                <div className="text-muted-foreground">
-                  {stat.label}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
-              Ready to Transform Your Hotel Operations?
-            </h2>
-            <p className="text-xl text-muted-foreground mb-8">
-              Join hundreds of hotels already using HotelOps to streamline their operations
-            </p>
-            <Button size="lg" onClick={handleGetStarted} className="neon-glow text-lg px-8">
-              {isAuthenticated ? "Go to Dashboard" : "Start Your Free Trial"}
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Footer */}
+      {/* Footer – keep, aligns with theme */}
       <footer className="border-t border-border/50 py-12 bg-card/20 relative overflow-hidden">
         <img
           src="https://images.unsplash.com/photo-1525362081669-2b476bb628c3?q=80&w=1600&auto=format&fit=crop"
@@ -771,12 +733,12 @@ export default function Landing() {
         </div>
       </footer>
 
-      {/* Floating 3D emblem */}
+      {/* Floating 3D emblem – already present; adjust color accents */}
       <motion.div
         className="fixed right-4 md:right-8 bottom-4 md:bottom-8 z-50 pointer-events-none"
         style={{ y, rotate, transformStyle: "preserve-3d" }}
       >
-        <div className="relative w-20 h-28 md:w-24 md:h-32 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-500 shadow-2xl border border-white/20 will-change-transform">
+        <div className="relative w-20 h-28 md:w-24 md:h-32 rounded-2xl bg-gradient-to-br from-emerald-400 to-amber-400 shadow-2xl border border-white/20 will-change-transform">
           <div className="absolute inset-[6px] rounded-xl bg-black/20 backdrop-blur-sm border border-white/20" />
           <div className="absolute inset-0 flex items-center justify-center text-black font-extrabold tracking-wide">
             GH
