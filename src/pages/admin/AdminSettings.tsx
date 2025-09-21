@@ -366,6 +366,36 @@ create table if not exists staff (
   role text, -- matches app roles, e.g. 'admin', 'front_desk', 'guest', etc.
   created_at timestamptz default now()
 );
+
+-- Admin Staff (for /admin/staff page)
+create table if not exists admin_staff (
+  id text primary key,
+  name text,
+  staffId text,
+  gender text,
+  dob date,
+  address text,
+  emergencyContact text,
+  email text,
+  phone text,
+  altPhone text,
+  role text,
+  department text,
+  shiftTimings text,
+  supervisor text,
+  salary numeric,
+  joiningDate date,
+  contractType text,
+  username text,
+  password text,
+  roleAccess text,
+  skills text,
+  documents text,
+  assignedRoomsDepts text,
+  status text,
+  lastLogin text,
+  created_at timestamptz default now()
+);
 `.trim();
 
   const copySql = async () => {
@@ -443,6 +473,7 @@ alter table if exists payments enable row level security;
 alter table if exists transport_trips enable row level security;
 alter table if exists transport_vehicles enable row level security;
 alter table if exists staff enable row level security;
+alter table if exists admin_staff enable row level security;
 
 -- Ensure required columns exist before policies
 alter table if exists reservations add column if not exists owner text;
@@ -555,6 +586,14 @@ drop policy if exists "Staff write for auth" on staff;
 create policy "Staff write for auth" on staff
 for all
 to authenticated
+using (true)
+with check (true);
+
+-- Admin Staff: allow anon full for demo (you can tighten to authenticated later)
+drop policy if exists "Admin staff anon full" on admin_staff;
+create policy "Admin staff anon full" on admin_staff
+for all
+to anon
 using (true)
 with check (true);
 `.trim();
