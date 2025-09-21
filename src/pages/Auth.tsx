@@ -13,6 +13,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { useAuth } from "@/hooks/use-auth";
 import { ArrowRight, Loader2, Mail, UserX } from "lucide-react";
@@ -38,6 +39,9 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
   const [sessionInfo, setSessionInfo] = useState<string | null>(null);
   const [sbConnected, setSbConnected] = useState<boolean>(false);
   const [sbStatusText, setSbStatusText] = useState<string>("");
+
+  // Add: demo role selection state
+  const [demoRole, setDemoRole] = useState<string>("admin");
 
   function refreshSbStatus() {
     try {
@@ -93,6 +97,18 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       navigate(redirect);
     }
   }, [authLoading, isAuthenticated, navigate, redirectAfterAuth]);
+
+  // Add: enter demo handler
+  const handleEnterDemo = () => {
+    try {
+      if (!demoRole) return;
+      localStorage.setItem("demoRole", demoRole);
+      const dest = roleToPath[demoRole] || "/";
+      navigate(dest);
+    } catch {
+      navigate("/");
+    }
+  };
 
   const handleEmailSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -231,6 +247,35 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
 
                     <p className="text-xs text-muted-foreground mt-4 text-center">
                       Use the email form above to receive a one-time code.
+                    </p>
+                  </div>
+
+                  {/* Add: Demo Mode quick access */}
+                  <div className="mt-6 border rounded-lg p-4">
+                    <div className="text-sm font-medium mb-2">Continue in Demo Mode</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-center">
+                      <Select value={demoRole} onValueChange={setDemoRole}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="front_desk">Front Desk</SelectItem>
+                          <SelectItem value="housekeeping">Housekeeping</SelectItem>
+                          <SelectItem value="restaurant">Restaurant</SelectItem>
+                          <SelectItem value="security">Security</SelectItem>
+                          <SelectItem value="maintenance">Maintenance</SelectItem>
+                          <SelectItem value="transport">Transport</SelectItem>
+                          <SelectItem value="inventory">Inventory</SelectItem>
+                          <SelectItem value="guest">Guest</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button type="button" variant="secondary" onClick={handleEnterDemo}>
+                        Enter Demo
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Skips login and opens the selected dashboard using demo data (local storage or Supabase fallback).
                     </p>
                   </div>
 
