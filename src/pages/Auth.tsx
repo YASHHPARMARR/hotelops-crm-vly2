@@ -16,7 +16,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { useAuth } from "@/hooks/use-auth";
-import { ArrowRight, Loader2, Mail, UserX } from "lucide-react";
+import { ArrowRight, Loader2, Mail } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { getSupabaseUserEmail } from "@/lib/supabaseClient";
@@ -394,7 +394,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
               <form onSubmit={handleOtpSubmit}>
                 <CardContent className="pb-4">
                   <input type="hidden" name="email" value={step.email} />
-                  <input type="hidden" name="code" value={otp} />
+                  <input type="hidden" name="token" value={otp} />
 
                   <div className="flex justify-center">
                     <InputOTP
