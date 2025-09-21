@@ -17,7 +17,7 @@ export default function InventoryItems() {
           <CardContent>
             <CrudPage
               title="Inventory Items"
-              storageKey="inv_items"
+              table="inventory_items"
               description="Items, stock levels, and thresholds."
               columns={[
                 { key: "item", label: "Item", input: "text", required: true },

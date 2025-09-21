@@ -17,7 +17,7 @@ export default function MaintenanceAssets() {
           <CardContent>
             <CrudPage
               title="Assets"
-              storageKey="mt_assets"
+              table="maintenance_assets"
               description="Hotel assets and current status."
               columns={[
                 { key: "name", label: "Name", input: "text", required: true },

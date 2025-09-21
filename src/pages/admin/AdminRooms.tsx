@@ -17,7 +17,7 @@ export default function AdminRooms() {
           <CardContent>
             <CrudPage
               title="Rooms"
-              storageKey="rooms"
+              table="rooms"
               description="Configure rooms with full setup and live status."
               columns={[
                 { key: "number", label: "Room #", input: "text", required: true },
@@ -78,7 +78,6 @@ export default function AdminRooms() {
                   notes: "",
                 }
               ]}
-              backend="local"
             />
           </CardContent>
         </Card>

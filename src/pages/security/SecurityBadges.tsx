@@ -17,7 +17,7 @@ export default function SecurityBadges() {
           <CardContent>
             <CrudPage
               title="Visitor Badges"
-              storageKey="sec_badges"
+              table="security_badges"
               description="Issue and manage visitor badges."
               columns={[
                 { key: "visitorName", label: "Visitor", input: "text", required: true },

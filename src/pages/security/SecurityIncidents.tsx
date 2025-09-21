@@ -17,7 +17,7 @@ export default function SecurityIncidents() {
           <CardContent>
             <CrudPage
               title="Incidents"
-              storageKey="sec_incidents"
+              table="security_incidents"
               description="Create and track security incidents."
               columns={[
                 { key: "title", label: "Title", input: "text", required: true },

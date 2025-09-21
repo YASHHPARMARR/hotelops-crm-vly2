@@ -17,7 +17,7 @@ export default function RestaurantTables() {
           <CardContent>
             <CrudPage
               title="Tables"
-              storageKey="rest_tables"
+              table="restaurant_tables"
               description="Manage tables and occupancy."
               columns={[
                 { key: "tableNo", label: "Table #", input: "text", required: true },

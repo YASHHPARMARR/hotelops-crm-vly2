@@ -17,7 +17,7 @@ export default function InventorySuppliers() {
           <CardContent>
             <CrudPage
               title="Suppliers"
-              storageKey="inv_suppliers"
+              table="inventory_suppliers"
               description="Vendor directory and contacts."
               columns={[
                 { key: "name", label: "Name", input: "text", required: true },

@@ -17,7 +17,7 @@ export default function InventoryOrders() {
           <CardContent>
             <CrudPage
               title="Purchase Orders"
-              storageKey="inv_orders"
+              table="inventory_orders"
               description="Create and track purchase orders."
               columns={[
                 { key: "poNumber", label: "PO #", input: "text", required: true },

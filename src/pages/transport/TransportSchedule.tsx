@@ -17,7 +17,7 @@ export default function TransportSchedule() {
           <CardContent>
             <CrudPage
               title="Transport Schedule"
-              storageKey="tp_schedule"
+              table="transport_schedule"
               description="Daily transport schedule."
               columns={[
                 { key: "route", label: "Route", input: "text", required: true },

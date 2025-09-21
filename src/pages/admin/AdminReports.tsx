@@ -17,7 +17,7 @@ export default function AdminReports() {
           <CardContent>
             <CrudPage
               title="Reports"
-              storageKey="admin_reports"
+              table="admin_reports"
               description="Track generated reports and exports."
               columns={[
                 { key: "name", label: "Report", input: "text", required: true },

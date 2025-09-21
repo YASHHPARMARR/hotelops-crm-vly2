@@ -17,7 +17,7 @@ export default function MaintenanceTickets() {
           <CardContent>
             <CrudPage
               title="Tickets"
-              storageKey="mt_tickets"
+              table="maintenance_tickets"
               description="Create, assign, and track repairs."
               columns={[
                 { key: "title", label: "Title", input: "text", required: true },
