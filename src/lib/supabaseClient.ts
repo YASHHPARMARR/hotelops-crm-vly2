@@ -7,6 +7,8 @@ export function setSupabaseKeys(url: string, anonKey: string) {
     supabaseClient = createClient(url, anonKey);
     localStorage.setItem('VITE_SUPABASE_URL', url);
     localStorage.setItem('VITE_SUPABASE_ANON_KEY', anonKey);
+    // Notify app that Supabase is ready without requiring a page refresh
+    try { window.dispatchEvent(new Event('supabase:ready')); } catch {}
   } catch (error) {
     console.error('Failed to initialize Supabase client:', error);
     supabaseClient = null;
@@ -45,6 +47,8 @@ export function clearSupabaseKeys() {
   supabaseClient = null;
   localStorage.removeItem('VITE_SUPABASE_URL');
   localStorage.removeItem('VITE_SUPABASE_ANON_KEY');
+  // Notify app that Supabase was cleared
+  try { window.dispatchEvent(new Event('supabase:cleared')); } catch {}
 }
 
 export async function getSupabaseUserEmail(): Promise<string | null> {

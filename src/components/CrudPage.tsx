@@ -265,7 +265,20 @@ export function CrudPage({
     }
   }, [table, ownerScoped, storageKey, title]);
 
-  const [provider] = useState(() => getProvider());
+  // Replace constant provider with reactive one to switch to Supabase without reload
+  const [provider, setProvider] = useState<StorageProvider>(() => getProvider());
+
+  // Recompute provider when Supabase keys are added/cleared (no page reload needed)
+  useEffect(() => {
+    const onReady = () => setProvider(getProvider());
+    const onCleared = () => setProvider(getProvider());
+    window.addEventListener('supabase:ready', onReady);
+    window.addEventListener('supabase:cleared', onCleared);
+    return () => {
+      window.removeEventListener('supabase:ready', onReady);
+      window.removeEventListener('supabase:cleared', onCleared);
+    };
+  }, [getProvider]);
 
   // Load data
   const loadData = useCallback(async () => {

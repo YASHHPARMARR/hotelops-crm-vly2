@@ -18,7 +18,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { ArrowRight, Loader2, Mail, UserX } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { supabaseSignIn, supabaseSignOut, supabaseSignUp, getSupabaseUserEmail } from "@/lib/supabaseClient";
+import { getSupabaseUserEmail } from "@/lib/supabaseClient";
 import { getSupabase } from "@/lib/supabaseClient";
 import { getSupabaseInitStatus, normalizeSupabaseError } from "@/lib/supabaseClient";
 
@@ -34,7 +34,6 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showRolePicker, setShowRolePicker] = useState(false);
-  const [useSupabase, setUseSupabase] = useState(false);
   const [sbEmail, setSbEmail] = useState("");
   const [sbPassword, setSbPassword] = useState("");
   const [debugOpen, setDebugOpen] = useState(false);
@@ -171,6 +170,25 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
     }
   };
 
+  // Add anonymous (Convex) login — instant, no email required
+  const handleAnonymousLogin = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await signIn("anonymous");
+      if (!localStorage.getItem("demoRole")) {
+        localStorage.setItem("demoRole", "guest");
+      }
+      const dest = redirectAfterAuth || (await getRoleRedirect());
+      navigate(dest);
+    } catch (error) {
+      console.error("Anon login error:", error);
+      setError("Failed to start anonymous session.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
 
@@ -240,12 +258,23 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
                         </span>
                       </div>
                     </div>
-                    
+
+                    {/* New: One-click anonymous login (Convex) */}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full mt-4"
+                      onClick={handleAnonymousLogin}
+                      disabled={isLoading}
+                    >
+                      Instant Access (No Email)
+                    </Button>
+
                     {!showRolePicker ? (
                       <Button
                         type="button"
                         variant="outline"
-                        className="w-full mt-4"
+                        className="w-full mt-2"
                         onClick={() => setShowRolePicker(true)}
                         disabled={isLoading}
                       >
@@ -274,187 +303,6 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
                           disabled={isLoading}
                         >
                           Cancel
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mt-6 border-t pt-4">
-                    <div className="flex items-center justify-between">
-                      <div className="text-xs font-medium text-muted-foreground">Use Supabase Email/Password</div>
-                      <Button type="button" variant="ghost" size="sm" onClick={() => setUseSupabase((v) => !v)}>
-                        {useSupabase ? "Hide" : "Show"}
-                      </Button>
-                    </div>
-                    {useSupabase && (
-                      <div className="mt-3 space-y-2">
-                        <Input
-                          placeholder="email@domain.com"
-                          type="email"
-                          value={sbEmail}
-                          onChange={(e) => setSbEmail(e.target.value)}
-                          disabled={isLoading}
-                        />
-                        <Input
-                          placeholder="Password"
-                          type="password"
-                          value={sbPassword}
-                          onChange={(e) => setSbPassword(e.target.value)}
-                          disabled={isLoading}
-                        />
-                        <div className="flex gap-2">
-                          <Button
-                            type="button"
-                            className="flex-1"
-                            disabled={isLoading || !sbEmail || !sbPassword}
-                            onClick={async () => {
-                              setIsLoading(true);
-                              setError(null);
-                              try {
-                                await supabaseSignUp(sbEmail, sbPassword);
-                                await supabaseSignIn(sbEmail, sbPassword);
-                                const email = await getSupabaseUserEmail();
-                                if (!email) throw new Error("Signed in but no Supabase user email found.");
-                                const dest = redirectAfterAuth || (await getRoleRedirect());
-                                navigate(dest);
-                                localStorage.removeItem("demoRole");
-                              } catch (e: any) {
-                                console.error(e);
-                                setError(e?.message || "Signup failed");
-                              } finally {
-                                setIsLoading(false);
-                              }
-                            }}
-                          >
-                            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                            Sign up
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            className="flex-1"
-                            disabled={isLoading || !sbEmail || !sbPassword}
-                            onClick={async () => {
-                              setIsLoading(true);
-                              setError(null);
-                              try {
-                                await supabaseSignIn(sbEmail, sbPassword);
-                                const email = await getSupabaseUserEmail();
-                                if (!email) throw new Error("Signed in but no Supabase user email found.");
-                                const dest = redirectAfterAuth || (await getRoleRedirect());
-                                navigate(dest);
-                                localStorage.removeItem("demoRole");
-                              } catch (e: any) {
-                                console.error(e);
-                                setError(e?.message || "Login failed");
-                              } finally {
-                                setIsLoading(false);
-                              }
-                            }}
-                          >
-                            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                            Log in
-                          </Button>
-                        </div>
-                        <div className="mt-4 rounded-md border border-border/60 bg-muted/30 p-3">
-                          <div className="flex items-center justify-between">
-                            <div className="text-xs font-medium text-muted-foreground">Supabase Debug</div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setDebugOpen((v) => !v);
-                                if (!debugOpen) refreshSbStatus();
-                              }}
-                            >
-                              {debugOpen ? "Hide" : "Show"}
-                            </Button>
-                          </div>
-                          {debugOpen && (
-                            <div className="mt-2 space-y-2 text-xs">
-                              <div className="flex flex-col gap-1">
-                                <div>Status: {sbStatusText || "Unknown"}</div>
-                                <div>Client: {sbConnected ? "initialized" : "not initialized"}</div>
-                                {sessionInfo ? <div className="text-muted-foreground break-words">{sessionInfo}</div> : null}
-                              </div>
-                              <div className="flex flex-wrap gap-2">
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={async () => {
-                                    try {
-                                      const s = getSupabase();
-                                      if (!s) {
-                                        setSessionInfo("No client. Go to Admin → Settings to configure URL and Anon key.");
-                                        return;
-                                      }
-                                      const { data, error } = await s.auth.getSession();
-                                      if (error) throw error;
-                                      const email = (await s.auth.getUser()).data?.user?.email ?? "none";
-                                      setSessionInfo(
-                                        `Session: ${data?.session ? "present" : "absent"} • Email: ${email}`
-                                      );
-                                    } catch (e: any) {
-                                      setSessionInfo(`Session check failed: ${normalizeSupabaseError(e)}`);
-                                    } finally {
-                                      refreshSbStatus();
-                                    }
-                                  }}
-                                >
-                                  Check session
-                                </Button>
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    refreshSbStatus();
-                                  }}
-                                >
-                                  Recheck status
-                                </Button>
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  className="neon-glow"
-                                  onClick={() => {
-                                    // Navigate to Admin Settings for keys and SQL
-                                    navigate("/admin/settings");
-                                  }}
-                                >
-                                  Open Admin Settings
-                                </Button>
-                              </div>
-                              <div className="text-muted-foreground">
-                                • If SDK/URL/Anon show "missing", set keys in Admin → Settings, then return here.
-                                <br />
-                                • If tables are missing on other pages, use that page's "Copy SQL to create &lt;table&gt;" then Refresh.
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          className="w-full"
-                          disabled={isLoading}
-                          onClick={async () => {
-                            setIsLoading(true);
-                            setError(null);
-                            try {
-                              await supabaseSignOut();
-                              setSbEmail("");
-                              setSbPassword("");
-                            } catch (e: any) {
-                              setError(e?.message || "Logout failed");
-                            } finally {
-                              setIsLoading(false);
-                            }
-                          }}
-                        >
-                          Log out of Supabase
                         </Button>
                       </div>
                     )}
