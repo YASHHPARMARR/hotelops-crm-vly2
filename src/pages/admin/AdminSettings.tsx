@@ -396,6 +396,33 @@ create table if not exists admin_staff (
   lastLogin text,
   created_at timestamptz default now()
 );
+
+-- Reconcile admin_staff schema (add any missing columns safely)
+alter table if exists admin_staff add column if not exists name text;
+alter table if exists admin_staff add column if not exists staffId text;
+alter table if exists admin_staff add column if not exists gender text;
+alter table if exists admin_staff add column if not exists dob date;
+alter table if exists admin_staff add column if not exists address text;
+alter table if exists admin_staff add column if not exists emergencyContact text;
+alter table if exists admin_staff add column if not exists email text;
+alter table if exists admin_staff add column if not exists phone text;
+alter table if exists admin_staff add column if not exists altPhone text;
+alter table if exists admin_staff add column if not exists role text;
+alter table if exists admin_staff add column if not exists department text;
+alter table if exists admin_staff add column if not exists shiftTimings text;
+alter table if exists admin_staff add column if not exists supervisor text;
+alter table if exists admin_staff add column if not exists salary numeric;
+alter table if exists admin_staff add column if not exists joiningDate date;
+alter table if exists admin_staff add column if not exists contractType text;
+alter table if exists admin_staff add column if not exists username text;
+alter table if exists admin_staff add column if not exists password text;
+alter table if exists admin_staff add column if not exists roleAccess text;
+alter table if exists admin_staff add column if not exists skills text;
+alter table if exists admin_staff add column if not exists documents text;
+alter table if exists admin_staff add column if not exists assignedRoomsDepts text;
+alter table if exists admin_staff add column if not exists status text;
+alter table if exists admin_staff add column if not exists lastLogin text;
+alter table if exists admin_staff add column if not exists created_at timestamptz default now();
 `.trim();
 
   const copySql = async () => {
