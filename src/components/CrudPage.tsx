@@ -308,6 +308,12 @@ export function CrudPage({
     }
   }, [table, ownerScoped, storageKey, title]);
 
+  // Helper to create a local provider for seamless fallback
+  const makeLocalProvider = useCallback((): StorageProvider => {
+    const key = storageKey || `crud_${title.toLowerCase().replace(/\s+/g, '_')}`;
+    return new LocalProvider(key);
+  }, [storageKey, title]);
+
   // Replace constant provider with reactive one to switch to Supabase without reload
   const [provider, setProvider] = useState<StorageProvider>(() => getProvider());
 
@@ -336,15 +342,25 @@ export function CrudPage({
       
       if (errorMsg.includes('Permission denied') || errorMsg.includes('RLS')) {
         toast.error("Database permission error", {
-          description: "Please run RLS SQL from Admin Settings and/or sign in if required."
+          description: "Falling back to Demo Mode for this page. Apply RLS SQL and sign in to use Supabase here."
         });
+        // Seamless fallback to local provider and reload
+        const local = makeLocalProvider();
+        setProvider(local);
+        try {
+          const data = await local.list();
+          setItems(data);
+          setError(null);
+        } catch {
+          // ignore
+        }
       } else {
         toast.error(`Failed to load ${title.toLowerCase()}: ${errorMsg}`);
       }
     } finally {
       setLoading(false);
     }
-  }, [provider, title]);
+  }, [provider, title, makeLocalProvider]);
 
   // Subscribe to real-time updates
   useEffect(() => {
@@ -411,8 +427,24 @@ export function CrudPage({
     } catch (e: any) {
       const errorMsg = normalizeSupabaseError(e);
       if (errorMsg.includes('Permission denied') || errorMsg.includes('RLS')) {
+        // Seamless fallback and retry on local
+        const local = makeLocalProvider();
+        setProvider(local);
+        try {
+          if (editingId) {
+            await local.update(editingId, form);
+            toast.success(`${title} updated in Demo Mode`);
+            setEditingId(null);
+          } else {
+            await local.create(form);
+            toast.success(`${title} created in Demo Mode`);
+          }
+          await loadData();
+        } catch {
+          // ignore secondary failure
+        }
         toast.error("Database permission error", {
-          description: "Please run RLS SQL from Admin Settings and/or sign in if required."
+          description: "Switched to Demo Mode for this page. Apply RLS SQL and sign in to use Supabase here."
         });
       } else {
         toast.error(`Failed to save: ${errorMsg}`);
@@ -433,8 +465,17 @@ export function CrudPage({
     } catch (e: any) {
       const errorMsg = normalizeSupabaseError(e);
       if (errorMsg.includes('Permission denied') || errorMsg.includes('RLS')) {
+        const local = makeLocalProvider();
+        setProvider(local);
+        try {
+          await local.remove(id);
+          toast.success(`${title} deleted in Demo Mode`);
+          await loadData();
+        } catch {
+          // ignore
+        }
         toast.error("Database permission error", {
-          description: "Please run RLS SQL from Admin Settings and/or sign in if required."
+          description: "Switched to Demo Mode for this page. Apply RLS SQL and sign in to use Supabase here."
         });
       } else {
         toast.error(`Failed to delete: ${errorMsg}`);
