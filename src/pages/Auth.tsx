@@ -20,7 +20,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { getSupabaseUserEmail } from "@/lib/supabaseClient";
 import { getSupabase } from "@/lib/supabaseClient";
-import { getSupabaseInitStatus, normalizeSupabaseError } from "@/lib/supabaseClient";
+import { getSupabaseInitStatus, normalizeSupabaseError, supabaseSignUp } from "@/lib/supabaseClient";
 
 interface AuthProps {
   redirectAfterAuth?: string;
@@ -189,6 +189,31 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
     }
   };
 
+  const handleSupabaseSignup = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      if (!sbEmail) {
+        setError("Please enter your email for Supabase sign up.");
+        setIsLoading(false);
+        return;
+      }
+      const s = getSupabase();
+      if (!s) {
+        setError("Supabase is not configured. Add keys in Admin Settings.");
+        setIsLoading(false);
+        return;
+      }
+      await s.auth.signOut().catch(() => {});
+      await supabaseSignUp(sbEmail);
+      setSessionInfo("Sign up email sent. Please check your inbox to confirm and sign in to Supabase.");
+    } catch (e: any) {
+      setError(normalizeSupabaseError(e));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
 
@@ -307,6 +332,41 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
                       </div>
                     )}
                   </div>
+
+                  {/* Supabase Sign Up (Magic Link) — shown only if Supabase is configured */}
+                  {sbConnected && (
+                    <div className="mt-6 border-t pt-4">
+                      <div className="mb-2 text-xs text-muted-foreground">
+                        Supabase Status: {sbStatusText || "Connected"}
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="email for Supabase (magic link)"
+                          type="email"
+                          value={sbEmail}
+                          onChange={(e) => setSbEmail(e.target.value)}
+                          disabled={isLoading}
+                        />
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={handleSupabaseSignup}
+                          disabled={isLoading || !sbEmail}
+                        >
+                          {isLoading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            "Supabase Sign Up"
+                          )}
+                        </Button>
+                      </div>
+                      {sessionInfo && (
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          {sessionInfo}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                 </CardContent>
               </form>

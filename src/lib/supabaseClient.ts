@@ -115,17 +115,27 @@ export async function supabaseSignIn(email: string, password?: string): Promise<
   });
 }
 
-export async function supabaseSignUp(email: string, password?: string): Promise<any> {
-  const client = getSupabase();
-  if (!client) throw new Error("Supabase not initialized");
-  if (password && password.length > 0) {
-    return await client.auth.signUp({ email, password });
-  }
-  return await client.auth.signUp({ email });
-}
+/** Deprecated: password-based supabaseSignUp removed in favor of magic-link version below */
 
 export async function supabaseSignOut(): Promise<any> {
   const client = getSupabase();
   if (!client) throw new Error("Supabase not initialized");
   return await client.auth.signOut();
+}
+
+export async function supabaseSignUp(email: string): Promise<void> {
+  const supabase = getSupabase?.();
+  if (!supabase) throw new Error("Supabase is not configured");
+
+  const redirect =
+    typeof window !== "undefined" && window.location?.origin
+      ? window.location.origin
+      : "http://localhost:5173";
+
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: redirect },
+  });
+
+  if (error) throw error;
 }
