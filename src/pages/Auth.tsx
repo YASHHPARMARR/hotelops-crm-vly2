@@ -33,9 +33,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showRolePicker, setShowRolePicker] = useState(false);
   const [sbEmail, setSbEmail] = useState("");
-  const [sbPassword, setSbPassword] = useState("");
   const [debugOpen, setDebugOpen] = useState(false);
   const [sessionInfo, setSessionInfo] = useState<string | null>(null);
   const [sbConnected, setSbConnected] = useState<boolean>(false);
@@ -45,9 +43,8 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
     try {
       const status = getSupabaseInitStatus();
       const parts: string[] = [];
-      parts.push(`SDK: ${status.missing.sdk ? "missing" : "ok"}`);
-      parts.push(`URL: ${status.missing.url ? "missing" : "ok"}`);
-      parts.push(`Anon Key: ${status.missing.anon ? "missing" : "ok"}`);
+      parts.push(`Source: ${status.source || "none"}`);
+      parts.push(`URL: ${status.url ? "ok" : "missing"}`);
       setSbStatusText(parts.join(" • "));
       setSbConnected(!!getSupabase());
     } catch {
@@ -134,58 +131,6 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       setIsLoading(false);
 
       setOtp("");
-    }
-  };
-
-  const handleGuestLoginWithRole = async (role: keyof typeof roleToPath) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      // Do NOT sign in; enable demo mode via localStorage
-      localStorage.setItem("demoRole", role);
-      const dest = roleToPath[role] || "/";
-      // Navigate directly to the chosen dashboard
-      navigate(dest);
-    } catch (error) {
-      console.error("Guest login error:", error);
-      setError(`Failed to continue as guest: ${error instanceof Error ? error.message : "Unknown error"}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleGuestLogin = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      // Default to guest dashboard for quick explore
-      localStorage.setItem("demoRole", "guest");
-      const redirect = redirectAfterAuth || roleToPath["guest"] || "/";
-      navigate(redirect);
-    } catch (error) {
-      console.error("Guest login error:", error);
-      setError(`Failed to continue as guest: ${error instanceof Error ? error.message : "Unknown error"}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Add anonymous (Convex) login — instant, no email required
-  const handleAnonymousLogin = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      await signIn("anonymous");
-      if (!localStorage.getItem("demoRole")) {
-        localStorage.setItem("demoRole", "guest");
-      }
-      const dest = redirectAfterAuth || (await getRoleRedirect());
-      navigate(dest);
-    } catch (error) {
-      console.error("Anon login error:", error);
-      setError("Failed to start anonymous session.");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -284,56 +229,12 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
                       </div>
                     </div>
 
-                    {/* New: One-click anonymous login (Convex) */}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full mt-4"
-                      onClick={handleAnonymousLogin}
-                      disabled={isLoading}
-                    >
-                      Instant Access (No Email)
-                    </Button>
-
-                    {!showRolePicker ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full mt-2"
-                        onClick={() => setShowRolePicker(true)}
-                        disabled={isLoading}
-                      >
-                        <UserX className="mr-2 h-4 w-4" />
-                        Continue as Guest (Choose Role)
-                      </Button>
-                    ) : (
-                      <div className="mt-4 space-y-2">
-                        <div className="text-xs text-muted-foreground mb-2">Select a role to explore:</div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <Button variant="secondary" onClick={() => handleGuestLoginWithRole("admin")} disabled={isLoading}>Admin</Button>
-                          <Button variant="secondary" onClick={() => handleGuestLoginWithRole("front_desk")} disabled={isLoading}>Front Desk</Button>
-                          <Button variant="secondary" onClick={() => handleGuestLoginWithRole("housekeeping")} disabled={isLoading}>Housekeeping</Button>
-                          <Button variant="secondary" onClick={() => handleGuestLoginWithRole("restaurant")} disabled={isLoading}>Restaurant</Button>
-                          <Button variant="secondary" onClick={() => handleGuestLoginWithRole("security")} disabled={isLoading}>Security</Button>
-                          <Button variant="secondary" onClick={() => handleGuestLoginWithRole("maintenance")} disabled={isLoading}>Maintenance</Button>
-                          <Button variant="secondary" onClick={() => handleGuestLoginWithRole("transport")} disabled={isLoading}>Transport</Button>
-                          <Button variant="secondary" onClick={() => handleGuestLoginWithRole("inventory")} disabled={isLoading}>Inventory</Button>
-                          <Button variant="secondary" onClick={() => handleGuestLoginWithRole("guest")} disabled={isLoading} className="col-span-2">Guest</Button>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          className="w-full"
-                          onClick={() => setShowRolePicker(false)}
-                          disabled={isLoading}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    )}
+                    <p className="text-xs text-muted-foreground mt-4 text-center">
+                      Use the email form above to receive a one-time code.
+                    </p>
                   </div>
 
-                  {/* Supabase Sign Up (Magic Link) — shown only if Supabase is configured */}
+                  {/* Supabase Sign Up (Magic Link) — only if Supabase is configured */}
                   {sbConnected && (
                     <div className="mt-6 border-t pt-4">
                       <div className="mb-2 text-xs text-muted-foreground">
