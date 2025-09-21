@@ -124,6 +124,18 @@ const palettes: Array<PalettePreview> = [
     description: "Deep purple with magenta-violet accent",
     swatches: ["#1a1124", "#a78bfa", "#f472b6", "#312e81", "#0f172a"],
   },
+  {
+    key: "cotton",
+    name: "Cotton",
+    description: "Crisp white base with soft indigo accents",
+    swatches: ["#fafcff", "#6366f1", "#e5e7eb", "#94a3b8", "#0f172a"],
+  },
+  {
+    key: "champagne",
+    name: "Champagne",
+    description: "Warm ivory base with gentle gold and indigo",
+    swatches: ["#fbf7ef", "#a78bfa", "#e7e0cf", "#d4d4d4", "#334155"],
+  },
 ];
 
 export default function AdminSettings() {

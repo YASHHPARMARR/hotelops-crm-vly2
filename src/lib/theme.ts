@@ -16,7 +16,9 @@ export type AppTheme =
   | "amethyst"
   | "sky"
   | "mocha"
-  | "mint";
+  | "mint"
+  | "cotton"
+  | "champagne";
 
 export function getTheme(): AppTheme {
   const t = (typeof window !== "undefined" && localStorage.getItem(THEME_STORAGE_KEY)) as AppTheme | null;
@@ -38,6 +40,8 @@ export function getTheme(): AppTheme {
     "sky",
     "mocha",
     "mint",
+    "cotton",
+    "champagne",
   ];
   if (t && allowed.includes(t)) return t;
   return "neon";
@@ -59,7 +63,7 @@ export function applyThemeToDocument(theme: AppTheme) {
   root.setAttribute("data-theme", theme);
 
   // Toggle dark base only for dark themes to avoid mixed light/dark experience
-  const lightThemes: AppTheme[] = ["pastel", "sand", "beige", "ivory", "lavender", "pearl", "sky", "mocha", "mint"];
+  const lightThemes: AppTheme[] = ["pastel", "sand", "beige", "ivory", "lavender", "pearl", "sky", "mocha", "mint", "cotton", "champagne"];
   if (lightThemes.includes(theme)) {
     root.classList.remove("dark");
   } else {
@@ -84,6 +88,8 @@ export function cycleTheme(current?: AppTheme): AppTheme {
     "sky",
     "mocha",
     "mint",
+    "cotton",
+    "champagne",
     "onyx",
     "amethyst",
   ];
