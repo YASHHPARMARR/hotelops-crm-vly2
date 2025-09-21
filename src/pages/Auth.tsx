@@ -40,6 +40,16 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
   const [sbConnected, setSbConnected] = useState<boolean>(false);
   const [sbStatusText, setSbStatusText] = useState<string>("");
 
+  // Add: resend and redirect override state
+  const [resending, setResending] = useState(false);
+  const [redirectOverride, setRedirectOverride] = useState<string>(() => {
+    try {
+      return (typeof window !== "undefined" && localStorage.getItem("SUPABASE_REDIRECT_URL")) || "";
+    } catch {
+      return "";
+    }
+  });
+
   // Add: demo role selection state
   const [demoRole, setDemoRole] = useState<string>("admin");
 
@@ -110,6 +120,23 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
     }
   };
 
+  // Add: resend OTP handler
+  const handleResendCode = async () => {
+    if (typeof step !== "object") return;
+    setResending(true);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append("email", step.email);
+      await signIn("email-otp", formData);
+      setSessionInfo("A new verification code has been sent.");
+    } catch (e: any) {
+      setError(e?.message || "Failed to resend code.");
+    } finally {
+      setResending(false);
+    }
+  };
+
   const handleEmailSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
@@ -148,6 +175,19 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
 
       setOtp("");
     }
+  };
+
+  // Add: save Supabase redirect override
+  const handleSaveRedirectOverride = () => {
+    try {
+      if (redirectOverride) {
+        localStorage.setItem("SUPABASE_REDIRECT_URL", redirectOverride);
+      } else {
+        localStorage.removeItem("SUPABASE_REDIRECT_URL");
+      }
+      setSessionInfo("Redirect URL saved.");
+      refreshSbStatus();
+    } catch {}
   };
 
   const handleSupabaseSignup = async () => {
@@ -311,6 +351,32 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
                           {sessionInfo}
                         </p>
                       )}
+
+                      {/* Advanced redirect override for Supabase magic link */}
+                      <div className="mt-3 grid gap-2">
+                        <div className="text-xs text-muted-foreground">
+                          Advanced: Redirect URL override
+                        </div>
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="https://your-domain.com/"
+                            value={redirectOverride}
+                            onChange={(e) => setRedirectOverride(e.target.value)}
+                            disabled={isLoading}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleSaveRedirectOverride}
+                            disabled={isLoading}
+                          >
+                            Save
+                          </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Used when sending Supabase magic link. Leave blank to use current origin.
+                        </p>
+                      </div>
                     </div>
                   )}
 
@@ -363,9 +429,10 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
                     <Button
                       variant="link"
                       className="p-0 h-auto"
-                      onClick={() => setStep("signIn")}
+                      onClick={handleResendCode}
+                      disabled={resending || isLoading}
                     >
-                      Try again
+                      {resending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Resend code"}
                     </Button>
                   </p>
                 </CardContent>

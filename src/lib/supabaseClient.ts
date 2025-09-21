@@ -127,10 +127,22 @@ export async function supabaseSignUp(email: string): Promise<void> {
   const supabase = getSupabase?.();
   if (!supabase) throw new Error("Supabase is not configured");
 
-  const redirect =
-    typeof window !== "undefined" && window.location?.origin
-      ? window.location.origin
-      : "http://localhost:5173";
+  // Prefer an explicit public URL if provided, else current origin, else dev fallback
+  const explicitEnvUrl =
+    (import.meta.env as any)?.VITE_PUBLIC_URL ||
+    (import.meta.env as any)?.VITE_APP_URL ||
+    (import.meta.env as any)?.VITE_SITE_URL ||
+    undefined;
+
+  const lsOverride = (typeof window !== "undefined" && localStorage.getItem("SUPABASE_REDIRECT_URL")) || undefined;
+
+  const origin =
+    explicitEnvUrl ||
+    lsOverride ||
+    (typeof window !== "undefined" && window.location?.origin) ||
+    "http://localhost:5173";
+
+  const redirect = origin.endsWith("/") ? origin : `${origin}/`;
 
   const { error } = await supabase.auth.signInWithOtp({
     email,
