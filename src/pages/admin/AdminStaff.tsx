@@ -17,6 +17,7 @@ export default function AdminStaff() {
           <CardContent>
             <CrudPage
               title="Staff"
+              table="admin_staff"
               storageKey="admin_staff"
               description="Manage staff, HR details, access, schedules, and contact info."
               columns={[
@@ -148,7 +149,6 @@ export default function AdminStaff() {
                   lastLogin: "2025-09-12 09:10",
                 }
               ]}
-              backend="local"
             />
           </CardContent>
         </Card>

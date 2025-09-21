@@ -83,18 +83,17 @@ class SupabaseProvider implements StorageProvider {
     if (!this.supabase) throw new Error("Supabase not initialized");
     
     try {
-      let query = this.supabase.from(this.table).select('*');
+      let query = this.supabase.from(this.table).select("*");
       
       if (this.ownerScoped) {
         const email = await getSupabaseUserEmail();
         if (email) {
-          query = query.eq('owner', email);
+          query = query.eq("owner", email);
         }
       }
       
-      // Order by created_at if exists, otherwise by id
-      const { data, error } = await query.order('created_at', { ascending: false, nullsFirst: false })
-        .catch(() => query.order('id'));
+      // Simplify ordering to avoid relying on columns that may not exist (like created_at)
+      const { data, error } = await query.order("id", { ascending: false });
       
       if (error) throw error;
       return data || [];
@@ -180,16 +179,29 @@ class SupabaseProvider implements StorageProvider {
   subscribe(callback: () => void): () => void {
     if (!this.supabase) return () => {};
     
+    let intervalId: any = null;
     try {
+      // Polling fallback for environments without Supabase Realtime replication
+      intervalId = setInterval(() => {
+        try {
+          callback();
+        } catch {
+          // ignore callback errors
+        }
+      }, 3000);
+
+      // Try to subscribe to realtime if available (no-op if replication isn't enabled)
       this.channel = this.supabase
         .channel(`crud:${this.table}`)
-        .on('postgres_changes', 
-          { event: '*', schema: 'public', table: this.table }, 
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: this.table },
           () => callback()
         )
         .subscribe();
-      
+
       return () => {
+        if (intervalId) clearInterval(intervalId);
         if (this.channel) {
           this.supabase?.removeChannel(this.channel);
           this.channel = null;
@@ -197,7 +209,9 @@ class SupabaseProvider implements StorageProvider {
       };
     } catch (e) {
       console.error(`Supabase subscribe error for ${this.table}:`, e);
-      return () => {};
+      return () => {
+        if (intervalId) clearInterval(intervalId);
+      };
     }
   }
 }
