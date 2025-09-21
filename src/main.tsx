@@ -63,7 +63,9 @@ import GuestBills from "@/pages/guest/GuestBills.tsx";
 import { useAuth } from "./hooks/use-auth.ts";
 import { applyThemeToDocument, getTheme } from "@/lib/theme";
 
-const convexUrl = "https://dynamic-labrador-171.convex.cloud";
+const convexUrl =
+  (import.meta as any).env?.VITE_CONVEX_URL ||
+  "https://deafening-kingfisher-843.convex.cloud";
 
 const convex = new ConvexReactClient(convexUrl);
 
@@ -96,7 +98,7 @@ function DashboardRedirect() {
   const { isLoading, isAuthenticated, user } = useAuth();
   if (isLoading) return null;
   if (!isAuthenticated) return <Navigate to="/auth" replace />;
-  const role = user?.role;
+  const role = ((user as any)?.role as string | undefined) ?? (typeof window !== "undefined" ? (localStorage.getItem("demoRole") || undefined) : undefined);
   // Map roles to landing dashboards
   const pathByRole: Record<string, string> = {
     admin: "/admin",

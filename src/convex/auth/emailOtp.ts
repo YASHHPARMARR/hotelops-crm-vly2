@@ -1,3 +1,6 @@
+// Add Node runtime so outbound fetch works in Convex
+"use node";
+
 import { Email } from "@convex-dev/auth/providers/Email";
 import { alphabet, generateRandomString } from "oslo/crypto";
 

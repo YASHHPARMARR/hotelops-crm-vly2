@@ -69,18 +69,7 @@ const schema = defineSchema(
     // Auth tables
     ...authTables,
 
-    users: defineTable({
-      name: v.optional(v.string()),
-      image: v.optional(v.string()),
-      email: v.optional(v.string()),
-      emailVerificationTime: v.optional(v.number()),
-      isAnonymous: v.optional(v.boolean()),
-      role: v.optional(roleValidator),
-      department: v.optional(v.string()),
-      employeeId: v.optional(v.string()),
-      phone: v.optional(v.string()),
-      isActive: v.optional(v.boolean()),
-    }).index("email", ["email"]),
+    // Use the users table provided by authTables. Do not override to ensure Convex Auth works correctly.
 
     // Guest management
     guests: defineTable({

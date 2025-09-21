@@ -26,7 +26,9 @@ export function ProtectedRoute({
 
   // NEW: read demo role from localStorage for unauthenticated demo access
   const demoRole = typeof window !== "undefined" ? (localStorage.getItem("demoRole") as Role | null) : null;
-  const effectiveRole: Role | undefined = (user?.role as Role | undefined) ?? (demoRole as Role | undefined);
+  // Replace user?.role usage with a safe cast-based lookup
+  const userRole = (user as any)?.role as Role | undefined;
+  const effectiveRole: Role | undefined = userRole ?? (demoRole as Role | undefined);
 
   if (isLoading) {
     return (

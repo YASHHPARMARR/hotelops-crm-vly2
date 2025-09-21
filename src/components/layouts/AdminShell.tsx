@@ -30,7 +30,17 @@ import { MessageSquare } from "lucide-react";
 import { ChatPanel } from "@/components/ChatPanel";
 
 import type { ReactNode } from "react";
-import { Role, ROLES } from "@/convex/schema";
+// Define Role locally to avoid importing Convex server-side schema into client bundle
+type Role =
+  | "admin"
+  | "front_desk"
+  | "housekeeping"
+  | "restaurant"
+  | "security"
+  | "maintenance"
+  | "transport"
+  | "inventory"
+  | "guest";
 
 import { useEffect } from "react";
 import { applyThemeToDocument, getTheme } from "@/lib/theme";
@@ -77,7 +87,7 @@ export function AdminShell({ children }: AdminShellProps) {
   // Compute effectiveRole priority: Supabase staff role > user.role > demoRole
   const effectiveRole: Role | undefined =
     (staffRole as Role | undefined) ||
-    (user?.role as Role | undefined) ||
+    (((user as any)?.role as Role | undefined)) ||
     (demoRoleString as Role | undefined);
 
   const navigationItems = effectiveRole ? ROLE_NAVIGATION[effectiveRole] || [] : [];

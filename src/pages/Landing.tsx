@@ -257,8 +257,9 @@ export default function Landing() {
 
   const handleGetStarted = () => {
     if (isAuthenticated && user) {
-      // Redirect based on user role
-      switch (user.role) {
+      // Determine role from Convex user (if present) or demo role, then redirect
+      const role = ((user as any)?.role as string | undefined) ?? (typeof window !== "undefined" ? (localStorage.getItem("demoRole") || undefined) : undefined);
+      switch (role) {
         case "admin":
           navigate("/admin");
           break;
