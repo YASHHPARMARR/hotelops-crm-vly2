@@ -21,7 +21,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { getSupabaseUserEmail } from "@/lib/supabaseClient";
 import { getSupabase } from "@/lib/supabaseClient";
-import { getSupabaseInitStatus, normalizeSupabaseError, supabaseSignUp } from "@/lib/supabaseClient";
+import { normalizeSupabaseError } from "@/lib/supabaseClient";
 
 interface AuthProps {
   redirectAfterAuth?: string;
@@ -34,42 +34,13 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [sbEmail, setSbEmail] = useState("");
-  const [debugOpen, setDebugOpen] = useState(false);
   const [sessionInfo, setSessionInfo] = useState<string | null>(null);
-  const [sbConnected, setSbConnected] = useState<boolean>(false);
-  const [sbStatusText, setSbStatusText] = useState<string>("");
 
   // Add: resend and redirect override state
   const [resending, setResending] = useState(false);
-  const [redirectOverride, setRedirectOverride] = useState<string>(() => {
-    try {
-      return (typeof window !== "undefined" && localStorage.getItem("SUPABASE_REDIRECT_URL")) || "";
-    } catch {
-      return "";
-    }
-  });
 
   // Add: demo role selection state
   const [demoRole, setDemoRole] = useState<string>("admin");
-
-  function refreshSbStatus() {
-    try {
-      const status = getSupabaseInitStatus();
-      const parts: string[] = [];
-      parts.push(`Source: ${status.source || "none"}`);
-      parts.push(`URL: ${status.url ? "ok" : "missing"}`);
-      setSbStatusText(parts.join(" • "));
-      setSbConnected(!!getSupabase());
-    } catch {
-      setSbStatusText("Unable to read Supabase status");
-      setSbConnected(false);
-    }
-  }
-
-  useEffect(() => {
-    refreshSbStatus();
-  }, []);
 
   const roleToPath: Record<string, string> = {
     admin: "/admin",
@@ -177,44 +148,6 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
     }
   };
 
-  // Add: save Supabase redirect override
-  const handleSaveRedirectOverride = () => {
-    try {
-      if (redirectOverride) {
-        localStorage.setItem("SUPABASE_REDIRECT_URL", redirectOverride);
-      } else {
-        localStorage.removeItem("SUPABASE_REDIRECT_URL");
-      }
-      setSessionInfo("Redirect URL saved.");
-      refreshSbStatus();
-    } catch {}
-  };
-
-  const handleSupabaseSignup = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      if (!sbEmail) {
-        setError("Please enter your email for Supabase sign up.");
-        setIsLoading(false);
-        return;
-      }
-      const s = getSupabase();
-      if (!s) {
-        setError("Supabase is not configured. Add keys in Admin Settings.");
-        setIsLoading(false);
-        return;
-      }
-      await s.auth.signOut().catch(() => {});
-      await supabaseSignUp(sbEmail);
-      setSessionInfo("Sign up email sent. Please check your inbox to confirm and sign in to Supabase.");
-    } catch (e: any) {
-      setError(normalizeSupabaseError(e));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen flex flex-col">
 
@@ -318,67 +251,6 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
                       Skips login and opens the selected dashboard using demo data (local storage or Supabase fallback).
                     </p>
                   </div>
-
-                  {/* Supabase Sign Up (Magic Link) — only if Supabase is configured */}
-                  {sbConnected && (
-                    <div className="mt-6 border-t pt-4">
-                      <div className="mb-2 text-xs text-muted-foreground">
-                        Supabase Status: {sbStatusText || "Connected"}
-                      </div>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="email for Supabase (magic link)"
-                          type="email"
-                          value={sbEmail}
-                          onChange={(e) => setSbEmail(e.target.value)}
-                          disabled={isLoading}
-                        />
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          onClick={handleSupabaseSignup}
-                          disabled={isLoading || !sbEmail}
-                        >
-                          {isLoading ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            "Supabase Sign Up"
-                          )}
-                        </Button>
-                      </div>
-                      {sessionInfo && (
-                        <p className="mt-2 text-xs text-muted-foreground">
-                          {sessionInfo}
-                        </p>
-                      )}
-
-                      {/* Advanced redirect override for Supabase magic link */}
-                      <div className="mt-3 grid gap-2">
-                        <div className="text-xs text-muted-foreground">
-                          Advanced: Redirect URL override
-                        </div>
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="https://your-domain.com/"
-                            value={redirectOverride}
-                            onChange={(e) => setRedirectOverride(e.target.value)}
-                            disabled={isLoading}
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={handleSaveRedirectOverride}
-                            disabled={isLoading}
-                          >
-                            Save
-                          </Button>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Used when sending Supabase magic link. Leave blank to use current origin.
-                        </p>
-                      </div>
-                    </div>
-                  )}
 
                 </CardContent>
               </form>
