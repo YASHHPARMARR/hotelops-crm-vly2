@@ -386,15 +386,20 @@ create table if not exists staff (
     toast("Seeding started…");
 
     try {
+      // Build seeds; always seed other tables, only seed staff if authed (RLS protected)
       const seeds: Record<string, Array<Record<string, any>>> = {
         reservations: [
           { id: crypto.randomUUID(), guestName: "Ana Garcia", confirmation: "CNF-1001", roomType: "Deluxe King", roomNumber: "205", arrival: "2025-09-09", departure: "2025-09-11", status: "Booked", balance: 220, source: "Direct", notes: "High floor", owner: "demo@example.com" },
           { id: crypto.randomUUID(), guestName: "Luis Fernandez", confirmation: "CNF-1002", roomType: "Standard Queen", roomNumber: "214", arrival: "2025-09-08", departure: "2025-09-10", status: "CheckedIn", balance: 0, source: "OTA", notes: "", owner: "demo@example.com" },
         ],
-        staff: [
-          { id: crypto.randomUUID(), email: "demo@example.com", role: "admin" },
-        ],
       };
+
+      // Only include staff when authenticated (RLS requires auth)
+      if (sbAuth) {
+        seeds["staff"] = [{ id: crypto.randomUUID(), email: "demo@example.com", role: "admin" }];
+      } else {
+        toast.info("Skipped seeding 'staff' (login required).");
+      }
 
       for (const [table, data] of Object.entries(seeds)) {
         const { data: existing, error: qErr } = await s.from(table).select("id").limit(1);
