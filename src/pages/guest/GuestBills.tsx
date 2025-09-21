@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { getSupabase, getSupabaseUserEmail } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 
 export default function GuestBills() {
@@ -47,17 +46,95 @@ export default function GuestBills() {
 }
 
 function ChargesManager() {
-  const charges = useQuery((api as any).guest.listGuestCharges) ?? [];
-  const addCharge = useMutation((api as any).guest.addGuestCharge);
-  const delCharge = useMutation((api as any).guest.deleteGuestCharge);
-  // Seed demo financials if empty for this user (idempotent)
-  const seedFinancials = useMutation((api as any).guest.seedGuestFinancialsDemo);
+  const [charges, setCharges] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  async function loadCharges() {
+    try {
+      setLoading(true);
+      const s = getSupabase();
+      const email = await getSupabaseUserEmail();
+      if (!s || !email) {
+        setCharges([]);
+        return;
+      }
+      const { data, error } = await s
+        .from("guest_charges")
+        .select("*")
+        .eq("user_email", email)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      const mapped = (data || []).map((r: any) => ({
+        _id: r.id,
+        date: r.date,
+        item: r.item,
+        room: r.room,
+        category: r.category,
+        amount: r.amount,
+        createdAt: r.created_at,
+      }));
+      setCharges(mapped);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to load charges");
+      setCharges([]);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    if ((charges?.length ?? 0) === 0) {
-      seedFinancials({}).catch(() => {});
+    loadCharges();
+  }, []);
+
+  // Seed (Supabase) if empty (idempotent)
+  useEffect(() => {
+    async function seedIfEmpty() {
+      if ((charges?.length ?? 0) > 0) return;
+      try {
+        const s = getSupabase();
+        const email = await getSupabaseUserEmail();
+        if (!s || !email) return;
+        const today = new Date().toISOString().slice(0, 10);
+        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
+          .toISOString()
+          .slice(0, 10);
+        const { error } = await s.from("guest_charges").insert([
+          {
+            user_email: email,
+            date: yesterday,
+            item: "Room Night 1",
+            room: "1208",
+            category: "Room Night",
+            amount: 160,
+            created_at: new Date(Date.now() - 36 * 60 * 60 * 1000).toISOString(),
+          },
+          {
+            user_email: email,
+            date: today,
+            item: "Minibar Snacks",
+            room: "1208",
+            category: "Minibar",
+            amount: 12.0,
+            created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          },
+          {
+            user_email: email,
+            date: today,
+            item: "Room Service - Breakfast",
+            room: "1208",
+            category: "Dining",
+            amount: 22.5,
+            created_at: new Date(Date.now() - 90 * 60 * 1000).toISOString(),
+          },
+        ]);
+        if (error) throw error;
+        await loadCharges();
+      } catch {
+        // ignore seed errors (RLS may block)
+      }
     }
-  }, [charges?.length, seedFinancials]);
+    seedIfEmpty();
+  }, [charges?.length]);
 
   const [form, setForm] = useState({
     date: new Date().toISOString().slice(0, 10),
@@ -66,6 +143,42 @@ function ChargesManager() {
     category: "Room Night",
     amount: 0,
   });
+
+  async function addCharge(args: {
+    date: string;
+    item: string;
+    room?: string;
+    category: string;
+    amount: number;
+  }) {
+    const s = getSupabase();
+    const email = await getSupabaseUserEmail();
+    if (!s || !email) throw new Error("Supabase not connected or no user");
+    const { error } = await s.from("guest_charges").insert({
+      user_email: email,
+      date: args.date,
+      item: args.item,
+      room: args.room ?? null,
+      category: args.category,
+      amount: args.amount,
+      created_at: new Date().toISOString(),
+    });
+    if (error) throw error;
+    await loadCharges();
+  }
+
+  async function delCharge(args: { chargeId: string }) {
+    const s = getSupabase();
+    const email = await getSupabaseUserEmail();
+    if (!s || !email) throw new Error("Supabase not connected or no user");
+    const { error } = await s
+      .from("guest_charges")
+      .delete()
+      .eq("id", args.chargeId)
+      .eq("user_email", email);
+    if (error) throw error;
+    await loadCharges();
+  }
 
   async function add() {
     try {
@@ -204,9 +317,44 @@ function ChargesManager() {
 }
 
 function PaymentsManager() {
-  const payments = useQuery((api as any).guest.listGuestPayments) ?? [];
-  const addPayment = useMutation((api as any).guest.addGuestPayment);
-  const delPayment = useMutation((api as any).guest.deleteGuestPayment);
+  const [payments, setPayments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  async function loadPayments() {
+    try {
+      setLoading(true);
+      const s = getSupabase();
+      const email = await getSupabaseUserEmail();
+      if (!s || !email) {
+        setPayments([]);
+        return;
+      }
+      const { data, error } = await s
+        .from("guest_payments")
+        .select("*")
+        .eq("user_email", email)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      const mapped = (data || []).map((r: any) => ({
+        _id: r.id,
+        date: r.date,
+        method: r.method,
+        ref: r.ref,
+        amount: r.amount,
+        createdAt: r.created_at,
+      }));
+      setPayments(mapped);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to load payments");
+      setPayments([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadPayments();
+  }, []);
 
   const [form, setForm] = useState({
     date: new Date().toISOString().slice(0, 10),
@@ -214,6 +362,40 @@ function PaymentsManager() {
     ref: "",
     amount: 0,
   });
+
+  async function addPayment(args: {
+    date: string;
+    method: string;
+    ref?: string;
+    amount: number;
+  }) {
+    const s = getSupabase();
+    const email = await getSupabaseUserEmail();
+    if (!s || !email) throw new Error("Supabase not connected or no user");
+    const { error } = await s.from("guest_payments").insert({
+      user_email: email,
+      date: args.date,
+      method: args.method,
+      ref: args.ref ?? null,
+      amount: args.amount,
+      created_at: new Date().toISOString(),
+    });
+    if (error) throw error;
+    await loadPayments();
+  }
+
+  async function delPayment(args: { paymentId: string }) {
+    const s = getSupabase();
+    const email = await getSupabaseUserEmail();
+    if (!s || !email) throw new Error("Supabase not connected or no user");
+    const { error } = await s
+      .from("guest_payments")
+      .delete()
+      .eq("id", args.paymentId)
+      .eq("user_email", email);
+    if (error) throw error;
+    await loadPayments();
+  }
 
   async function add() {
     try {

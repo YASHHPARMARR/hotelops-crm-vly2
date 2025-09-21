@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { useState, useEffect } from "react";
+import { getSupabase, getSupabaseUserEmail } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 
 export default function GuestDining() {
@@ -33,10 +32,8 @@ export default function GuestDining() {
 }
 
 function DiningManager() {
-  const orders = useQuery((api as any).guest.listDiningOrders) ?? [];
-  const createOrder = useMutation((api as any).guest.createDiningOrder);
-  const updateStatus = useMutation((api as any).guest.updateDiningOrderStatus);
-  const deleteOrder = useMutation((api as any).guest.deleteDiningOrder);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const [form, setForm] = useState({
     roomNumber: "",
@@ -45,6 +42,94 @@ function DiningManager() {
     total: 0,
     status: "Placed",
   });
+
+  async function loadOrders() {
+    try {
+      setLoading(true);
+      const s = getSupabase();
+      const email = await getSupabaseUserEmail();
+      if (!s || !email) {
+        setOrders([]);
+        return;
+      }
+      const { data, error } = await s
+        .from("guest_dining_orders")
+        .select("*")
+        .eq("user_email", email)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      // Map to UI shape
+      const mapped = (data || []).map((r: any) => ({
+        _id: r.id,
+        user_email: r.user_email,
+        roomNumber: r.room_number,
+        method: r.method,
+        order: r.order_text,
+        total: r.total,
+        status: r.status,
+        createdAt: r.created_at,
+      }));
+      setOrders(mapped);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to load dining orders");
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadOrders();
+  }, []);
+
+  async function createOrder(args: {
+    roomNumber: string;
+    method: string;
+    order: string;
+    total: number;
+    status?: string;
+  }) {
+    const s = getSupabase();
+    const email = await getSupabaseUserEmail();
+    if (!s || !email) throw new Error("Supabase not connected or no user");
+    const { error } = await s.from("guest_dining_orders").insert({
+      user_email: email,
+      room_number: args.roomNumber,
+      method: args.method,
+      order_text: args.order,
+      total: args.total,
+      status: args.status ?? "Placed",
+      created_at: new Date().toISOString(),
+    });
+    if (error) throw error;
+    await loadOrders();
+  }
+
+  async function updateStatus(args: { orderId: string; status: string }) {
+    const s = getSupabase();
+    const email = await getSupabaseUserEmail();
+    if (!s || !email) throw new Error("Supabase not connected or no user");
+    const { error } = await s
+      .from("guest_dining_orders")
+      .update({ status: args.status })
+      .eq("id", args.orderId)
+      .eq("user_email", email);
+    if (error) throw error;
+    await loadOrders();
+  }
+
+  async function deleteOrder(args: { orderId: string }) {
+    const s = getSupabase();
+    const email = await getSupabaseUserEmail();
+    if (!s || !email) throw new Error("Supabase not connected or no user");
+    const { error } = await s
+      .from("guest_dining_orders")
+      .delete()
+      .eq("id", args.orderId)
+      .eq("user_email", email);
+    if (error) throw error;
+    await loadOrders();
+  }
 
   async function add() {
     try {

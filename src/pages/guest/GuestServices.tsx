@@ -18,8 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { useMemo, useState, type ComponentType, useEffect } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { getSupabase, getSupabaseUserEmail } from "@/lib/supabaseClient";
 
 type ServiceItem = {
   id: string;
@@ -139,24 +138,224 @@ export default function GuestServices() {
   const todayIso = new Date().toISOString().slice(0, 10);
   const tomorrowIso = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-  // Fetch from Convex (use typed API instead of any)
-  const bookings = useQuery(api.guest.listBookings) ?? [];
-  const requests = useQuery(api.guest.listRequests) ?? [];
+  // Replace Convex queries with local state + Supabase loaders
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [requests, setRequests] = useState<any[]>([]);
 
-  // Mutations (use typed API)
-  const createBooking = useMutation(api.guest.createBooking);
-  const cancelBookingMut = useMutation(api.guest.cancelBooking);
-  const createRequestMut = useMutation(api.guest.createRequest);
-  const completeRequestMut = useMutation(api.guest.completeRequest);
-  const cancelRequestMut = useMutation(api.guest.cancelRequest);
-
-  // Seed demo data once per session if empty to ensure DB has records
-  const seedGuestDemo = useMutation(api.guest.seedGuestDemo);
-  useEffect(() => {
-    if ((bookings?.length ?? 0) === 0) {
-      seedGuestDemo({}).catch(() => {});
+  async function loadBookings() {
+    try {
+      const s = getSupabase();
+      const email = await getSupabaseUserEmail();
+      if (!s || !email) {
+        setBookings([]);
+        return;
+      }
+      const { data, error } = await s
+        .from("guest_bookings")
+        .select("*")
+        .eq("user_email", email)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      const mapped = (data || []).map((r: any) => ({
+        _id: r.id,
+        user_email: r.user_email,
+        checkInDate: r.check_in_date,
+        checkOutDate: r.check_out_date,
+        roomType: r.room_type,
+        guests: r.guests,
+        nights: r.nights,
+        amount: r.amount,
+        status: r.status,
+        createdAt: r.created_at,
+      }));
+      setBookings(mapped);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to load bookings");
+      setBookings([]);
     }
-  }, [bookings?.length, seedGuestDemo]);
+  }
+
+  async function loadRequests() {
+    try {
+      const s = getSupabase();
+      const email = await getSupabaseUserEmail();
+      if (!s || !email) {
+        setRequests([]);
+        return;
+      }
+      const { data, error } = await s
+        .from("guest_service_requests")
+        .select("*")
+        .eq("user_email", email)
+        .order("requested_at", { ascending: false });
+      if (error) throw error;
+      const mapped = (data || []).map((r: any) => ({
+        _id: r.id,
+        label: r.label,
+        description: r.description,
+        eta: r.eta,
+        status: r.status,
+        requestedAt: r.requested_at,
+      }));
+      setRequests(mapped);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to load requests");
+      setRequests([]);
+    }
+  }
+
+  useEffect(() => {
+    loadBookings();
+    loadRequests();
+  }, []);
+
+  // Recreate "mutations" as local functions with same names used below
+  const createBooking = async (args: {
+    checkInDate: string;
+    checkOutDate: string;
+    roomType: string;
+    guests: number;
+    nights: number;
+    amount: number;
+  }) => {
+    const s = getSupabase();
+    const email = await getSupabaseUserEmail();
+    if (!s || !email) throw new Error("Supabase not connected or no user");
+    const { error } = await s.from("guest_bookings").insert({
+      user_email: email,
+      check_in_date: args.checkInDate,
+      check_out_date: args.checkOutDate,
+      room_type: args.roomType,
+      guests: args.guests,
+      nights: args.nights,
+      amount: args.amount,
+      status: "Confirmed",
+      created_at: new Date().toISOString(),
+    });
+    if (error) throw error;
+    await loadBookings();
+  };
+
+  const cancelBookingMut = async (args: { bookingId: string }) => {
+    const s = getSupabase();
+    const email = await getSupabaseUserEmail();
+    if (!s || !email) throw new Error("Supabase not connected or no user");
+    const { error } = await s
+      .from("guest_bookings")
+      .update({ status: "Cancelled" })
+      .eq("id", args.bookingId)
+      .eq("user_email", email);
+    if (error) throw error;
+    await loadBookings();
+  };
+
+  const createRequestMut = async (args: {
+    label: string;
+    description?: string;
+    eta: string;
+    presetId?: string;
+  }) => {
+    const s = getSupabase();
+    const email = await getSupabaseUserEmail();
+    if (!s || !email) throw new Error("Supabase not connected or no user");
+    const status = args.presetId === "svc_wifi" ? "In Progress" : "Requested";
+    const { error } = await s.from("guest_service_requests").insert({
+      user_email: email,
+      label: args.label,
+      description: args.description ?? "",
+      eta: args.eta,
+      status,
+      requested_at: new Date().toISOString(),
+    });
+    if (error) throw error;
+    await loadRequests();
+  };
+
+  const completeRequestMut = async (args: { requestId: string }) => {
+    const s = getSupabase();
+    const email = await getSupabaseUserEmail();
+    if (!s || !email) throw new Error("Supabase not connected or no user");
+    const { error } = await s
+      .from("guest_service_requests")
+      .update({ status: "Completed" })
+      .eq("id", args.requestId)
+      .eq("user_email", email);
+    if (error) throw error;
+    await loadRequests();
+  };
+
+  const cancelRequestMut = async (args: { requestId: string }) => {
+    const s = getSupabase();
+    const email = await getSupabaseUserEmail();
+    if (!s || !email) throw new Error("Supabase not connected or no user");
+    const { error } = await s
+      .from("guest_service_requests")
+      .update({ status: "Cancelled" })
+      .eq("id", args.requestId)
+      .eq("user_email", email);
+    if (error) throw error;
+    await loadRequests();
+  };
+
+  // Seed demo if empty (Supabase)
+  useEffect(() => {
+    async function seedIfEmpty() {
+      if ((bookings?.length ?? 0) > 0) return;
+      try {
+        const s = getSupabase();
+        const email = await getSupabaseUserEmail();
+        if (!s || !email) return;
+        const now = Date.now();
+        await s.from("guest_bookings").insert([
+          {
+            user_email: email,
+            check_in_date: new Date(now + 24 * 3600 * 1000).toISOString().slice(0, 10),
+            check_out_date: new Date(now + 3 * 24 * 3600 * 1000).toISOString().slice(0, 10),
+            room_type: "Deluxe",
+            guests: 2,
+            nights: 2,
+            amount: 320,
+            status: "Confirmed",
+            created_at: new Date(now - 60 * 60 * 1000).toISOString(),
+          },
+          {
+            user_email: email,
+            check_in_date: new Date(now + 6 * 24 * 3600 * 1000).toISOString().slice(0, 10),
+            check_out_date: new Date(now + 9 * 24 * 3600 * 1000).toISOString().slice(0, 10),
+            room_type: "Suite",
+            guests: 3,
+            nights: 3,
+            amount: 720,
+            status: "Pending",
+            created_at: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
+          },
+        ]);
+        await s.from("guest_service_requests").insert([
+          {
+            user_email: email,
+            label: "Laundry Pickup",
+            description: "2 shirts, 1 trouser",
+            eta: "6 pm",
+            status: "Requested",
+            requested_at: new Date(now - 90 * 60 * 1000).toISOString(),
+          },
+          {
+            user_email: email,
+            label: "Extra Pillows",
+            description: "",
+            eta: "15 min",
+            status: "In Progress",
+            requested_at: new Date(now - 30 * 60 * 1000).toISOString(),
+          },
+        ]);
+        await loadBookings();
+        await loadRequests();
+      } catch {
+        // ignore seed errors
+      }
+    }
+    seedIfEmpty();
+  }, [bookings?.length]);
 
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
   const [bookingForm, setBookingForm] = useState<BookingForm>({
