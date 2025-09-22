@@ -53,13 +53,35 @@ export function clearSupabaseKeys() {
 
 export async function getSupabaseUserEmail(): Promise<string | null> {
   const client = getSupabase();
-  if (!client) return null;
+  if (!client) {
+    // Fallback to stored demo email if Supabase isn't initialized
+    try {
+      const demoEmail = typeof window !== "undefined" ? localStorage.getItem("DEMO_USER_EMAIL") : null;
+      return demoEmail || null;
+    } catch {
+      return null;
+    }
+  }
   
   try {
     const { data: { user } } = await client.auth.getUser();
-    return user?.email || null;
+    if (user?.email) return user.email || null;
+
+    // Fallback: use demo email captured from Convex auth
+    try {
+      const demoEmail = typeof window !== "undefined" ? localStorage.getItem("DEMO_USER_EMAIL") : null;
+      return demoEmail || null;
+    } catch {
+      return null;
+    }
   } catch {
-    return null;
+    // Fallback: use demo email captured from Convex auth
+    try {
+      const demoEmail = typeof window !== "undefined" ? localStorage.getItem("DEMO_USER_EMAIL") : null;
+      return demoEmail || null;
+    } catch {
+      return null;
+    }
   }
 }
 

@@ -118,7 +118,13 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
     try {
       const formData = new FormData(event.currentTarget);
       await signIn("email-otp", formData);
-      setStep({ email: formData.get("email") as string });
+
+      const email = formData.get("email") as string;
+      setStep({ email });
+
+      // Store email so Supabase data layer can use it even without Supabase auth
+      try { localStorage.setItem("DEMO_USER_EMAIL", email); } catch {}
+
       setIsLoading(false);
     } catch (error) {
       console.error("Email sign-in error:", error);
@@ -138,6 +144,10 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
     try {
       const formData = new FormData(event.currentTarget);
       await signIn("email-otp", formData);
+
+      // Persist email for Supabase data fetching
+      const email = formData.get("email") as string;
+      try { localStorage.setItem("DEMO_USER_EMAIL", email); } catch {}
 
       // Force guest role immediately after OTP verification and redirect to Guest dashboard
       try {
