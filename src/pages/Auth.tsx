@@ -74,8 +74,11 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      const redirect = redirectAfterAuth || "/";
-      navigate(redirect);
+      // Force guest role on any successful login and go to Guest dashboard
+      try {
+        localStorage.setItem("demoRole", "guest");
+      } catch { /* ignore */ }
+      navigate("/guest");
     }
   }, [authLoading, isAuthenticated, navigate, redirectAfterAuth]);
 
@@ -136,8 +139,12 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       const formData = new FormData(event.currentTarget);
       await signIn("email-otp", formData);
 
-      const dest = redirectAfterAuth || (await getRoleRedirect());
-      navigate(dest);
+      // Force guest role immediately after OTP verification and redirect to Guest dashboard
+      try {
+        localStorage.setItem("demoRole", "guest");
+      } catch { /* ignore */ }
+
+      navigate("/guest");
     } catch (error) {
       console.error("OTP verification error:", error);
 
