@@ -42,7 +42,8 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
   // Add: demo role selection state
   const [demoRole, setDemoRole] = useState<string>("admin");
 
-  const roleToPath: Record<string, string> = {
+  // Map roles to dashboard paths for both demo mode and post-auth redirects
+  const ROLE_TO_PATH: Record<string, string> = {
     admin: "/admin",
     front_desk: "/front-desk",
     housekeeping: "/housekeeping",
@@ -54,8 +55,29 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
     guest: "/guest",
   };
 
+  // Add a helper to upsert the user into guests table (safe, optional)
+  async function upsertGuest(email: string) {
+    try {
+      const s = getSupabase();
+      if (!s) return;
+      // Try 'guests' first
+      const { error: e1 } = await s
+        .from("guests")
+        .upsert({ email, created_at: new Date().toISOString() }, { onConflict: "email" });
+      if (!e1) return;
+
+      // Fallback to 'guest' if 'guests' table doesn't exist
+      await s
+        .from("guest")
+        .upsert({ email, created_at: new Date().toISOString() }, { onConflict: "email" });
+    } catch {
+      // ignore if tables don't exist or RLS blocks
+    }
+  }
+
+  // Update getRoleRedirect to be used for post-auth navigation
   async function getRoleRedirect(): Promise<string> {
-    // 1) Supabase staff role by email
+    const roleToPath = ROLE_TO_PATH;
     try {
       const email = await getSupabaseUserEmail();
       const s = getSupabase();
@@ -65,20 +87,24 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
         if (staffRole && roleToPath[staffRole]) return roleToPath[staffRole];
       }
     } catch { /* ignore */ }
-    // 2) demoRole if set
-    const demoRole = localStorage.getItem("demoRole") || undefined;
-    if (demoRole && roleToPath[demoRole]) return roleToPath[demoRole];
-    // 3) fallback
-    return "/";
+
+    // If no staff role, default to guest dashboard
+    return "/guest";
   }
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      // Force guest role on any successful login and go to Guest dashboard
-      try {
-        localStorage.setItem("demoRole", "guest");
-      } catch { /* ignore */ }
-      navigate("/guest");
+      (async () => {
+        try {
+          const email = await getSupabaseUserEmail();
+          if (email) {
+            try { localStorage.setItem("DEMO_USER_EMAIL", email); } catch {}
+            await upsertGuest(email);
+          }
+        } catch {}
+        const dest = await getRoleRedirect();
+        navigate(dest);
+      })();
     }
   }, [authLoading, isAuthenticated, navigate, redirectAfterAuth]);
 
@@ -87,7 +113,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
     try {
       if (!demoRole) return;
       localStorage.setItem("demoRole", demoRole);
-      const dest = roleToPath[demoRole] || "/";
+      const dest = ROLE_TO_PATH[demoRole] || "/";
       navigate(dest);
     } catch {
       navigate("/");
@@ -122,8 +148,9 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       const email = formData.get("email") as string;
       setStep({ email });
 
-      // Store email so Supabase data layer can use it even without Supabase auth
       try { localStorage.setItem("DEMO_USER_EMAIL", email); } catch {}
+      // Optional: upsert record early
+      await upsertGuest(email);
 
       setIsLoading(false);
     } catch (error) {
@@ -145,22 +172,16 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       const formData = new FormData(event.currentTarget);
       await signIn("email-otp", formData);
 
-      // Persist email for Supabase data fetching
       const email = formData.get("email") as string;
       try { localStorage.setItem("DEMO_USER_EMAIL", email); } catch {}
+      await upsertGuest(email);
 
-      // Force guest role immediately after OTP verification and redirect to Guest dashboard
-      try {
-        localStorage.setItem("demoRole", "guest");
-      } catch { /* ignore */ }
-
-      navigate("/guest");
+      const dest = await getRoleRedirect();
+      navigate(dest);
     } catch (error) {
       console.error("OTP verification error:", error);
-
       setError("The verification code you entered is incorrect.");
       setIsLoading(false);
-
       setOtp("");
     }
   };

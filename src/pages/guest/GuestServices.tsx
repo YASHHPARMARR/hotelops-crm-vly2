@@ -173,8 +173,6 @@ export default function GuestServices() {
 
   useEffect(() => {
     loadAvailableRooms();
-    const t = setInterval(loadAvailableRooms, 6000);
-    return () => clearInterval(t);
   }, []);
 
   async function loadBookings() {
@@ -521,12 +519,57 @@ export default function GuestServices() {
   }, [requests, filter]);
 
   useEffect(() => {
-    // This runs after bookingForm is defined below
-    // It updates availability for the selected room type and keeps it refreshed
-    loadAvailableRooms(bookingForm?.roomType);
-    const t = setInterval(() => loadAvailableRooms(bookingForm?.roomType), 6000);
-    return () => clearInterval(t);
-  }, [/* react to room type changes */ bookingForm?.roomType]);
+    let channel: any | null = null;
+    let cancelled = false;
+    const s = getSupabase();
+
+    async function bindRealtime() {
+      await loadAvailableRooms(bookingForm?.roomType);
+      if (!s) return;
+      const email = await getSupabaseUserEmail();
+
+      channel = s
+        .channel("guest_services_realtime")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "rooms" },
+          () => loadAvailableRooms(bookingForm?.roomType),
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "guest_bookings",
+            filter: email ? `user_email=eq.${email}` : undefined,
+          },
+          () => loadBookings(),
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "guest_service_requests",
+            filter: email ? `user_email=eq.${email}` : undefined,
+          },
+          () => loadRequests(),
+        );
+
+      channel.subscribe().catch(() => {});
+    }
+
+    bindRealtime();
+
+    return () => {
+      cancelled = true;
+      try {
+        if (channel && s) {
+          s.removeChannel(channel);
+        }
+      } catch {}
+    };
+  }, [bookingForm?.roomType]);
 
   return (
     <AdminShell>

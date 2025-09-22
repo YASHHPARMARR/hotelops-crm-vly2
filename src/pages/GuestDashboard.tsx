@@ -22,9 +22,11 @@ export default function GuestDashboard() {
 
   useEffect(() => {
     let cancelled = false;
+    let channel: any | null = null;
+    const s = getSupabase();
+
     async function loadAvailability() {
       try {
-        const s = getSupabase();
         if (!s) return;
         const { count, error } = await s
           .from("rooms")
@@ -38,7 +40,6 @@ export default function GuestDashboard() {
     }
     async function loadBooking() {
       try {
-        const s = getSupabase();
         const email = await getSupabaseUserEmail();
         if (!s || !email) return;
         const { data, error } = await s
@@ -64,15 +65,46 @@ export default function GuestDashboard() {
         if (!cancelled) setBookingSummary(null);
       }
     }
-    loadAvailability();
-    loadBooking();
-    const t = setInterval(() => {
-      loadAvailability();
-      loadBooking();
-    }, 7000);
+
+    (async () => {
+      await loadAvailability();
+      await loadBooking();
+
+      if (!s) return;
+      const email = await getSupabaseUserEmail();
+
+      channel = s
+        .channel("guest_dashboard_realtime")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "rooms" },
+          () => {
+            loadAvailability();
+          },
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "guest_bookings",
+            filter: email ? `user_email=eq.${email}` : undefined,
+          },
+          () => {
+            loadBooking();
+          },
+        );
+
+      channel.subscribe().catch(() => {});
+    })();
+
     return () => {
       cancelled = true;
-      clearInterval(t);
+      try {
+        if (channel && s) {
+          s.removeChannel(channel);
+        }
+      } catch {}
     };
   }, []);
 

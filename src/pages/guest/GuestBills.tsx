@@ -86,6 +86,40 @@ function ChargesManager() {
     loadCharges();
   }, []);
 
+  // Add realtime subscription for charges (stop relying on refreshes)
+  useEffect(() => {
+    let channel: any | null = null;
+    const s = getSupabase();
+
+    (async () => {
+      const email = await getSupabaseUserEmail();
+      if (!s || !email) return;
+
+      channel = s
+        .channel("guest_charges_realtime")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "guest_charges",
+            filter: `user_email=eq.${email}`,
+          },
+          () => loadCharges(),
+        );
+
+      channel.subscribe().catch(() => {});
+    })();
+
+    return () => {
+      try {
+        if (channel && s) {
+          s.removeChannel(channel);
+        }
+      } catch {}
+    };
+  }, []);
+
   // Seed (Supabase) if empty (idempotent)
   useEffect(() => {
     async function seedIfEmpty() {
@@ -354,6 +388,40 @@ function PaymentsManager() {
 
   useEffect(() => {
     loadPayments();
+  }, []);
+
+  // Add realtime subscription for payments
+  useEffect(() => {
+    let channel: any | null = null;
+    const s = getSupabase();
+
+    (async () => {
+      const email = await getSupabaseUserEmail();
+      if (!s || !email) return;
+
+      channel = s
+        .channel("guest_payments_realtime")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "guest_payments",
+            filter: `user_email=eq.${email}`,
+          },
+          () => loadPayments(),
+        );
+
+      channel.subscribe().catch(() => {});
+    })();
+
+    return () => {
+      try {
+        if (channel && s) {
+          s.removeChannel(channel);
+        }
+      } catch {}
+    };
   }, []);
 
   const [form, setForm] = useState({
