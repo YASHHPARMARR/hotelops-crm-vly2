@@ -7,6 +7,8 @@ import { motion } from "framer-motion";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { MessageSquare } from "lucide-react";
 import { ChatPanel } from "@/components/ChatPanel";
+import { useEffect, useState } from "react";
+import { getSupabase, getSupabaseUserEmail } from "@/lib/supabaseClient";
 
 const services = [
   { name: "Room Service", eta: "25-35 min" },
@@ -15,6 +17,65 @@ const services = [
 ];
 
 export default function GuestDashboard() {
+  const [availableRooms, setAvailableRooms] = useState<number>(0);
+  const [bookingSummary, setBookingSummary] = useState<{ roomType?: string; checkout?: string; balance?: number } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadAvailability() {
+      try {
+        const s = getSupabase();
+        if (!s) return;
+        const { count, error } = await s
+          .from("rooms")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "Available");
+        if (error) throw error;
+        if (!cancelled) setAvailableRooms(count ?? 0);
+      } catch {
+        if (!cancelled) setAvailableRooms(0);
+      }
+    }
+    async function loadBooking() {
+      try {
+        const s = getSupabase();
+        const email = await getSupabaseUserEmail();
+        if (!s || !email) return;
+        const { data, error } = await s
+          .from("guest_bookings")
+          .select("*")
+          .eq("user_email", email)
+          .order("created_at", { ascending: false })
+          .limit(1);
+        if (error) throw error;
+        const b = (data && data[0]) || null;
+        if (!cancelled) {
+          setBookingSummary(
+            b
+              ? {
+                  roomType: b.room_type ?? undefined,
+                  checkout: b.check_out_date ?? undefined,
+                  balance: undefined,
+                }
+              : null,
+          );
+        }
+      } catch {
+        if (!cancelled) setBookingSummary(null);
+      }
+    }
+    loadAvailability();
+    loadBooking();
+    const t = setInterval(() => {
+      loadAvailability();
+      loadBooking();
+    }, 7000);
+    return () => {
+      cancelled = true;
+      clearInterval(t);
+    };
+  }, []);
+
   return (
     <AdminShell>
       <div className="space-y-6">
@@ -36,10 +97,24 @@ export default function GuestDashboard() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <KPICard title="Room" value="205 • Deluxe" trend="neutral" icon={<Home className="h-4 w-4" />} />
-          <KPICard title="Check-out" value="Fri, 11:00 AM" trend="neutral" icon={<Calendar className="h-4 w-4" />} />
-          <KPICard title="Dining Credit" value="$85.00" trend="neutral" icon={<UtensilsCrossed className="h-4 w-4" />} />
-          <KPICard title="Balance" value="$142.60" trend="neutral" icon={<Wallet className="h-4 w-4" />} />
+          <KPICard
+            title="Room"
+            value={
+              bookingSummary?.roomType
+                ? `• ${bookingSummary.roomType}`
+                : "—"
+            }
+            trend="neutral"
+            icon={<Home className="h-4 w-4" />}
+          />
+          <KPICard
+            title="Check-out"
+            value={bookingSummary?.checkout ? new Date(bookingSummary.checkout).toLocaleDateString() : "—"}
+            trend="neutral"
+            icon={<Calendar className="h-4 w-4" />}
+          />
+          <KPICard title="Available Rooms" value={String(availableRooms)} trend="neutral" icon={<UtensilsCrossed className="h-4 w-4" />} />
+          <KPICard title="Balance" value="—" trend="neutral" icon={<Wallet className="h-4 w-4" />} />
         </div>
 
         <Card className="gradient-card">

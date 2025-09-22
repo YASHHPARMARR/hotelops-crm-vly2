@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { useMemo, useState, type ComponentType, useEffect } from "react";
 import { getSupabase, getSupabaseUserEmail } from "@/lib/supabaseClient";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type ServiceItem = {
   id: string;
@@ -141,6 +143,31 @@ export default function GuestServices() {
   // Replace Convex queries with local state + Supabase loaders
   const [bookings, setBookings] = useState<any[]>([]);
   const [requests, setRequests] = useState<any[]>([]);
+  const [availableRooms, setAvailableRooms] = useState<number>(0);
+
+  async function loadAvailableRooms() {
+    try {
+      const s = getSupabase();
+      if (!s) {
+        setAvailableRooms(0);
+        return;
+      }
+      const { count, error } = await s
+        .from("rooms")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "Available");
+      if (error) throw error;
+      setAvailableRooms(count ?? 0);
+    } catch {
+      setAvailableRooms(0);
+    }
+  }
+
+  useEffect(() => {
+    loadAvailableRooms();
+    const t = setInterval(loadAvailableRooms, 6000);
+    return () => clearInterval(t);
+  }, []);
 
   async function loadBookings() {
     try {
@@ -569,6 +596,7 @@ export default function GuestServices() {
               </div>
 
               <div className="flex flex-wrap items-center gap-3 pt-2">
+                <Badge variant="secondary">Available Rooms: {availableRooms}</Badge>
                 <Badge variant="secondary">Nights: {formNights}</Badge>
                 <Badge variant="secondary">
                   Rate: ${PRICE_PER_NIGHT[bookingForm.roomType]}/night

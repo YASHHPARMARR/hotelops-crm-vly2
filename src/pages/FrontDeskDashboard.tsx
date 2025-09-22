@@ -7,6 +7,8 @@ import { ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Toolti
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { MessageSquare } from "lucide-react";
 import { ChatPanel } from "@/components/ChatPanel";
+import { useEffect, useState } from "react";
+import { getSupabase } from "@/lib/supabaseClient";
 
 const arrivalsDepartures = [
   { hour: "08:00", arrivals: 8, departures: 3 },
@@ -25,6 +27,33 @@ const queueData = [
 ];
 
 export default function FrontDeskDashboard() {
+  const [availableRooms, setAvailableRooms] = useState<number>(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const s = getSupabase();
+        if (!s) return;
+        const { count, error } = await s
+          .from("rooms")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "Available");
+        if (error) throw error;
+        if (!cancelled) setAvailableRooms(count ?? 0);
+      } catch {
+        if (!cancelled) setAvailableRooms(0);
+      }
+    }
+    load();
+    // Refresh periodically (lightweight)
+    const t = setInterval(load, 5000);
+    return () => {
+      cancelled = true;
+      clearInterval(t);
+    };
+  }, []);
+
   return (
     <AdminShell>
       <div className="space-y-6">
@@ -46,10 +75,10 @@ export default function FrontDeskDashboard() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <KPICard title="Available Rooms" value={String(availableRooms)} change={undefined} trend="neutral" icon={<Users className="h-4 w-4" />} />
           <KPICard title="Today's Arrivals" value="82" change={{ value: 6.4, period: "yesterday" }} trend="up" icon={<LogIn className="h-4 w-4" />} />
           <KPICard title="Today's Departures" value="76" change={{ value: -3.1, period: "yesterday" }} trend="down" icon={<Calendar className="h-4 w-4" />} />
           <KPICard title="Avg Check-in Time" value="4m 30s" change={{ value: -8.3, period: "last week" }} trend="up" icon={<Clock className="h-4 w-4" />} />
-          <KPICard title="VIP Arrivals" value="7" change={{ value: 2.5, period: "yesterday" }} trend="up" icon={<Users className="h-4 w-4" />} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
