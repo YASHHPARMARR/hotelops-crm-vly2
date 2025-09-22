@@ -145,17 +145,25 @@ export default function GuestServices() {
   const [requests, setRequests] = useState<any[]>([]);
   const [availableRooms, setAvailableRooms] = useState<number>(0);
 
-  async function loadAvailableRooms() {
+  async function loadAvailableRooms(roomType?: string) {
     try {
       const s = getSupabase();
       if (!s) {
         setAvailableRooms(0);
         return;
       }
-      const { count, error } = await s
-        .from("rooms")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "Available");
+      // Base query for available rooms
+      let query = s.from("rooms").select("id", { count: "exact", head: true }).eq("status", "Available");
+      // Narrow by room type if provided (fallback gracefully if column doesn't exist)
+      if (roomType && roomType.length > 0) {
+        const { count, error } = await query.eq("room_type", roomType);
+        if (!error) {
+          setAvailableRooms(count ?? 0);
+          return;
+        }
+        // If error (e.g., missing column), fallback to overall availability
+      }
+      const { count, error } = await query;
       if (error) throw error;
       setAvailableRooms(count ?? 0);
     } catch {
@@ -512,6 +520,14 @@ export default function GuestServices() {
     return requests.filter((r: any) => r.status === "Requested" || r.status === "In Progress");
   }, [requests, filter]);
 
+  useEffect(() => {
+    // This runs after bookingForm is defined below
+    // It updates availability for the selected room type and keeps it refreshed
+    loadAvailableRooms(bookingForm?.roomType);
+    const t = setInterval(() => loadAvailableRooms(bookingForm?.roomType), 6000);
+    return () => clearInterval(t);
+  }, [/* react to room type changes */ bookingForm?.roomType]);
+
   return (
     <AdminShell>
       <div className="space-y-8">
@@ -596,7 +612,7 @@ export default function GuestServices() {
               </div>
 
               <div className="flex flex-wrap items-center gap-3 pt-2">
-                <Badge variant="secondary">Available Rooms: {availableRooms}</Badge>
+                <Badge variant="secondary">Available {bookingForm.roomType} Rooms: {availableRooms}</Badge>
                 <Badge variant="secondary">Nights: {formNights}</Badge>
                 <Badge variant="secondary">
                   Rate: ${PRICE_PER_NIGHT[bookingForm.roomType]}/night
