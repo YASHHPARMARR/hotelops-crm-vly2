@@ -67,18 +67,23 @@ export function AdminShell({ children }: AdminShellProps) {
   useEffect(() => {
     (async () => {
       try {
-        const email = await getSupabaseUserEmail();
-        const s = getSupabase();
-        if (!s || !email) {
+        // Only resolve staff role when authenticated; skip in demo mode
+        const authEmail = user?.email;
+        if (!authEmail) {
           setStaffRole(undefined);
-          setStaffRoleLoaded(true); // mark as loaded even if unavailable
+          setStaffRoleLoaded(true); // mark as loaded for unauthenticated cases
           return;
         }
-        // Change: read role from 'accounts' table instead of 'staff'
+        const s = getSupabase();
+        if (!s) {
+          setStaffRole(undefined);
+          setStaffRoleLoaded(true);
+          return;
+        }
         const { data, error } = await s
           .from("accounts")
           .select("role")
-          .eq("email", email)
+          .eq("email", authEmail)
           .limit(1)
           .maybeSingle();
         if (error) {
@@ -102,20 +107,21 @@ export function AdminShell({ children }: AdminShellProps) {
     const s = getSupabase();
 
     (async () => {
-      const email = await getSupabaseUserEmail();
-      if (!s || !email) return;
+      // Only listen for role changes when authenticated; ignore demo mode
+      const authEmail = user?.email;
+      if (!s || !authEmail) return;
 
       const refreshRole = async () => {
         try {
           const { data } = await s
             .from("accounts")
             .select("role")
-            .eq("email", email)
+            .eq("email", authEmail)
             .limit(1)
             .maybeSingle();
           const role = (data?.role as Role | undefined) || undefined;
           setStaffRole(role);
-          // do not change staffRoleLoaded here; it should already be true after initial fetch
+          // staffRoleLoaded should already be true after initial fetch
         } catch {
           // ignore
         }
@@ -129,7 +135,7 @@ export function AdminShell({ children }: AdminShellProps) {
             event: "*",
             schema: "public",
             table: "accounts",
-            filter: `email=eq.${email}`,
+            filter: `email=eq.${authEmail}`,
           },
           () => {
             refreshRole();
@@ -158,9 +164,9 @@ export function AdminShell({ children }: AdminShellProps) {
   // - If authenticated: use staffRole only (once loaded). Do NOT use demoRole to avoid flips.
   // - If not authenticated and demoRole is set: use demoRole for demo navigation.
   const isDemo = !user && !!demoRoleString;
-  const effectiveRole: Role | undefined =
-    (staffRole as Role | undefined) ??
-    (isDemo ? (demoRoleString as Role | undefined) : undefined);
+  const effectiveRole: Role | undefined = user
+    ? (staffRole as Role | undefined)
+    : (isDemo ? (demoRoleString as Role | undefined) : undefined);
 
   const navigationItems = effectiveRole ? ROLE_NAVIGATION[effectiveRole] || [] : [];
 
