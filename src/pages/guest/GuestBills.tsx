@@ -108,7 +108,7 @@ function ChargesManager() {
           () => loadCharges(),
         );
 
-      channel.subscribe().catch(() => {});
+      channel.subscribe();
     })();
 
     return () => {
@@ -412,7 +412,7 @@ function PaymentsManager() {
           () => loadPayments(),
         );
 
-      channel.subscribe().catch(() => {});
+      channel.subscribe();
     })();
 
     return () => {

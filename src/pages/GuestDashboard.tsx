@@ -95,7 +95,7 @@ export default function GuestDashboard() {
           },
         );
 
-      channel.subscribe().catch(() => {});
+      channel.subscribe();
     })();
 
     return () => {

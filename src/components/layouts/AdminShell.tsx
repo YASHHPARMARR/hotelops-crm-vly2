@@ -130,7 +130,7 @@ export function AdminShell({ children }: AdminShellProps) {
         );
 
       try {
-        await channel.subscribe();
+        channel.subscribe();
       } catch {
         // ignore
       }
@@ -158,7 +158,12 @@ export function AdminShell({ children }: AdminShellProps) {
   // Add: if role changes, ensure user is on a route allowed by that role; otherwise redirect
   // Use boolean comparison instead of Set.has to avoid string literal union type mismatch
   useEffect(() => {
-    const isAllowed = navigationItems.some((i) => i.path === location.pathname);
+    const isAllowed =
+      navigationItems.some(
+        (i) =>
+          i.path === location.pathname ||
+          location.pathname.startsWith(i.path + "/")
+      );
     if (!isAllowed && navigationItems.length > 0) {
       navigate(navigationItems[0].path, { replace: true });
     }

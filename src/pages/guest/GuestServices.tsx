@@ -556,7 +556,7 @@ export default function GuestServices() {
           () => loadRequests(),
         );
 
-      channel.subscribe().catch(() => {});
+      channel.subscribe();
     }
 
     bindRealtime();
