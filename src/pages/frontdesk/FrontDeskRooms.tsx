@@ -25,7 +25,7 @@ export default function FrontDeskRooms() {
                 { key: "room_number", label: "Room Number", type: "text", required: true },
                 { key: "room_type", label: "Room Type", type: "select", options: ["Deluxe", "Suite", "Standard"], required: true },
                 { key: "status", label: "Status", type: "select", options: ["available", "booked", "maintenance"], required: true },
-                { key: "price", label: "Price (numeric)", type: "number", required: true },
+                { key: "pricePerNight", label: "Price per day", type: "number", required: true },
               ]}
             />
           </CardContent>
