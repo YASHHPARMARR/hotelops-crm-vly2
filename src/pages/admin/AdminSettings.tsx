@@ -1174,6 +1174,25 @@ with check (true);
                 Seed Sample Data (if empty)
               </Button>
             </div>
+
+            <div className="space-y-3">
+              <Label>Create Tables SQL</Label>
+              <Textarea
+                value={setupSql}
+                readOnly
+                className="font-mono text-xs h-64"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label>RLS Policies SQL</Label>
+              <Textarea
+                value={rlsSql}
+                readOnly
+                className="font-mono text-xs h-64"
+              />
+            </div>
+
             <div className="text-xs text-muted-foreground">
               1) In Supabase → SQL editor, paste and run the copied SQL. 2) Turn on Realtime for all tables. 3) Click Seed Sample Data.
             </div>
