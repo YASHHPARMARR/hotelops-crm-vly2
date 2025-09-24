@@ -20,7 +20,20 @@ export default function HousekeepingRooms() {
               storageKey="rooms"
               description="Housekeeping status per room in sync with Front Desk and Admin."
               columns={[
-                { key: "number", label: "Room #", input: "text", required: true },
+                {
+                  key: "number",
+                  label: "Room #",
+                  input: "select",
+                  required: true,
+                  // Use dynamic options from Supabase: only available rooms
+                  dynamicOptions: {
+                    table: "rooms",
+                    valueField: "number",
+                    labelField: "number",
+                    filters: [{ column: "status", op: "eq", value: "Available" }],
+                    orderBy: { column: "number", ascending: true },
+                  },
+                },
                 { key: "status", label: "Status", input: "select", options: [
                   { label: "Vacant Clean", value: "Vacant Clean" },
                   { label: "Vacant Dirty", value: "Vacant Dirty" },

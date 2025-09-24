@@ -241,6 +241,15 @@ export interface CrudPageProps {
     // Support both string[] and {label,value}[] for options to match older pages
     options?: Array<string | { label: string; value: string }>;
     required?: boolean;
+    // Add: dynamic options from Supabase
+    dynamicOptions?: {
+      table: string;
+      valueField: string;
+      labelField?: string;
+      filters?: Array<{ column: string; op: "eq" | "neq" | "gte" | "lte"; value: any }>;
+      orderBy?: { column: string; ascending?: boolean };
+      limit?: number;
+    };
   }>;
   table?: string; // Supabase table name
   ownerScoped?: boolean; // Whether to scope by owner email
@@ -263,6 +272,7 @@ export function CrudPage({
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<Record<string, any>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [dynamicOptionsMap, setDynamicOptionsMap] = useState<Record<string, Array<{ value: string; label: string }>>>({});
 
   // Determine provider based on conditions
   const getProvider = useCallback((): StorageProvider => {
@@ -341,6 +351,59 @@ export function CrudPage({
     
     return unsubscribe;
   }, [loadData, provider]);
+
+  // Duplicate dynamicOptionsMap state removed (already declared above)
+
+  // Add: loader for dynamic options from Supabase
+  const loadDynamicOptions = useCallback(async (columnKey: string) => {
+    const col = columns.find(c => c.key === columnKey);
+    if (!col?.dynamicOptions) return;
+    const supabase = getSupabase();
+    if (!supabase) return;
+
+    const cfg = col.dynamicOptions;
+    try {
+      let q = supabase.from(cfg.table).select("*");
+      // Apply filters
+      if (cfg.filters && cfg.filters.length > 0) {
+        for (const f of cfg.filters) {
+          if (f.op === "eq") q = q.eq(f.column, f.value);
+          if (f.op === "neq") q = q.neq(f.column, f.value);
+          if (f.op === "gte") q = q.gte(f.column, f.value);
+          if (f.op === "lte") q = q.lte(f.column, f.value);
+        }
+      }
+      // Order
+      if (cfg.orderBy) {
+        q = q.order(cfg.orderBy.column, { ascending: cfg.orderBy.ascending ?? true });
+      }
+      // Limit
+      if (cfg.limit) q = q.limit(cfg.limit);
+
+      const { data, error } = await q;
+      if (error) throw error;
+
+      const opts: Array<{ value: string; label: string }> = (Array.isArray(data) ? data : []).map((row: any) => {
+        const value = String(row[cfg.valueField] ?? "");
+        const label = String((cfg.labelField ? row[cfg.labelField] : row[cfg.valueField]) ?? value);
+        return { value, label };
+      }).filter(opt => opt.value !== "");
+
+      setDynamicOptionsMap(prev => ({ ...prev, [columnKey]: opts }));
+    } catch {
+      // fail silently; field will show no options
+    }
+  }, [columns]);
+
+  // Load dynamic options on mount and when provider changes
+  useEffect(() => {
+    for (const col of columns) {
+      if (col.dynamicOptions) {
+        loadDynamicOptions(col.key);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [provider]);
 
   // Initialize form with default values
   useEffect(() => {
@@ -473,34 +536,54 @@ export function CrudPage({
     const inputType = column.type || column.input || "text";
     const value = form[column.key] ?? (inputType === "number" ? 0 : "");
 
-    if (inputType === "select" && column.options) {
-      // Normalize options to string values
-      const options: string[] = (column.options as Array<string | { label: string; value: string }>).map(
+    if (inputType === "select" && (column.options || column.dynamicOptions)) {
+      // Normalize static options if provided
+      const hasDynamic = !!column.dynamicOptions && !!getSupabase();
+      const dyn = hasDynamic ? (dynamicOptionsMap[column.key] || []) : [];
+      const staticOptions: string[] = (column.options as Array<string | { label: string; value: string }> | undefined)?.map(
         (opt: any) => (typeof opt === "string" ? opt : opt.value)
-      );
-      const labels: Record<string, string> = (column.options as Array<string | { label: string; value: string }>).reduce(
+      ) || [];
+      const staticLabels: Record<string, string> = (column.options as Array<string | { label: string; value: string }> | undefined)?.reduce(
         (acc: Record<string, string>, opt: any) => {
           if (typeof opt === "string") acc[opt] = opt;
           else acc[opt.value] = opt.label;
           return acc;
         },
         {}
-      );
+      ) || {};
+
+      // Combine dynamic and static (dynamic first)
+      const combined: Array<{ value: string; label: string }> = [
+        ...dyn,
+        ...staticOptions
+          .filter((v: string) => !dyn.find(d => d.value === v))
+          .map((v: string) => ({ value: v, label: staticLabels[v] ?? v })),
+      ];
 
       return (
         <Select
           value={String(value)}
           onValueChange={(newValue) => setForm((prev: any) => ({ ...prev, [column.key]: newValue }))}
+          // when opened, refresh dynamic options
+          onOpenChange={(open: boolean) => {
+            if (open && hasDynamic) loadDynamicOptions(column.key);
+          }}
         >
           <SelectTrigger>
             <SelectValue placeholder={`Select ${column.label.toLowerCase()}`} />
           </SelectTrigger>
           <SelectContent>
-            {options.map((opt: string) => (
-              <SelectItem key={opt} value={opt}>
-                {labels[opt] ?? opt}
+            {combined.length === 0 ? (
+              <SelectItem value="__none__" disabled>
+                {hasDynamic ? "No options (check Supabase connection/data)" : "No options"}
               </SelectItem>
-            ))}
+            ) : (
+              combined.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))
+            )}
           </SelectContent>
         </Select>
       );
