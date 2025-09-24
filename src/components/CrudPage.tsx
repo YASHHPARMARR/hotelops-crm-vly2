@@ -192,33 +192,21 @@ class SupabaseProvider implements StorageProvider {
   subscribe(callback: () => void): () => void {
     if (!this.supabase) return () => {};
     
+    // Replace frequent updates and realtime with a simple 30s refresh
     let intervalId: any = null;
     try {
-      // Polling fallback for environments without Supabase Realtime replication
       intervalId = setInterval(() => {
         try {
           callback();
         } catch {
           // ignore callback errors
         }
-      }, 3000);
+      }, 30000); // 30 seconds
 
-      // Try to subscribe to realtime if available (no-op if replication isn't enabled)
-      this.channel = this.supabase
-        .channel(`crud:${this.table}`)
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: this.table },
-          () => callback()
-        )
-        .subscribe();
+      // Removed Supabase realtime channel subscription to stop live refreshes
 
       return () => {
         if (intervalId) clearInterval(intervalId);
-        if (this.channel) {
-          this.supabase?.removeChannel(this.channel);
-          this.channel = null;
-        }
       };
     } catch (e) {
       console.error(`Supabase subscribe error for ${this.table}:`, e);

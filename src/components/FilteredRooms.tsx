@@ -65,6 +65,14 @@ export function FilteredRooms() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [type, priceRange.min, priceRange.max]);
 
+  // Add a background refresh every 30 seconds, independent of filter changes
+  useEffect(() => {
+    const id = setInterval(() => {
+      fetchRooms();
+    }, 30000); // 30 seconds
+    return () => clearInterval(id);
+  }, [type, priceRange.min, priceRange.max]); // refresh for current filters
+
   return (
     <Card className="gradient-card">
       <CardHeader>
