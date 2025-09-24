@@ -117,6 +117,11 @@ class SupabaseProvider implements StorageProvider {
         }
       }
 
+      // Ensure an id is present to satisfy tables without a DB default
+      if (!("id" in newRow) || newRow.id === undefined || newRow.id === null || newRow.id === "") {
+        newRow.id = crypto.randomUUID();
+      }
+
       // Drop only empty-string fields; do not strip columns reported missing
       const cleaned: Record<string, any> = Object.fromEntries(
         Object.entries(newRow).filter(([_, v]) => v !== "" && v !== undefined)
