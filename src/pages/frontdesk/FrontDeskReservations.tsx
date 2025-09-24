@@ -9,9 +9,26 @@ export default function FrontDeskReservations() {
         description="Manage hotel reservations and bookings."
         table="reservations"
         columns={[
-          { key: "guest_name", label: "Guest Name", type: "text", required: true },
+          {
+            key: "guest_name",
+            label: "Guest Name",
+            type: "select",
+            required: true,
+            dynamicOptions: {
+              table: "guests",
+              valueField: "name",
+              labelField: "name",
+              orderBy: { column: "name", ascending: true },
+            },
+          },
           { key: "confirmation", label: "Confirmation", type: "text", required: true },
-          { key: "room_type", label: "Room Type", type: "select", options: ["Standard", "Deluxe", "Suite", "Presidential"], required: true },
+          {
+            key: "room_type",
+            label: "Room Type",
+            type: "select",
+            options: ["Standard", "Deluxe", "Suite", "Presidential"],
+            required: true,
+          },
           {
             key: "room_number",
             label: "Room Number",
@@ -27,10 +44,16 @@ export default function FrontDeskReservations() {
           },
           { key: "arrival", label: "Arrival", type: "date", required: true },
           { key: "departure", label: "Departure", type: "date", required: true },
-          { key: "status", label: "Status", type: "select", options: ["Booked", "CheckedIn", "CheckedOut", "Cancelled"], required: true },
+          {
+            key: "status",
+            label: "Status",
+            type: "select",
+            options: ["Booked", "CheckedIn", "CheckedOut", "Cancelled"],
+            required: true,
+          },
           { key: "balance", label: "Balance", type: "number" },
           { key: "source", label: "Source", type: "select", options: ["Direct", "OTA", "Phone", "Walk-in"] },
-          { key: "notes", label: "Notes", type: "text" }
+          { key: "notes", label: "Notes", type: "text" },
         ]}
       />
     </AdminShell>
