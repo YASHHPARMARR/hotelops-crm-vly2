@@ -230,6 +230,7 @@ export default function AdminSettings() {
 -- =========================================
 -- REPAIR-FIRST: Ensure all used columns exist (no renames, no drops)
 -- This block only adds missing columns. It won't change table names.
+-- IMPORTANT: Quote camelCase identifiers to preserve exact casing
 -- =========================================
 
 -- ROOMS: unify fields used across Admin, Front Desk, Housekeeping
@@ -239,13 +240,13 @@ alter table if exists rooms add column if not exists type text;
 alter table if exists rooms add column if not exists status text;
 alter table if exists rooms add column if not exists guest text;
 alter table if exists rooms add column if not exists rate numeric;
-alter table if exists rooms add column if not exists lastCleaned date;
-alter table if exists rooms add column if not exists roomType text;
-alter table if exists rooms add column if not exists bedType text;
-alter table if exists rooms add column if not exists pricePerNight numeric;
-alter table if exists rooms add column if not exists maxOccupancy numeric;
-alter table if exists rooms add column if not exists viewBalcony text;
-alter table if exists rooms add column if not exists floorWing text;
+alter table if exists rooms add column if not exists "lastCleaned" date;
+alter table if exists rooms add column if not exists "roomType" text;
+alter table if exists rooms add column if not exists "bedType" text;
+alter table if exists rooms add column if not exists "pricePerNight" numeric;
+alter table if exists rooms add column if not exists "maxOccupancy" numeric;
+alter table if exists rooms add column if not exists "viewBalcony" text;
+alter table if exists rooms add column if not exists "floorWing" text;
 alter table if exists rooms add column if not exists amenities text;
 alter table if exists rooms add column if not exists notes text;
 alter table if exists rooms add column if not exists created_at timestamptz default now();
@@ -254,8 +255,8 @@ alter table if exists rooms add column if not exists created_at timestamptz defa
 alter table if exists reservations add column if not exists id text primary key;
 alter table if exists reservations add column if not exists guestName text;
 alter table if exists reservations add column if not exists confirmation text;
-alter table if exists reservations add column if not exists roomType text;
-alter table if exists reservations add column if not exists roomNumber text;
+alter table if exists reservations add column if not exists "roomType" text;
+alter table if exists reservations add column if not exists "roomNumber" text;
 alter table if exists reservations add column if not exists arrival date;
 alter table if exists reservations add column if not exists departure date;
 alter table if exists reservations add column if not exists status text;
@@ -274,7 +275,7 @@ alter table if exists hk_tasks add column if not exists status text;
 alter table if exists hk_tasks add column if not exists assignedTo text;
 alter table if exists hk_tasks add column if not exists created_at timestamptz default now();
 
--- HK_INVENTORY: referenced in settings seeding
+-- HK_INVENTORY
 alter table if exists hk_inventory add column if not exists id text primary key;
 alter table if exists hk_inventory add column if not exists item text;
 alter table if exists hk_inventory add column if not exists stock numeric;
@@ -291,15 +292,15 @@ alter table if exists restaurant_menu add column if not exists created_at timest
 
 -- RESTAURANT_ORDERS
 alter table if exists restaurant_orders add column if not exists id text primary key;
-alter table if exists restaurant_orders add column if not exists table text;
+alter table if exists restaurant_orders add column if not exists "table" text;
 alter table if exists restaurant_orders add column if not exists items text;
 alter table if exists restaurant_orders add column if not exists total numeric;
 alter table if exists restaurant_orders add column if not exists status text;
 alter table if exists restaurant_orders add column if not exists created_at timestamptz default now();
 
--- RESTAURANT_TABLES (used by RestaurantTables page)
+-- RESTAURANT_TABLES
 alter table if exists restaurant_tables add column if not exists id text primary key;
-alter table if exists restaurant_tables add column if not exists tableNo text;
+alter table if exists restaurant_tables add column if not exists "tableNo" text;
 alter table if exists restaurant_tables add column if not exists seats numeric;
 alter table if exists restaurant_tables add column if not exists status text;
 alter table if exists restaurant_tables add column if not exists created_at timestamptz default now();
@@ -332,7 +333,7 @@ alter table if exists payments add column if not exists created_at timestamptz d
 alter table if exists transport_trips add column if not exists id text primary key;
 alter table if exists transport_trips add column if not exists tripNo text;
 alter table if exists transport_trips add column if not exists guest text;
-alter table if exists transport_trips add column if not exists pickupTime text;
+alter table if exists transport_trips add column if not exists "pickupTime" text;
 alter table if exists transport_trips add column if not exists status text;
 alter table if exists transport_trips add column if not exists created_at timestamptz default now();
 
@@ -344,50 +345,50 @@ alter table if exists transport_vehicles add column if not exists capacity numer
 alter table if exists transport_vehicles add column if not exists status text;
 alter table if exists transport_vehicles add column if not exists created_at timestamptz default now();
 
--- STAFF (used in Settings page)
+-- STAFF
 alter table if exists staff add column if not exists id text primary key;
 alter table if exists staff add column if not exists email text;
 alter table if exists staff add column if not exists role text;
 alter table if exists staff add column if not exists created_at timestamptz default now();
 
--- ADMIN_STAFF (used by /admin/staff page)
+-- ADMIN_STAFF
 alter table if exists admin_staff add column if not exists id text primary key;
 alter table if exists admin_staff add column if not exists name text;
-alter table if exists admin_staff add column if not exists staffId text;
+alter table if exists admin_staff add column if not exists "staffId" text;
 alter table if exists admin_staff add column if not exists gender text;
 alter table if exists admin_staff add column if not exists dob date;
 alter table if exists admin_staff add column if not exists address text;
-alter table if exists admin_staff add column if not exists emergencyContact text;
+alter table if exists admin_staff add column if not exists "emergencyContact" text;
 alter table if exists admin_staff add column if not exists email text;
 alter table if exists admin_staff add column if not exists phone text;
-alter table if exists admin_staff add column if not exists altPhone text;
+alter table if exists admin_staff add column if not exists "altPhone" text;
 alter table if exists admin_staff add column if not exists role text;
 alter table if exists admin_staff add column if not exists department text;
-alter table if exists admin_staff add column if not exists shiftTimings text;
+alter table if exists admin_staff add column if not exists "shiftTimings" text;
 alter table if exists admin_staff add column if not exists supervisor text;
 alter table if exists admin_staff add column if not exists salary numeric;
-alter table if exists admin_staff add column if not exists joiningDate date;
-alter table if exists admin_staff add column if not exists contractType text;
+alter table if exists admin_staff add column if not exists "joiningDate" date;
+alter table if exists admin_staff add column if not exists "contractType" text;
 alter table if exists admin_staff add column if not exists username text;
 alter table if exists admin_staff add column if not exists password text;
-alter table if exists admin_staff add column if not exists roleAccess text;
+alter table if exists admin_staff add column if not exists "roleAccess" text;
 alter table if exists admin_staff add column if not exists skills text;
 alter table if exists admin_staff add column if not exists documents text;
-alter table if exists admin_staff add column if not exists assignedRoomsDepts text;
+alter table if exists admin_staff add column if not exists "assignedRoomsDepts" text;
 alter table if exists admin_staff add column if not exists status text;
-alter table if exists admin_staff add column if not exists lastLogin text;
+alter table if exists admin_staff add column if not exists "lastLogin" text;
 alter table if exists admin_staff add column if not exists created_at timestamptz default now();
 
 -- =========================================
--- CREATE TABLES IF MISSING (names unchanged)
+-- CREATE TABLES IF MISSING (names unchanged; quote camelCase)
 -- =========================================
 
 create table if not exists reservations (
   id text primary key,
   guestName text,
   confirmation text,
-  roomType text,
-  roomNumber text,
+  "roomType" text,
+  "roomNumber" text,
   arrival date,
   departure date,
   status text,
@@ -417,13 +418,13 @@ create table if not exists rooms (
   status text,
   guest text,
   rate numeric,
-  lastCleaned date,
-  roomType text,
-  bedType text,
-  pricePerNight numeric,
-  maxOccupancy numeric,
-  viewBalcony text,
-  floorWing text,
+  "lastCleaned" date,
+  "roomType" text,
+  "bedType" text,
+  "pricePerNight" numeric,
+  "maxOccupancy" numeric,
+  "viewBalcony" text,
+  "floorWing" text,
   amenities text,
   notes text,
   created_at timestamptz default now()
@@ -458,7 +459,7 @@ create table if not exists restaurant_menu (
 
 create table if not exists restaurant_orders (
   id text primary key,
-  table text,
+  "table" text,
   items text,
   total numeric,
   status text,
@@ -467,7 +468,7 @@ create table if not exists restaurant_orders (
 
 create table if not exists restaurant_tables (
   id text primary key,
-  tableNo text,
+  "tableNo" text,
   seats numeric,
   status text,
   created_at timestamptz default now()
@@ -504,7 +505,7 @@ create table if not exists transport_trips (
   id text primary key,
   tripNo text,
   guest text,
-  pickupTime text,
+  "pickupTime" text,
   status text,
   created_at timestamptz default now()
 );
@@ -528,29 +529,29 @@ create table if not exists staff (
 create table if not exists admin_staff (
   id text primary key,
   name text,
-  staffId text,
+  "staffId" text,
   gender text,
   dob date,
   address text,
-  emergencyContact text,
+  "emergencyContact" text,
   email text,
   phone text,
-  altPhone text,
+  "altPhone" text,
   role text,
   department text,
-  shiftTimings text,
+  "shiftTimings" text,
   supervisor text,
   salary numeric,
-  joiningDate date,
-  contractType text,
+  "joiningDate" date,
+  "contractType" text,
   username text,
   password text,
-  roleAccess text,
+  "roleAccess" text,
   skills text,
   documents text,
-  assignedRoomsDepts text,
+  "assignedRoomsDepts" text,
   status text,
-  lastLogin text,
+  "lastLogin" text,
   created_at timestamptz default now()
 );
 `.trim();
