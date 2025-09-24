@@ -90,6 +90,63 @@ export function AdminShell({ children }: AdminShellProps) {
     })();
   }, [user?.email]);
 
+  // Add: realtime listener to reflect role changes from Supabase immediately
+  useEffect(() => {
+    let channel: any | null = null;
+    const s = getSupabase();
+
+    (async () => {
+      const email = await getSupabaseUserEmail();
+      if (!s || !email) return;
+
+      const refreshRole = async () => {
+        try {
+          const { data } = await s
+            .from("accounts")
+            .select("role")
+            .eq("email", email)
+            .limit(1)
+            .maybeSingle();
+          const role = (data?.role as Role | undefined) || undefined;
+          setStaffRole(role);
+        } catch {
+          // ignore
+        }
+      };
+
+      channel = s
+        .channel("accounts_role_changes")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "accounts",
+            filter: `email=eq.${email}`,
+          },
+          () => {
+            refreshRole();
+          }
+        );
+
+      try {
+        await channel.subscribe();
+      } catch {
+        // ignore
+      }
+    })();
+
+    return () => {
+      try {
+        if (channel && s) {
+          s.removeChannel(channel);
+        }
+      } catch {
+        // ignore
+      }
+    };
+  }, [user?.email]);
+
   // Compute effectiveRole priority: Supabase staff role > user.role > demoRole
   const effectiveRole: Role | undefined =
     (staffRole as Role | undefined) ||
@@ -97,6 +154,15 @@ export function AdminShell({ children }: AdminShellProps) {
     (demoRoleString as Role | undefined);
 
   const navigationItems = effectiveRole ? ROLE_NAVIGATION[effectiveRole] || [] : [];
+
+  // Add: if role changes, ensure user is on a route allowed by that role; otherwise redirect
+  // Use boolean comparison instead of Set.has to avoid string literal union type mismatch
+  useEffect(() => {
+    const isAllowed = navigationItems.some((i) => i.path === location.pathname);
+    if (!isAllowed && navigationItems.length > 0) {
+      navigate(navigationItems[0].path, { replace: true });
+    }
+  }, [staffRole, navigationItems, location.pathname, navigate]);
 
   // Redirect to role-specific landing when at generic admin/dashboard
   useEffect(() => {
