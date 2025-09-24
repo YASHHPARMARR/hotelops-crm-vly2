@@ -9,7 +9,19 @@ export default function FrontDeskReservations() {
         description="Manage hotel reservations and bookings."
         table="reservations"
         columns={[
-          { key: "guest_name", label: "Guest Name", type: "text", required: true },
+          {
+            key: "guest_name",
+            label: "Guest Name",
+            type: "select",
+            required: true,
+            // Dynamically load guest names from Supabase guests table
+            dynamicOptions: {
+              table: "guests",
+              valueField: "name",
+              labelField: "name",
+              orderBy: { column: "name", ascending: true },
+            },
+          },
           { key: "confirmation", label: "Confirmation", type: "text", required: true },
           { key: "room_type", label: "Room Type", type: "select", options: ["Standard", "Deluxe", "Suite", "Presidential"], required: true },
           {
@@ -21,7 +33,8 @@ export default function FrontDeskReservations() {
               table: "rooms",
               valueField: "room_number",
               labelField: "room_number",
-              filters: [{ column: "status", op: "eq", value: "available" }],
+              // Robust filter: accept both lowercase and capitalized values
+              filters: [{ column: "status", op: "in", value: ["available", "Available"] }],
               orderBy: { column: "room_number", ascending: true },
             },
           },

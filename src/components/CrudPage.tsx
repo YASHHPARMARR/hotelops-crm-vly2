@@ -234,7 +234,8 @@ export interface CrudPageProps {
       table: string;
       valueField: string;
       labelField?: string;
-      filters?: Array<{ column: string; op: "eq" | "neq" | "gte" | "lte"; value: any }>;
+      // Extend filters with "in" to support multiple candidates (e.g., case variations)
+      filters?: Array<{ column: string; op: "eq" | "neq" | "gte" | "lte" | "in"; value: any }>;
       orderBy?: { column: string; ascending?: boolean };
       limit?: number;
     };
@@ -359,6 +360,11 @@ export function CrudPage({
           if (f.op === "neq") q = q.neq(f.column, f.value);
           if (f.op === "gte") q = q.gte(f.column, f.value);
           if (f.op === "lte") q = q.lte(f.column, f.value);
+          // New: support "in" for arrays (e.g., ["available","Available"])
+          if (f.op === "in") {
+            const arr = Array.isArray(f.value) ? f.value : [f.value];
+            q = q.in(f.column, arr);
+          }
         }
       }
       // Order

@@ -25,12 +25,12 @@ export default function HousekeepingRooms() {
                   label: "Room #",
                   input: "select",
                   required: true,
-                  // Use dynamic options from Supabase: only available rooms
+                  // Use dynamic options from Supabase: only available rooms (handle case variants)
                   dynamicOptions: {
                     table: "rooms",
                     valueField: "room_number",
                     labelField: "room_number",
-                    filters: [{ column: "status", op: "eq", value: "available" }],
+                    filters: [{ column: "status", op: "in", value: ["available", "Available"] }],
                     orderBy: { column: "room_number", ascending: true },
                   },
                 },
