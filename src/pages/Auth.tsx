@@ -75,6 +75,19 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
     }
   }
 
+  // Add: safe upsert into Supabase 'users' table (optional, RLS permitting)
+  async function upsertUser(email: string) {
+    try {
+      const s = getSupabase();
+      if (!s) return;
+      await s
+        .from("users")
+        .upsert({ email, created_at: new Date().toISOString() }, { onConflict: "email" });
+    } catch {
+      // ignore if table doesn't exist or RLS blocks
+    }
+  }
+
   // Update getRoleRedirect to be used for post-auth navigation
   async function getRoleRedirect(): Promise<string> {
     const roleToPath = ROLE_TO_PATH;
@@ -100,6 +113,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
           if (email) {
             try { localStorage.setItem("DEMO_USER_EMAIL", email); } catch {}
             await upsertGuest(email);
+            await upsertUser(email);
           }
         } catch {}
         const dest = await getRoleRedirect();
@@ -151,6 +165,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       try { localStorage.setItem("DEMO_USER_EMAIL", email); } catch {}
       // Optional: upsert record early
       await upsertGuest(email);
+      await upsertUser(email);
 
       setIsLoading(false);
     } catch (error) {
@@ -175,6 +190,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       const email = formData.get("email") as string;
       try { localStorage.setItem("DEMO_USER_EMAIL", email); } catch {}
       await upsertGuest(email);
+      await upsertUser(email);
 
       const dest = await getRoleRedirect();
       navigate(dest);
