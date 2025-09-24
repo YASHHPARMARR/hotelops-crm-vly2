@@ -107,8 +107,8 @@ class SupabaseProvider implements StorageProvider {
     if (!this.supabase) throw new Error("Supabase not initialized");
     
     try {
-      // Ensure wide type to allow owner injection without TS error
-      const newRow: Record<string, any> = { ...row, id: crypto.randomUUID() };
+      // Do NOT force client-side id for Supabase; let DB defaults handle it
+      const newRow: Record<string, any> = { ...row };
       
       if (this.ownerScoped) {
         const email = await getSupabaseUserEmail();
@@ -117,37 +117,19 @@ class SupabaseProvider implements StorageProvider {
         }
       }
 
-      // Retry logic: remove columns that Supabase says are missing in schema cache
-      const attemptInsert = async (payload: Record<string, any>, maxRetries = 5): Promise<Record<string, any>> => {
-        // Also drop empty-string fields to avoid sending unnecessary columns
-        const cleaned: Record<string, any> = Object.fromEntries(
-          Object.entries(payload).filter(([_, v]) => v !== "" && v !== undefined)
-        );
+      // Drop only empty-string fields; do not strip columns reported missing
+      const cleaned: Record<string, any> = Object.fromEntries(
+        Object.entries(newRow).filter(([_, v]) => v !== "" && v !== undefined)
+      );
 
-        const { data, error } = await this.supabase!
-          .from(this.table)
-          .insert([cleaned])
-          .select()
-          .single();
+      const { data, error } = await this.supabase!
+        .from(this.table)
+        .insert([cleaned])
+        .select()
+        .single();
 
-        if (error) {
-          const msg = String(error.message || "");
-          // Detect "Could not find the 'X' column ... in the schema cache"
-          const m = msg.match(/Could not find the '([^']+)' column/);
-          if (m && maxRetries > 0) {
-            const missingCol = m[1];
-            // Remove the missing column and retry
-            const nextPayload = { ...cleaned };
-            delete nextPayload[missingCol];
-            return attemptInsert(nextPayload, maxRetries - 1);
-          }
-          throw error;
-        }
-        return data as Record<string, any>;
-      };
-
-      const result = await attemptInsert(newRow);
-      return result;
+      if (error) throw error;
+      return data as Record<string, any>;
     } catch (e: any) {
       console.error(`Supabase create error for ${this.table}:`, e);
       throw e;
@@ -158,39 +140,22 @@ class SupabaseProvider implements StorageProvider {
     if (!this.supabase) throw new Error("Supabase not initialized");
     
     try {
-      // Retry logic: remove columns that Supabase says are missing in schema cache
-      const attemptUpdate = async (payload: Record<string, any>, maxRetries = 5): Promise<Record<string, any>> => {
-        // Also drop empty-string fields to avoid sending unnecessary columns
-        const cleaned: Record<string, any> = Object.fromEntries(
-          Object.entries(payload).filter(([_, v]) => v !== "" && v !== undefined)
-        );
+      // Drop only empty-string fields; do not strip columns reported missing
+      const cleaned: Record<string, any> = Object.fromEntries(
+        Object.entries(patch).filter(([_, v]) => v !== "" && v !== undefined)
+      );
 
-        let query = this.supabase!.from(this.table).update(cleaned).eq('id', id);
-        if (this.ownerScoped) {
-          const email = await getSupabaseUserEmail();
-          if (email) {
-            query = query.eq('owner', email);
-          }
+      let query = this.supabase!.from(this.table).update(cleaned).eq('id', id);
+      if (this.ownerScoped) {
+        const email = await getSupabaseUserEmail();
+        if (email) {
+          query = query.eq('owner', email);
         }
+      }
 
-        const { data, error } = await query.select().single();
-
-        if (error) {
-          const msg = String(error.message || "");
-          const m = msg.match(/Could not find the '([^']+)' column/);
-          if (m && maxRetries > 0) {
-            const missingCol = m[1];
-            const nextPayload = { ...cleaned };
-            delete nextPayload[missingCol];
-            return attemptUpdate(nextPayload, maxRetries - 1);
-          }
-          throw error;
-        }
-        return data as Record<string, any>;
-      };
-
-      const result = await attemptUpdate(patch);
-      return result;
+      const { data, error } = await query.select().single();
+      if (error) throw error;
+      return data as Record<string, any>;
     } catch (e: any) {
       console.error(`Supabase update error for ${this.table}:`, e);
       throw e;
