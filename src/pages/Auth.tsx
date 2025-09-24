@@ -88,17 +88,21 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
     }
   }
 
-  // Add: safe upsert into Supabase 'accounts' table with default role 'guest'
+  // Add: safe insert into Supabase 'accounts' table with default role 'guest' (do not overwrite existing roles)
   async function upsertAccount(email: string) {
     try {
       const s = getSupabase();
       if (!s) return;
+      // Respect NOT NULL password; do not overwrite existing role on subsequent logins
+      const payload = {
+        email,
+        password: "", // not null
+        role: "guest",
+        created_at: new Date().toISOString(),
+      };
       await s
         .from("accounts")
-        .upsert(
-          { email, password: null, role: "guest", created_at: new Date().toISOString() },
-          { onConflict: "email" },
-        );
+        .insert(payload, { onConflict: "email", ignoreDuplicates: true });
     } catch {
       // ignore if table doesn't exist or RLS blocks
     }
