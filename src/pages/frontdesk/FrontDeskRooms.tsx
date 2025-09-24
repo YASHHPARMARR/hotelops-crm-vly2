@@ -22,12 +22,10 @@ export default function FrontDeskRooms() {
               description="Manage room inventory and status."
               table="rooms"
               columns={[
-                { key: "number", label: "Room Number", type: "text", required: true },
-                { key: "type", label: "Room Type", type: "select", options: ["Standard", "Deluxe", "Suite", "Presidential"], required: true },
-                { key: "status", label: "Status", type: "select", options: ["Available", "Occupied", "Maintenance", "Cleaning"], required: true },
-                { key: "guest", label: "Current Guest", type: "text" },
-                { key: "rate", label: "Nightly Rate", type: "number", required: true },
-                { key: "lastCleaned", label: "Last Cleaned", type: "date" }
+                { key: "room_number", label: "Room Number", type: "text", required: true },
+                { key: "room_type", label: "Room Type", type: "select", options: ["Deluxe", "Suite", "Standard"], required: true },
+                { key: "status", label: "Status", type: "select", options: ["available", "booked", "maintenance"], required: true },
+                { key: "price", label: "Price (numeric)", type: "number", required: true },
               ]}
             />
           </CardContent>

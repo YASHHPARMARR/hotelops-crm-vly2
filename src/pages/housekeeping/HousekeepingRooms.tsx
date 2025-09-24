@@ -21,34 +21,39 @@ export default function HousekeepingRooms() {
               description="Housekeeping status per room in sync with Front Desk and Admin."
               columns={[
                 {
-                  key: "number",
+                  key: "room_number",
                   label: "Room #",
                   input: "select",
                   required: true,
                   // Use dynamic options from Supabase: only available rooms
                   dynamicOptions: {
                     table: "rooms",
-                    valueField: "number",
-                    labelField: "number",
-                    filters: [{ column: "status", op: "eq", value: "Available" }],
-                    orderBy: { column: "number", ascending: true },
+                    valueField: "room_number",
+                    labelField: "room_number",
+                    filters: [{ column: "status", op: "eq", value: "available" }],
+                    orderBy: { column: "room_number", ascending: true },
                   },
                 },
-                { key: "status", label: "Status", input: "select", options: [
-                  { label: "Vacant Clean", value: "Vacant Clean" },
-                  { label: "Vacant Dirty", value: "Vacant Dirty" },
-                  { label: "Occupied", value: "Occupied" },
-                  { label: "OOO", value: "OOO" },
-                ], required: true },
+                {
+                  key: "status",
+                  label: "Status",
+                  input: "select",
+                  options: [
+                    { label: "Vacant Clean", value: "Vacant Clean" },
+                    { label: "Vacant Dirty", value: "Vacant Dirty" },
+                    { label: "Occupied", value: "Occupied" },
+                    { label: "OOO", value: "OOO" },
+                  ],
+                  required: true,
+                },
                 { key: "lastCleaned", label: "Last Cleaned", input: "date" },
               ]}
               seed={[
-                { id: "rm1", number: "205", type: "Deluxe King", status: "Occupied", guest: "Ana Garcia", rate: 220, lastCleaned: "2025-09-09" },
-                { id: "rm2", number: "214", type: "Standard Queen", status: "Vacant Clean", guest: "", rate: 150, lastCleaned: "2025-09-09" },
-                { id: "rm3", number: "118", type: "Standard Twin", status: "Occupied", guest: "Ivy Chen", rate: 160, lastCleaned: "2025-09-08" },
+                { id: "rm1", room_number: "205", status: "Occupied", lastCleaned: "2025-09-09" },
+                { id: "rm2", room_number: "214", status: "Vacant Clean", lastCleaned: "2025-09-09" },
+                { id: "rm3", room_number: "118", status: "Occupied", lastCleaned: "2025-09-08" },
               ]}
               backend="supabase"
-              table="rooms"
             />
           </CardContent>
         </Card>
