@@ -11,7 +11,7 @@ type Room = {
   room_number: string | null;
   room_type: "Deluxe" | "Suite" | "Standard" | string | null;
   status: "available" | "booked" | "maintenance" | string | null;
-  price: number | null;
+  pricePerNight: number | null;
   created_at?: string | null;
 };
 
@@ -41,10 +41,10 @@ export function FilteredRooms() {
       let query = supabase.from("rooms").select("*").eq("room_type", type).eq("status", "available");
 
       if (priceRange.min !== undefined) {
-        query = query.gte("price", priceRange.min);
+        query = query.gte("pricePerNight", priceRange.min);
       }
       if (priceRange.max !== undefined) {
-        query = query.lte("price", priceRange.max);
+        query = query.lte("pricePerNight", priceRange.max);
       }
 
       // Order by created_at when available, fallback to room_number
@@ -155,7 +155,7 @@ export function FilteredRooms() {
                     <td className="p-3">{r.room_number ?? "-"}</td>
                     <td className="p-3">{r.room_type ?? "-"}</td>
                     <td className="p-3">{r.status ?? "-"}</td>
-                    <td className="p-3">{r.price ?? "-"}</td>
+                    <td className="p-3">{r.pricePerNight ?? "-"}</td>
                     <td className="p-3">{r.created_at ? new Date(r.created_at).toLocaleString() : "-"}</td>
                   </tr>
                 ))}
