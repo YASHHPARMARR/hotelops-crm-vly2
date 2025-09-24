@@ -22,8 +22,8 @@ export default function FrontDeskRooms() {
               description="Manage room inventory and status."
               table="rooms"
               columns={[
-                { key: "room_number", label: "Room Number", type: "text", required: true },
-                { key: "room_type", label: "Room Type", type: "select", options: ["Deluxe", "Suite", "Standard"], required: true },
+                { key: "number", label: "Room Number", type: "text", required: true },
+                { key: "roomType", label: "Room Type", type: "select", options: ["Deluxe", "Suite", "Standard"], required: true },
                 { key: "status", label: "Status", type: "select", options: ["available", "booked", "maintenance"], required: true },
                 { key: "pricePerNight", label: "Price per day", type: "number", required: true },
               ]}

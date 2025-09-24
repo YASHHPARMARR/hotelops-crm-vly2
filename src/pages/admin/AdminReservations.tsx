@@ -21,25 +21,25 @@ export default function AdminReservations() {
               table="reservations"
               columns={[
                 {
-                  key: "guest_name",
+                  key: "guestName",
                   label: "Guest Name",
                   type: "text",
                   required: true,
                 },
                 { key: "confirmation", label: "Confirmation", type: "text", required: true },
-                { key: "room_type", label: "Room Type", type: "select", options: ["Standard", "Deluxe", "Suite", "Presidential"], required: true },
+                { key: "roomType", label: "Room Type", type: "select", options: ["Standard", "Deluxe", "Suite", "Presidential"], required: true },
                 {
-                  key: "room_number",
+                  key: "roomNumber",
                   label: "Room Number",
                   type: "select",
                   required: true,
                   dynamicOptions: {
                     table: "rooms",
-                    valueField: "room_number",
-                    labelField: "room_number",
+                    valueField: "number",
+                    labelField: "number",
                     // Case-insensitive match for available rooms
                     filters: [{ column: "status", op: "ilike", value: "available" }],
-                    orderBy: { column: "room_number", ascending: true },
+                    orderBy: { column: "number", ascending: true },
                   },
                 },
                 { key: "arrival", label: "Arrival", type: "date", required: true },

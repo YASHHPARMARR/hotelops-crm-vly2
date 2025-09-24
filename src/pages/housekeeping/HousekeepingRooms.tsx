@@ -28,10 +28,10 @@ export default function HousekeepingRooms() {
                   // Use dynamic options from Supabase: only available rooms (handle case variants)
                   dynamicOptions: {
                     table: "rooms",
-                    valueField: "room_number",
-                    labelField: "room_number",
+                    valueField: "number",
+                    labelField: "number",
                     filters: [{ column: "status", op: "in", value: ["available", "Available"] }],
-                    orderBy: { column: "room_number", ascending: true },
+                    orderBy: { column: "number", ascending: true },
                   },
                 },
                 {

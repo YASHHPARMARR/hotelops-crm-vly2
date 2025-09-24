@@ -8,8 +8,8 @@ import { toast } from "sonner";
 
 type Room = {
   id: string;
-  room_number: string | null;
-  room_type: "Deluxe" | "Suite" | "Standard" | string | null;
+  number: string | null;
+  roomType: "Deluxe" | "Suite" | "Standard" | string | null;
   status: "available" | "booked" | "maintenance" | string | null;
   pricePerNight: number | null;
   created_at?: string | null;
@@ -38,7 +38,7 @@ export function FilteredRooms() {
     }
     setLoading(true);
     try {
-      let query = supabase.from("rooms").select("*").eq("room_type", type).eq("status", "available");
+      let query = supabase.from("rooms").select("*").eq("roomType", type).eq("status", "available");
 
       if (priceRange.min !== undefined) {
         query = query.gte("pricePerNight", priceRange.min);
@@ -47,8 +47,7 @@ export function FilteredRooms() {
         query = query.lte("pricePerNight", priceRange.max);
       }
 
-      // Order by created_at when available, fallback to room_number
-      const { data, error } = await query.order("created_at", { ascending: false }).order("room_number", { ascending: true });
+      const { data, error } = await query.order("created_at", { ascending: false }).order("number", { ascending: true });
       if (error) {
         throw error;
       }
@@ -152,8 +151,8 @@ export function FilteredRooms() {
               <tbody>
                 {rooms.map((r) => (
                   <tr key={r.id} className="border-b border-border/50">
-                    <td className="p-3">{r.room_number ?? "-"}</td>
-                    <td className="p-3">{r.room_type ?? "-"}</td>
+                    <td className="p-3">{r.number ?? "-"}</td>
+                    <td className="p-3">{r.roomType ?? "-"}</td>
                     <td className="p-3">{r.status ?? "-"}</td>
                     <td className="p-3">{r.pricePerNight ?? "-"}</td>
                     <td className="p-3">{r.created_at ? new Date(r.created_at).toLocaleString() : "-"}</td>
