@@ -235,7 +235,7 @@ export interface CrudPageProps {
       valueField: string;
       labelField?: string;
       // Extend filters with "in" to support multiple candidates (e.g., case variations)
-      filters?: Array<{ column: string; op: "eq" | "neq" | "gte" | "lte" | "in"; value: any }>;
+      filters?: Array<{ column: string; op: "eq" | "neq" | "gte" | "lte" | "in" | "ilike"; value: any }>;
       orderBy?: { column: string; ascending?: boolean };
       limit?: number;
     };
@@ -353,25 +353,25 @@ export function CrudPage({
     const cfg = col.dynamicOptions;
     try {
       let q = supabase.from(cfg.table).select("*");
-      // Apply filters
       if (cfg.filters && cfg.filters.length > 0) {
         for (const f of cfg.filters) {
           if (f.op === "eq") q = q.eq(f.column, f.value);
           if (f.op === "neq") q = q.neq(f.column, f.value);
           if (f.op === "gte") q = q.gte(f.column, f.value);
           if (f.op === "lte") q = q.lte(f.column, f.value);
-          // New: support "in" for arrays (e.g., ["available","Available"])
           if (f.op === "in") {
             const arr = Array.isArray(f.value) ? f.value : [f.value];
             q = q.in(f.column, arr);
           }
+          // New: case-insensitive match for strings
+          if (f.op === "ilike") {
+            q = q.ilike(f.column, f.value);
+          }
         }
       }
-      // Order
       if (cfg.orderBy) {
         q = q.order(cfg.orderBy.column, { ascending: cfg.orderBy.ascending ?? true });
       }
-      // Limit
       if (cfg.limit) q = q.limit(cfg.limit);
 
       const { data, error } = await q;
@@ -385,7 +385,7 @@ export function CrudPage({
 
       setDynamicOptionsMap(prev => ({ ...prev, [columnKey]: opts }));
     } catch {
-      // fail silently; field will show no options
+      // fail silently
     }
   }, [columns]);
 
