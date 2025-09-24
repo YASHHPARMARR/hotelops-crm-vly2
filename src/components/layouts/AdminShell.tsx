@@ -57,6 +57,8 @@ export function AdminShell({ children }: AdminShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [staffRole, setStaffRole] = useState<Role | undefined>(undefined);
+  // Add: track when we've loaded the staff role at least once to avoid premature redirects
+  const [staffRoleLoaded, setStaffRoleLoaded] = useState(false);
 
   // Add: fallback to demoRole if user.role is undefined
   const demoRoleString = typeof window !== "undefined" ? localStorage.getItem("demoRole") : null;
@@ -69,6 +71,7 @@ export function AdminShell({ children }: AdminShellProps) {
         const s = getSupabase();
         if (!s || !email) {
           setStaffRole(undefined);
+          setStaffRoleLoaded(true); // mark as loaded even if unavailable
           return;
         }
         // Change: read role from 'accounts' table instead of 'staff'
@@ -80,12 +83,15 @@ export function AdminShell({ children }: AdminShellProps) {
           .maybeSingle();
         if (error) {
           setStaffRole(undefined);
+          setStaffRoleLoaded(true);
           return;
         }
         const role = (data?.role as Role | undefined) || undefined;
         setStaffRole(role);
+        setStaffRoleLoaded(true);
       } catch {
         setStaffRole(undefined);
+        setStaffRoleLoaded(true);
       }
     })();
   }, [user?.email]);
@@ -109,6 +115,7 @@ export function AdminShell({ children }: AdminShellProps) {
             .maybeSingle();
           const role = (data?.role as Role | undefined) || undefined;
           setStaffRole(role);
+          // do not change staffRoleLoaded here; it should already be true after initial fetch
         } catch {
           // ignore
         }
@@ -147,35 +154,45 @@ export function AdminShell({ children }: AdminShellProps) {
     };
   }, [user?.email]);
 
-  // Compute effectiveRole priority: Supabase staff role > user.role > demoRole
+  // Compute effectiveRole priority:
+  // - If authenticated: use staffRole only (once loaded). Do NOT use demoRole to avoid flips.
+  // - If not authenticated and demoRole is set: use demoRole for demo navigation.
+  const isDemo = !user && !!demoRoleString;
   const effectiveRole: Role | undefined =
-    (staffRole as Role | undefined) ||
-    (((user as any)?.role as Role | undefined)) ||
-    (demoRoleString as Role | undefined);
+    (staffRole as Role | undefined) ??
+    (isDemo ? (demoRoleString as Role | undefined) : undefined);
 
   const navigationItems = effectiveRole ? ROLE_NAVIGATION[effectiveRole] || [] : [];
 
-  // Add: if role changes, ensure user is on a route allowed by that role; otherwise redirect
-  // Use boolean comparison instead of Set.has to avoid string literal union type mismatch
+  // Redirect only after role is resolved:
+  // - If authenticated: wait for staffRoleLoaded before redirect checks.
+  // - If demo: allow immediately.
   useEffect(() => {
+    const ready = (user ? staffRoleLoaded : isDemo);
+    if (!ready) return;
+
     const isAllowed =
       navigationItems.some(
         (i) =>
           i.path === location.pathname ||
           location.pathname.startsWith(i.path + "/")
       );
+
     if (!isAllowed && navigationItems.length > 0) {
       navigate(navigationItems[0].path, { replace: true });
     }
-  }, [staffRole, navigationItems, location.pathname, navigate]);
+  }, [user, staffRoleLoaded, isDemo, navigationItems, location.pathname, navigate]);
 
-  // Redirect to role-specific landing when at generic admin/dashboard
+  // Redirect to role-specific landing when at generic admin/dashboard (only when ready)
   useEffect(() => {
+    const ready = (user ? staffRoleLoaded : isDemo);
+    if (!ready) return;
+
     const genericHomes = new Set<string>(["/admin", "/dashboard"]);
     if (genericHomes.has(location.pathname) && navigationItems.length > 0) {
       navigate(navigationItems[0].path, { replace: true });
     }
-  }, [location.pathname, navigationItems, navigate]);
+  }, [user, staffRoleLoaded, isDemo, location.pathname, navigationItems, navigate]);
 
   // Initialize and react to theme changes
   useEffect(() => {
