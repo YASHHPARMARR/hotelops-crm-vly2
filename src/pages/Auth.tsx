@@ -88,6 +88,22 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
     }
   }
 
+  // Add: safe upsert into Supabase 'accounts' table with default role 'guest'
+  async function upsertAccount(email: string) {
+    try {
+      const s = getSupabase();
+      if (!s) return;
+      await s
+        .from("accounts")
+        .upsert(
+          { email, password: null, role: "guest", created_at: new Date().toISOString() },
+          { onConflict: "email" },
+        );
+    } catch {
+      // ignore if table doesn't exist or RLS blocks
+    }
+  }
+
   // Update getRoleRedirect to be used for post-auth navigation
   async function getRoleRedirect(): Promise<string> {
     const roleToPath = ROLE_TO_PATH;
@@ -95,13 +111,19 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       const email = await getSupabaseUserEmail();
       const s = getSupabase();
       if (s && email) {
-        const { data } = await s.from("staff").select("role").eq("email", email).limit(1).maybeSingle();
-        const staffRole = data?.role as string | undefined;
-        if (staffRole && roleToPath[staffRole]) return roleToPath[staffRole];
+        // Change: Check 'accounts' table for role
+        const { data } = await s
+          .from("accounts")
+          .select("role")
+          .eq("email", email)
+          .limit(1)
+          .maybeSingle();
+        const role = data?.role as string | undefined;
+        if (role && roleToPath[role]) return roleToPath[role];
       }
     } catch { /* ignore */ }
 
-    // If no staff role, default to guest dashboard
+    // If no role, default to guest dashboard
     return "/guest";
   }
 
@@ -114,6 +136,8 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
             try { localStorage.setItem("DEMO_USER_EMAIL", email); } catch {}
             await upsertGuest(email);
             await upsertUser(email);
+            // Add: ensure an account row exists
+            await upsertAccount(email);
           }
         } catch {}
         const dest = await getRoleRedirect();
@@ -166,6 +190,8 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       // Optional: upsert record early
       await upsertGuest(email);
       await upsertUser(email);
+      // Add: upsert into accounts with default role guest
+      await upsertAccount(email);
 
       setIsLoading(false);
     } catch (error) {
@@ -191,6 +217,8 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       try { localStorage.setItem("DEMO_USER_EMAIL", email); } catch {}
       await upsertGuest(email);
       await upsertUser(email);
+      // Add: upsert into accounts with default role guest
+      await upsertAccount(email);
 
       const dest = await getRoleRedirect();
       navigate(dest);

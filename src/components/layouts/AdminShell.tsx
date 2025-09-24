@@ -71,7 +71,13 @@ export function AdminShell({ children }: AdminShellProps) {
           setStaffRole(undefined);
           return;
         }
-        const { data, error } = await s.from("staff").select("role").eq("email", email).limit(1).maybeSingle();
+        // Change: read role from 'accounts' table instead of 'staff'
+        const { data, error } = await s
+          .from("accounts")
+          .select("role")
+          .eq("email", email)
+          .limit(1)
+          .maybeSingle();
         if (error) {
           setStaffRole(undefined);
           return;
