@@ -269,6 +269,16 @@ create table if not exists rooms (
   created_at timestamptz default now()
 );
 
+-- Reconcile rooms schema (add any missing columns safely to support all dashboards)
+alter table if exists rooms add column if not exists roomType text;
+alter table if exists rooms add column if not exists bedType text;
+alter table if exists rooms add column if not exists pricePerNight numeric;
+alter table if exists rooms add column if not exists maxOccupancy numeric;
+alter table if exists rooms add column if not exists viewBalcony text;
+alter table if exists rooms add column if not exists floorWing text;
+alter table if exists rooms add column if not exists amenities text;
+alter table if exists rooms add column if not exists notes text;
+
 -- Housekeeping tasks
 create table if not exists hk_tasks (
   id text primary key,
@@ -305,6 +315,15 @@ create table if not exists restaurant_orders (
   table text,
   items text,
   total numeric,
+  status text,
+  created_at timestamptz default now()
+);
+
+-- Restaurant tables (for RestaurantTables page)
+create table if not exists restaurant_tables (
+  id text primary key,
+  tableNo text,
+  seats numeric,
   status text,
   created_at timestamptz default now()
 );
@@ -494,6 +513,7 @@ alter table if exists hk_tasks enable row level security;
 alter table if exists hk_inventory enable row level security;
 alter table if exists restaurant_menu enable row level security;
 alter table if exists restaurant_orders enable row level security;
+alter table if exists restaurant_tables enable row level security;
 alter table if exists dining_orders enable row level security;
 alter table if exists charges enable row level security;
 alter table if exists payments enable row level security;
@@ -557,6 +577,14 @@ with check (true);
 -- Restaurant orders
 drop policy if exists "Restaurant orders anon full" on restaurant_orders;
 create policy "Restaurant orders anon full" on restaurant_orders
+for all
+to anon
+using (true)
+with check (true);
+
+-- Restaurant tables
+drop policy if exists "Restaurant tables anon full" on restaurant_tables;
+create policy "Restaurant tables anon full" on restaurant_tables
 for all
 to anon
 using (true)
