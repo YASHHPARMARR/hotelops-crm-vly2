@@ -21,7 +21,7 @@ export default function AdminReservations() {
               table="reservations"
               columns={[
                 {
-                  key: "guestName",
+                  key: "guestname",
                   label: "Guest Name",
                   type: "text",
                   required: true,
