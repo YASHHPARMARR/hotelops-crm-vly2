@@ -132,9 +132,9 @@ const testimonials = [
 ];
 
 const events = [
-  { title: "Grand Ballroom Wedding", img: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1600&auto=format&fit=crop", desc: "Lavish ceremonies with bespoke decor & orchestration" },
-  { title: "Sky Terrace Reception", img: "https://images.unsplash.com/photo-1470229538611-16ba8c7ffbd7?q=80&w=1600&auto=format&fit=crop", desc: "Sunset cityscapes, gourmet menus & craft cocktails" },
-  { title: "Executive Conference", img: "https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=1600&auto=format&fit=crop", desc: "State-of-the-art AV, concierge coordination & privacy" },
+  { title: "Luxury Wedding Ceremonies", img: "https://images.unsplash.com/photo-1519167758481-83f29da8c2b0?q=80&w=1600&auto=format&fit=crop", desc: "Grand ballroom accommodating 500+ guests with crystal chandeliers, custom lighting, and dedicated wedding planners" },
+  { title: "Corporate Conferences & Summits", img: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=1600&auto=format&fit=crop", desc: "Executive meeting spaces with cutting-edge AV technology, high-speed connectivity, and professional catering services" },
+  { title: "Gala Dinners & Award Ceremonies", img: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?q=80&w=1600&auto=format&fit=crop", desc: "Elegant venues with stage setups, premium sound systems, and Michelin-star catering for unforgettable celebrations" },
 ];
 
 const amenitiesData = [
@@ -478,46 +478,108 @@ export default function Landing() {
       </section>
 
       {/* About / Legacy */}
-      <section id="about" className="py-20 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-10 items-center">
-          <motion.div
-            initial={{ opacity: 0, rotateY: -15, y: 20 }}
-            whileInView={{ opacity: 1, rotateY: 0, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.55 }}
-            className="relative w-full aspect-square rounded-3xl bg-gradient-to-br from-indigo-300/10 to-violet-500/10 border border-indigo-400/30 preserve-3d flex items-center justify-center"
-          >
-            <div className="absolute inset-6 rounded-2xl border border-amber-300/30" />
+      <section id="about" className="py-20 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/30 via-violet-950/20 to-background" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
-              whileHover={{ rotateX: 8, rotateY: -8, scale: 1.03 }}
-              className="w-40 h-40 rounded-full border-4 border-indigo-400/60 shadow-xl flex items-center justify-center animate-spin"
-              style={{ animationDuration: "8s" } as any}
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.6 }}
+              className="space-y-6"
             >
-              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-400 to-violet-400 shadow" />
+              <Badge variant="outline" className="border-indigo-400/50 text-indigo-300">
+                Since 1985
+              </Badge>
+              <h2 className="text-4xl md:text-5xl font-bold text-foreground leading-tight">
+                Four Decades of Unparalleled Excellence
+              </h2>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                Grand Horizon Hotels has been the epitome of luxury hospitality for over 40 years. 
+                From our first property to our global portfolio, we've consistently delivered 
+                world-class experiences that blend timeless elegance with contemporary innovation.
+              </p>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                Our commitment to excellence has earned us numerous accolades, including the 
+                prestigious Five-Star Diamond Award and recognition as one of the world's leading 
+                luxury hotel brands. Every detail, from our meticulously designed suites to our 
+                award-winning culinary offerings, reflects our dedication to creating unforgettable moments.
+              </p>
+              <div className="grid grid-cols-3 gap-6 pt-4">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-indigo-300">40+</div>
+                  <div className="text-sm text-muted-foreground">Years of Excellence</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-indigo-300">50+</div>
+                  <div className="text-sm text-muted-foreground">Global Properties</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-indigo-300">2M+</div>
+                  <div className="text-sm text-muted-foreground">Satisfied Guests</div>
+                </div>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <Button onClick={handleGetStarted} className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-[0_0_24px_rgba(99,102,241,0.35)]">
+                  Book Your Stay
+                </Button>
+                <Button variant="outline">Discover Our Story</Button>
+              </div>
             </motion.div>
-            <video
-              className="absolute -z-10 inset-0 w-full h-full object-cover rounded-3xl opacity-20"
-              autoPlay muted loop playsInline
-              src="https://videos.pexels.com/video-files/6077857/6077857-uhd_2560_1440_25fps.mp4"
-            />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Badge variant="outline" className="neon-border-emerald mb-3">Our Legacy</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Our Legacy of Timeless Hospitality</h2>
-            <p className="text-lg text-muted-foreground mb-6">
-              Where heritage meets modern luxury. Crafted experiences, refined service,
-              and a century-inspired ethos—brought to life in blue–purple opulence.
-            </p>
-            <div className="flex gap-3">
-              <Button onClick={handleGetStarted} className="neon-glow-emerald">Book Your Escape</Button>
-              <Button variant="outline">Our Story</Button>
-            </div>
-          </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.6 }}
+              className="relative"
+            >
+              <div className="grid grid-cols-2 gap-4">
+                <motion.div
+                  whileHover={{ scale: 1.05, rotateZ: 2 }}
+                  className="rounded-2xl overflow-hidden border border-indigo-500/30 shadow-xl"
+                >
+                  <img
+                    src="https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=800&auto=format&fit=crop"
+                    alt="Grand Horizon Lobby"
+                    className="w-full h-64 object-cover"
+                  />
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.05, rotateZ: -2 }}
+                  className="rounded-2xl overflow-hidden border border-indigo-500/30 shadow-xl mt-8"
+                >
+                  <img
+                    src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=800&auto=format&fit=crop"
+                    alt="Luxury Suite"
+                    className="w-full h-64 object-cover"
+                  />
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.05, rotateZ: -2 }}
+                  className="rounded-2xl overflow-hidden border border-indigo-500/30 shadow-xl -mt-8"
+                >
+                  <img
+                    src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=800&auto=format&fit=crop"
+                    alt="Fine Dining"
+                    className="w-full h-64 object-cover"
+                  />
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.05, rotateZ: 2 }}
+                  className="rounded-2xl overflow-hidden border border-indigo-500/30 shadow-xl"
+                >
+                  <img
+                    src="https://images.unsplash.com/photo-1540541338287-41700207dee6?q=80&w=800&auto=format&fit=crop"
+                    alt="Spa & Wellness"
+                    className="w-full h-64 object-cover"
+                  />
+                </motion.div>
+              </div>
+              <div className="absolute -inset-4 bg-gradient-to-br from-indigo-500/10 to-violet-500/10 blur-3xl -z-10" />
+            </motion.div>
+          </div>
         </div>
       </section>
 
@@ -838,21 +900,25 @@ export default function Landing() {
 
       {/* Virtual Tour */}
       <section id="virtual-tour" className="py-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-8"
+            className="text-center mb-10"
           >
             <h2 className="text-3xl md:text-4xl font-bold">Virtual Tour</h2>
-            <p className="text-muted-foreground">Interactive 3D globe and lobby walkthrough</p>
+            <p className="text-muted-foreground">Explore our property in immersive 3D</p>
           </motion.div>
 
-          <div className="grid lg:grid-cols-2 gap-6">
-            <motion.div whileHover={{ scale: 1.01 }} className="rounded-2xl overflow-hidden border border-indigo-500/30 gradient-card aspect-video group">
+          <div className="grid lg:grid-cols-2 gap-8">
+            <motion.div 
+              whileHover={{ scale: 1.02 }} 
+              className="rounded-2xl overflow-hidden border border-indigo-500/30 gradient-card group"
+              style={{ height: '500px' }}
+            >
               <iframe
-                title="3D Tour A"
+                title="Grand Horizon Lobby Tour"
                 className="w-full h-full transition-transform duration-500 group-hover:scale-[1.02]"
                 src="https://sketchfab.com/models/11fa3ac64ef64cc0a6208e54d792f2d3/embed"
                 allow="autoplay; fullscreen; xr-spatial-tracking"
@@ -868,9 +934,13 @@ export default function Landing() {
                 } as any}
               />
             </motion.div>
-            <motion.div whileHover={{ scale: 1.01 }} className="rounded-2xl overflow-hidden border border-indigo-500/30 gradient-card aspect-video group">
+            <motion.div 
+              whileHover={{ scale: 1.02 }} 
+              className="rounded-2xl overflow-hidden border border-indigo-500/30 gradient-card group"
+              style={{ height: '500px' }}
+            >
               <iframe
-                title="3D Tour B"
+                title="Presidential Suite Tour"
                 className="w-full h-full transition-transform duration-500 group-hover:scale-[1.02]"
                 src="https://sketchfab.com/models/11fa3ac64ef64cc0a6208e54d792f2d3/embed"
                 allow="autoplay; fullscreen; xr-spatial-tracking"
@@ -887,12 +957,13 @@ export default function Landing() {
               />
             </motion.div>
           </div>
-          <div className="text-center mt-4">
+          <div className="text-center mt-8">
             <Button
+              size="lg"
               className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-[0_0_24px_rgba(99,102,241,0.35)] hover:shadow-[0_0_36px_rgba(139,92,246,0.45)]"
               onClick={handleGetStarted}
             >
-              Enter Virtual Tour
+              Schedule a Private Tour
             </Button>
           </div>
         </div>
@@ -948,23 +1019,31 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Booking CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 px-4 pb-4">
-        <div className="mx-auto max-w-5xl neon-glass border-t border-indigo-500/20">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 p-3">
-            <Input type="date" aria-label="Check-in" placeholder="Check-in" />
-            <Input type="date" aria-label="Check-out" placeholder="Check-out" />
-            <Input type="number" min={1} aria-label="Guests" placeholder="Guests" />
-            <Input type="number" min={1} aria-label="Rooms" placeholder="Rooms" />
-            <Button
-              className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white ripple-btn shadow-[0_0_24px_rgba(99,102,241,0.35)] hover:shadow-[0_0_36px_rgba(139,92,246,0.45)]"
-              onClick={handleGetStarted}
-            >
-              Check Availability
-            </Button>
-          </div>
+      {/* Booking CTA - Now at end of page before footer */}
+      <section className="py-12 bg-card/30">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="neon-glass border border-indigo-500/20 rounded-2xl p-6"
+          >
+            <h3 className="text-2xl font-bold text-center mb-6">Check Availability</h3>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <Input type="date" aria-label="Check-in" placeholder="Check-in" />
+              <Input type="date" aria-label="Check-out" placeholder="Check-out" />
+              <Input type="number" min={1} aria-label="Guests" placeholder="Guests" />
+              <Input type="number" min={1} aria-label="Rooms" placeholder="Rooms" />
+              <Button
+                className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white ripple-btn shadow-[0_0_24px_rgba(99,102,241,0.35)] hover:shadow-[0_0_36px_rgba(139,92,246,0.45)]"
+                onClick={handleGetStarted}
+              >
+                Check Availability
+              </Button>
+            </div>
+          </motion.div>
         </div>
-      </div>
+      </section>
 
       {/* Footer */}
       <footer id="contact" className="border-t border-border/50 py-12 bg-card/20 relative overflow-hidden">
