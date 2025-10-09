@@ -251,7 +251,7 @@ alter table if exists rooms add column if not exists amenities text;
 alter table if exists rooms add column if not exists notes text;
 alter table if exists rooms add column if not exists created_at timestamptz default now();
 
--- RESERVATIONS: fields used in FrontDeskReservations + owner scope
+-- RESERVATIONS: fields used in FrontDeskReservations + owner scope + ID proof
 alter table if exists reservations add column if not exists id text primary key;
 alter table if exists reservations add column if not exists guestName text;
 alter table if exists reservations add column if not exists confirmation text;
@@ -264,7 +264,24 @@ alter table if exists reservations add column if not exists balance numeric;
 alter table if exists reservations add column if not exists source text;
 alter table if exists reservations add column if not exists notes text;
 alter table if exists reservations add column if not exists owner text;
+alter table if exists reservations add column if not exists "idProofType" text;
+alter table if exists reservations add column if not exists "idProofNumber" text;
 alter table if exists reservations add column if not exists created_at timestamptz default now();
+
+-- GUESTS: add profile management fields
+alter table if exists guests add column if not exists id text primary key;
+alter table if exists guests add column if not exists name text;
+alter table if exists guests add column if not exists email text;
+alter table if exists guests add column if not exists phone text;
+alter table if exists guests add column if not exists address text;
+alter table if exists guests add column if not exists loyalty text;
+alter table if exists guests add column if not exists vip text;
+alter table if exists guests add column if not exists notes text;
+alter table if exists guests add column if not exists full_name text;
+alter table if exists guests add column if not exists "quickAccessCode" text;
+alter table if exists guests add column if not exists membership text;
+alter table if exists guests add column if not exists loyalty_points numeric default 0;
+alter table if exists guests add column if not exists created_at timestamptz default now();
 
 -- HK_TASKS: fields used in HousekeepingTasks
 alter table if exists hk_tasks add column if not exists id text primary key;
@@ -396,18 +413,24 @@ create table if not exists reservations (
   source text,
   notes text,
   owner text,
+  "idProofType" text,
+  "idProofNumber" text,
   created_at timestamptz default now()
 );
 
 create table if not exists guests (
   id text primary key,
   name text,
-  email text,
+  email text unique,
   phone text,
   address text,
   loyalty text,
   vip text,
   notes text,
+  full_name text,
+  "quickAccessCode" text unique,
+  membership text default 'None',
+  loyalty_points numeric default 0,
   created_at timestamptz default now()
 );
 
