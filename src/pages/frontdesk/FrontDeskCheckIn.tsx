@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Search,
   LogIn,
@@ -37,103 +37,97 @@ import {
   DoorOpen,
   CalendarClock,
 } from "lucide-react";
+import { getSupabase } from "@/lib/supabaseClient";
 
 type ReservationStatus = "Booked" | "CheckedIn" | "CheckedOut";
 
 type Reservation = {
   id: string;
   guestName: string;
-  confirmation: string;
   roomType: string;
   roomNumber?: string;
   status: ReservationStatus;
-  arrivalDate: string; // ISO
-  departureDate: string; // ISO
-  eta?: string;
+  checkInDate: string;
+  checkOutDate: string;
   balance: number;
   notes?: string;
 };
 
-const initialReservations: Reservation[] = [
-  {
-    id: "r1",
-    guestName: "Ana Garcia",
-    confirmation: "CNF-83241",
-    roomType: "Deluxe King",
-    roomNumber: undefined,
-    status: "Booked",
-    arrivalDate: new Date().toISOString(),
-    departureDate: new Date(Date.now() + 2 * 86400000).toISOString(),
-    eta: "14:30",
-    balance: 142.6,
-    notes: "VIP; prefers high floor",
-  },
-  {
-    id: "r2",
-    guestName: "Luis Fernandez",
-    confirmation: "CNF-83242",
-    roomType: "Standard Queen",
-    roomNumber: "214",
-    status: "CheckedIn",
-    arrivalDate: new Date().toISOString(),
-    departureDate: new Date(Date.now() + 1 * 86400000).toISOString(),
-    eta: "12:00",
-    balance: 0,
-  },
-  {
-    id: "r3",
-    guestName: "Maya Lee",
-    confirmation: "CNF-83243",
-    roomType: "Suite",
-    roomNumber: undefined,
-    status: "Booked",
-    arrivalDate: new Date().toISOString(),
-    departureDate: new Date(Date.now() + 3 * 86400000).toISOString(),
-    eta: "17:15",
-    balance: 320.0,
-  },
-  {
-    id: "r4",
-    guestName: "Ivy Chen",
-    confirmation: "CNF-83244",
-    roomType: "Standard Twin",
-    roomNumber: "118",
-    status: "CheckedIn",
-    arrivalDate: new Date().toISOString(),
-    departureDate: new Date(Date.now() + 2 * 86400000).toISOString(),
-    eta: "15:45",
-    balance: 18.75,
-  },
-  {
-    id: "r5",
-    guestName: "Peter Johnson",
-    confirmation: "CNF-83245",
-    roomType: "Deluxe King",
-    roomNumber: undefined,
-    status: "Booked",
-    arrivalDate: new Date().toISOString(),
-    departureDate: new Date(Date.now() + 1 * 86400000).toISOString(),
-    eta: "11:50",
-    balance: 0,
-    notes: "Early check-in requested",
-  },
-];
-
-const availableRoomsByType: Record<string, string[]> = {
-  "Deluxe King": ["205", "312", "507"],
-  "Standard Queen": ["104", "219", "418"],
-  Suite: ["602", "701"],
-  "Standard Twin": ["118", "216", "319"],
+type Room = {
+  id: string;
+  number: string;
+  roomType: string;
+  status: string;
 };
 
 export default function FrontDeskCheckIn() {
-  const [reservations, setReservations] =
-    useState<Reservation[]>(initialReservations);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [availableRooms, setAvailableRooms] = useState<Room[]>([]);
   const [query, setQuery] = useState("");
   const [assignOpen, setAssignOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [selected, setSelected] = useState<Reservation | null>(null);
   const [selectedRoom, setSelectedRoom] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+
+  // Fetch reservations and rooms from Supabase
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 30000); // 30-second refresh
+    return () => clearInterval(interval);
+  }, []);
+
+  async function fetchData() {
+    try {
+      const supabase = getSupabase();
+      if (!supabase) {
+        setLoading(false);
+        return;
+      }
+
+      // Fetch today's reservations
+      const today = new Date().toISOString().split('T')[0];
+      const { data: resData, error: resError } = await supabase
+        .from("reservations")
+        .select("*")
+        .gte("checkInDate", today)
+        .order("checkInDate", { ascending: true });
+
+      if (!resError && resData) {
+        setReservations(resData.map((r: any) => ({
+          id: r.id,
+          guestName: r.guestName || "",
+          roomType: r.roomType || "",
+          roomNumber: r.roomNumber || undefined,
+          status: r.status || "Booked",
+          checkInDate: r.checkInDate || "",
+          checkOutDate: r.checkOutDate || "",
+          balance: Number(r.balance) || 0,
+          notes: r.notes || "",
+        })));
+      }
+
+      // Fetch available rooms
+      const { data: roomsData, error: roomsError } = await supabase
+        .from("rooms")
+        .select("*")
+        .ilike("status", "available");
+
+      if (!roomsError && roomsData) {
+        setAvailableRooms(roomsData.map((r: any) => ({
+          id: r.id,
+          number: r.number || "",
+          roomType: r.roomType || "",
+          status: r.status || "",
+        })));
+      }
+
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching data:", err);
+      setLoading(false);
+    }
+  }
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -141,7 +135,6 @@ export default function FrontDeskCheckIn() {
     return reservations.filter(
       (r) =>
         r.guestName.toLowerCase().includes(q) ||
-        r.confirmation.toLowerCase().includes(q) ||
         r.roomNumber?.toLowerCase().includes(q) ||
         r.roomType.toLowerCase().includes(q),
     );
@@ -153,16 +146,15 @@ export default function FrontDeskCheckIn() {
     const dueOut = reservations.filter(
       (r) =>
         r.status === "CheckedIn" &&
-        new Date(r.departureDate).toDateString() ===
-          new Date().toDateString(),
+        new Date(r.checkOutDate).toDateString() === new Date().toDateString(),
     ).length;
     return { booked, inHouse, dueOut };
   }, [reservations]);
 
   function openAssignRoom(res: Reservation) {
     setSelected(res);
-    const hasRooms = (availableRoomsByType[res.roomType] || []).length > 0;
-    if (!hasRooms) {
+    const roomsForType = availableRooms.filter(r => r.roomType === res.roomType);
+    if (roomsForType.length === 0) {
       toast.error(`No available rooms for type: ${res.roomType}`);
       return;
     }
@@ -170,28 +162,47 @@ export default function FrontDeskCheckIn() {
     setAssignOpen(true);
   }
 
-  function confirmAssignRoom() {
-    if (!selected) return;
-    if (!selectedRoom) {
+  async function confirmAssignRoom() {
+    if (!selected || !selectedRoom) {
       toast.error("Please choose a room to assign");
       return;
     }
-    setReservations((prev) =>
-      prev.map((r) =>
-        r.id === selected.id
-          ? { ...r, roomNumber: selectedRoom, status: "CheckedIn" }
-          : r,
-      ),
-    );
-    toast.success(
-      `Checked in ${selected.guestName} to room ${selectedRoom}`,
-    );
-    setAssignOpen(false);
-    setSelected(null);
-    setSelectedRoom("");
+
+    try {
+      const supabase = getSupabase();
+      if (!supabase) {
+        toast.error("Database not configured");
+        return;
+      }
+
+      // Update reservation
+      const { error: resError } = await supabase
+        .from("reservations")
+        .update({ roomNumber: selectedRoom, status: "CheckedIn" })
+        .eq("id", selected.id);
+
+      if (resError) throw resError;
+
+      // Update room status
+      const { error: roomError } = await supabase
+        .from("rooms")
+        .update({ status: "occupied" })
+        .eq("number", selectedRoom);
+
+      if (roomError) throw roomError;
+
+      toast.success(`Checked in ${selected.guestName} to room ${selectedRoom}`);
+      setAssignOpen(false);
+      setSelected(null);
+      setSelectedRoom("");
+      fetchData();
+    } catch (err) {
+      console.error("Error assigning room:", err);
+      toast.error("Failed to assign room");
+    }
   }
 
-  function handleCheckIn(res: Reservation) {
+  async function handleCheckIn(res: Reservation) {
     if (res.status === "CheckedOut") {
       toast.error("Reservation already checked out");
       return;
@@ -204,12 +215,27 @@ export default function FrontDeskCheckIn() {
       openAssignRoom(res);
       return;
     }
-    setReservations((prev) =>
-      prev.map((r) =>
-        r.id === res.id ? { ...r, status: "CheckedIn" } : r,
-      ),
-    );
-    toast.success(`Checked in ${res.guestName}`);
+
+    try {
+      const supabase = getSupabase();
+      if (!supabase) {
+        toast.error("Database not configured");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("reservations")
+        .update({ status: "CheckedIn" })
+        .eq("id", res.id);
+
+      if (error) throw error;
+
+      toast.success(`Checked in ${res.guestName}`);
+      fetchData();
+    } catch (err) {
+      console.error("Error checking in:", err);
+      toast.error("Failed to check in");
+    }
   }
 
   function openCheckout(res: Reservation) {
@@ -221,16 +247,42 @@ export default function FrontDeskCheckIn() {
     setCheckoutOpen(true);
   }
 
-  function confirmCheckout() {
+  async function confirmCheckout() {
     if (!selected) return;
-    setReservations((prev) =>
-      prev.map((r) =>
-        r.id === selected.id ? { ...r, status: "CheckedOut" } : r,
-      ),
-    );
-    toast.success(`Checked out ${selected.guestName}`);
-    setCheckoutOpen(false);
-    setSelected(null);
+
+    try {
+      const supabase = getSupabase();
+      if (!supabase) {
+        toast.error("Database not configured");
+        return;
+      }
+
+      // Update reservation
+      const { error: resError } = await supabase
+        .from("reservations")
+        .update({ status: "CheckedOut" })
+        .eq("id", selected.id);
+
+      if (resError) throw resError;
+
+      // Update room status back to available
+      if (selected.roomNumber) {
+        const { error: roomError } = await supabase
+          .from("rooms")
+          .update({ status: "available" })
+          .eq("number", selected.roomNumber);
+
+        if (roomError) throw roomError;
+      }
+
+      toast.success(`Checked out ${selected.guestName}`);
+      setCheckoutOpen(false);
+      setSelected(null);
+      fetchData();
+    } catch (err) {
+      console.error("Error checking out:", err);
+      toast.error("Failed to check out");
+    }
   }
 
   function statusBadge(status: ReservationStatus) {
@@ -240,6 +292,16 @@ export default function FrontDeskCheckIn() {
       CheckedOut: "bg-zinc-500/20 text-zinc-300",
     };
     return <Badge className={map[status]}>{status}</Badge>;
+  }
+
+  if (loading) {
+    return (
+      <AdminShell>
+        <div className="flex items-center justify-center h-96">
+          <div className="text-muted-foreground">Loading...</div>
+        </div>
+      </AdminShell>
+    );
   }
 
   return (
@@ -257,7 +319,7 @@ export default function FrontDeskCheckIn() {
             <div className="relative flex-1 md:min-w-[320px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by name, confirmation, room, or type..."
+                placeholder="Search by name, room, or type..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 className="pl-10 bg-background"
@@ -314,10 +376,8 @@ export default function FrontDeskCheckIn() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Guest</TableHead>
-                    <TableHead>Confirmation</TableHead>
                     <TableHead>Room Type</TableHead>
                     <TableHead>Room #</TableHead>
-                    <TableHead className="hidden md:table-cell">ETA</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Balance</TableHead>
                     <TableHead className="w-[180px] text-right">Actions</TableHead>
@@ -334,14 +394,8 @@ export default function FrontDeskCheckIn() {
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {r.confirmation}
-                      </TableCell>
                       <TableCell>{r.roomType}</TableCell>
                       <TableCell>{r.roomNumber ?? "-"}</TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {r.eta ?? "-"}
-                      </TableCell>
                       <TableCell>{statusBadge(r.status)}</TableCell>
                       <TableCell className="text-right">
                         {r.balance > 0 ? (
@@ -374,8 +428,8 @@ export default function FrontDeskCheckIn() {
                   ))}
                   {filtered.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
-                        No reservations match your search.
+                      <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+                        No reservations found.
                       </TableCell>
                     </TableRow>
                   )}
@@ -398,7 +452,7 @@ export default function FrontDeskCheckIn() {
               <div className="grid gap-2">
                 <Label>Guest</Label>
                 <div className="text-sm text-foreground">
-                  {selected?.guestName} • {selected?.confirmation}
+                  {selected?.guestName}
                 </div>
               </div>
               <div className="grid gap-2">
@@ -412,13 +466,13 @@ export default function FrontDeskCheckIn() {
                     <SelectValue placeholder="Select room number" />
                   </SelectTrigger>
                   <SelectContent>
-                    {(selected ? availableRoomsByType[selected.roomType] : [])?.map(
-                      (room) => (
-                        <SelectItem key={room} value={room}>
-                          {room}
+                    {availableRooms
+                      .filter(r => r.roomType === selected?.roomType)
+                      .map((room) => (
+                        <SelectItem key={room.id} value={room.number}>
+                          {room.number}
                         </SelectItem>
-                      ),
-                    )}
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
