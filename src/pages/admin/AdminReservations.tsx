@@ -21,12 +21,24 @@ export default function AdminReservations() {
               table="reservations"
               columns={[
                 {
-                  key: "guestname",
+                  key: "guestName",
                   label: "Guest Name",
                   type: "text",
                   required: true,
                 },
-                { key: "confirmation", label: "Confirmation", type: "text", required: true },
+                { 
+                  key: "idProofType", 
+                  label: "ID Proof Type", 
+                  type: "select", 
+                  options: ["Passport", "Driver License", "Aadhar", "National ID"], 
+                  required: true 
+                },
+                { 
+                  key: "idProofNumber", 
+                  label: "ID Proof Number", 
+                  type: "text", 
+                  required: true 
+                },
                 { key: "roomType", label: "Room Type", type: "select", options: ["Standard", "Deluxe", "Suite", "Presidential"], required: true },
                 {
                   key: "roomNumber",
@@ -37,7 +49,6 @@ export default function AdminReservations() {
                     table: "rooms",
                     valueField: "number",
                     labelField: "number",
-                    // Case-insensitive match for available rooms
                     filters: [{ column: "status", op: "ilike", value: "available" }],
                     orderBy: { column: "number", ascending: true },
                   },

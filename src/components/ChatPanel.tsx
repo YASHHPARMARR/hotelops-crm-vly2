@@ -72,7 +72,7 @@ export function ChatPanel() {
     if (!t) return;
     const msg: Message = {
       id: crypto.randomUUID(),
-      role,
+      role: role,
       text: t,
       at: Date.now(),
     };

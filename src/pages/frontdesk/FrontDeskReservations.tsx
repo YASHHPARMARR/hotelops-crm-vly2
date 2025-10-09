@@ -15,7 +15,19 @@ export default function FrontDeskReservations() {
             type: "text",
             required: true,
           },
-          { key: "confirmation", label: "Confirmation", type: "text", required: true },
+          { 
+            key: "idProofType", 
+            label: "ID Proof Type", 
+            type: "select", 
+            options: ["Passport", "Driver License", "Aadhar", "National ID"], 
+            required: true 
+          },
+          { 
+            key: "idProofNumber", 
+            label: "ID Proof Number", 
+            type: "text", 
+            required: true 
+          },
           { key: "roomType", label: "Room Type", type: "select", options: ["Standard", "Deluxe", "Suite", "Presidential"], required: true },
           {
             key: "roomNumber",
@@ -26,7 +38,6 @@ export default function FrontDeskReservations() {
               table: "rooms",
               valueField: "number",
               labelField: "number",
-              // Case-insensitive match for status = 'available'
               filters: [{ column: "status", op: "ilike", value: "available" }],
               orderBy: { column: "number", ascending: true },
             },

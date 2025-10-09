@@ -60,6 +60,8 @@ import GuestServices from "@/pages/guest/GuestServices.tsx";
 import GuestDining from "@/pages/guest/GuestDining.tsx";
 import GuestBills from "@/pages/guest/GuestBills.tsx";
 
+import UserProfile from "@/pages/shared/UserProfile.tsx";
+
 import { useAuth } from "./hooks/use-auth.ts";
 import { applyThemeToDocument, getTheme } from "@/lib/theme";
 
@@ -468,6 +470,80 @@ createRoot(document.getElementById("root")!).render(
               element={
                 <ProtectedRoute>
                   <GuestBills />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Profile routes for all roles */}
+            <Route 
+              path="/admin/profile" 
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/front-desk/profile" 
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/housekeeping/profile" 
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/restaurant/profile" 
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/security/profile" 
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/maintenance/profile" 
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/transport/profile" 
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/inventory/profile" 
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/guest/profile" 
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
                 </ProtectedRoute>
               } 
             />
