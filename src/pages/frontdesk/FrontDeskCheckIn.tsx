@@ -90,8 +90,8 @@ export default function FrontDeskCheckIn() {
       const { data: resData, error: resError } = await supabase
         .from("reservations")
         .select("*")
-        .gte("checkInDate", today)
-        .order("checkInDate", { ascending: true });
+        .gte("arrival", today)
+        .order("arrival", { ascending: true });
 
       if (!resError && resData) {
         setReservations(resData.map((r: any) => ({
@@ -100,8 +100,8 @@ export default function FrontDeskCheckIn() {
           roomType: r.roomType || "",
           roomNumber: r.roomNumber || undefined,
           status: r.status || "Booked",
-          checkInDate: r.checkInDate || "",
-          checkOutDate: r.checkOutDate || "",
+          checkInDate: r.arrival || "",
+          checkOutDate: r.departure || "",
           balance: Number(r.balance) || 0,
           notes: r.notes || "",
         })));
@@ -111,13 +111,13 @@ export default function FrontDeskCheckIn() {
       const { data: roomsData, error: roomsError } = await supabase
         .from("rooms")
         .select("*")
-        .ilike("status", "available");
+        .eq("status", "available");
 
       if (!roomsError && roomsData) {
         setAvailableRooms(roomsData.map((r: any) => ({
           id: r.id,
           number: r.number || "",
-          roomType: r.roomType || "",
+          roomType: r.roomType || r.type || "",
           status: r.status || "",
         })));
       }

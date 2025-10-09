@@ -145,9 +145,9 @@ class SupabaseProvider implements StorageProvider {
     if (!this.supabase) throw new Error("Supabase not initialized");
     
     try {
-      // Drop only empty-string fields; do not strip columns reported missing
+      // Only drop undefined values, keep empty strings as they are valid data
       const cleaned: Record<string, any> = Object.fromEntries(
-        Object.entries(patch).filter(([_, v]) => v !== "" && v !== undefined)
+        Object.entries(patch).filter(([_, v]) => v !== undefined)
       );
 
       let query = this.supabase!.from(this.table).update(cleaned).eq('id', id);
