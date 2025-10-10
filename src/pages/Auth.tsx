@@ -132,8 +132,9 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
   }
 
   useEffect(() => {
+    // Only run when auth is loaded and user is authenticated
     if (!authLoading && isAuthenticated) {
-      (async () => {
+      const handleRedirect = async () => {
         try {
           const email = await getSupabaseUserEmail();
           if (email) {
@@ -151,7 +152,9 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
         
         // Navigate immediately with replace to prevent back button issues
         navigate(dest, { replace: true });
-      })();
+      };
+      
+      handleRedirect();
     }
   }, [authLoading, isAuthenticated, navigate]);
 
@@ -225,8 +228,8 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       const email = formData.get("email") as string;
       try { localStorage.setItem("DEMO_USER_EMAIL", email); } catch {}
       
-      // Note: Navigation will be handled by useEffect after isAuthenticated becomes true
-      // Keep loading state active until redirect happens
+      // Navigation will be handled by useEffect when isAuthenticated becomes true
+      // The loading state will remain active until the redirect happens
     } catch (error) {
       console.error("OTP verification error:", error);
       setError("The verification code you entered is incorrect.");
