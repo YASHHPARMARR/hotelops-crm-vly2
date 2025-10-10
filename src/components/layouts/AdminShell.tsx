@@ -10,7 +10,14 @@ import {
   Search, 
   Settings, 
   User,
-  X
+  X,
+  LayoutDashboard,
+  Calendar,
+  Users,
+  UserCog,
+  Bed,
+  FileText,
+  Code
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
@@ -50,7 +57,7 @@ interface AdminShellProps {
   children: ReactNode;
 }
 
-export function AdminShell({ children }: AdminShellProps) {
+export function AdminShell({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -222,135 +229,98 @@ export function AdminShell({ children }: AdminShellProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* Sidebar */}
-      <motion.aside
-        initial={false}
-        animate={{ width: sidebarOpen ? 280 : 80 }}
-        className="fixed left-0 top-0 z-40 h-full bg-card border-r border-border"
-      >
-        <div className="flex h-full flex-col">
-          {/* Logo */}
-          <div className="flex h-16 items-center justify-between px-4 border-b border-border">
-            <motion.div
-              animate={{ opacity: sidebarOpen ? 1 : 0 }}
-              className="flex items-center gap-3"
-            >
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">H</span>
-              </div>
-              {sidebarOpen && (
-                <span className="font-bold text-lg text-foreground">HotelOps</span>
-              )}
-            </motion.div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="h-8 w-8"
-            >
-              {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-            </Button>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2">
-            {navigationItems.map((item) => {
-              const isActive = location.pathname === item.path;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200",
-                    isActive
-                      ? "bg-primary text-primary-foreground neon-glow"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                  )}
-                >
-                  <div className="w-5 h-5" />
-                  {sidebarOpen && (
-                    <motion.span
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="font-medium"
-                    >
-                      {item.name}
-                    </motion.span>
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Sidebar Chat access */}
-          <div className="px-4 pb-3">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button
-                  variant="secondary"
-                  className={cn(
-                    "w-full justify-start gap-3",
-                    !sidebarOpen && "justify-center px-0"
-                  )}
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  {sidebarOpen && <span>Team Chat</span>}
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-                <ChatPanel />
-              </SheetContent>
-            </Sheet>
-          </div>
-
-          {/* User Profile */}
-          <div className="p-4 border-t border-border">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "w-full justify-start gap-3 h-auto p-3",
-                    !sidebarOpen && "justify-center"
-                  )}
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user?.image} />
-                    <AvatarFallback>
-                      {user?.name?.charAt(0) || user?.email?.charAt(0) || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  {sidebarOpen && (
-                    <>
-                      <div className="flex-1 text-left">
-                        <div className="text-sm font-medium">{user?.name || "User"}</div>
-                        <div className="text-xs text-muted-foreground capitalize">
-                          {(effectiveRole || "").replace("_", " ")}
-                        </div>
-                      </div>
-                      <ChevronDown className="h-4 w-4" />
-                    </>
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </motion.aside>
+      <aside className="w-64 border-r border-border bg-card/50 min-h-[calc(100vh-4rem)] p-4">
+        <nav className="space-y-2">
+          <Link
+            to="/admin"
+            className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
+              location.pathname === "/admin"
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-muted"
+            }`}
+          >
+            <LayoutDashboard className="h-4 w-4" />
+            <span>Dashboard</span>
+          </Link>
+          <Link
+            to="/admin/reservations"
+            className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
+              location.pathname === "/admin/reservations"
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-muted"
+            }`}
+          >
+            <Calendar className="h-4 w-4" />
+            <span>Reservations</span>
+          </Link>
+          <Link
+            to="/admin/guests"
+            className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
+              location.pathname === "/admin/guests"
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-muted"
+            }`}
+          >
+            <Users className="h-4 w-4" />
+            <span>Guests</span>
+          </Link>
+          <Link
+            to="/admin/staff"
+            className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
+              location.pathname === "/admin/staff"
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-muted"
+            }`}
+          >
+            <UserCog className="h-4 w-4" />
+            <span>Staff</span>
+          </Link>
+          <Link
+            to="/admin/rooms"
+            className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
+              location.pathname === "/admin/rooms"
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-muted"
+            }`}
+          >
+            <Bed className="h-4 w-4" />
+            <span>Rooms</span>
+          </Link>
+          <Link
+            to="/admin/reports"
+            className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
+              location.pathname === "/admin/reports"
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-muted"
+            }`}
+          >
+            <FileText className="h-4 w-4" />
+            <span>Reports</span>
+          </Link>
+          <Link
+            to="/admin/tech"
+            className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
+              location.pathname === "/admin/tech"
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-muted"
+            }`}
+          >
+            <Code className="h-4 w-4" />
+            <span>Tech Info</span>
+          </Link>
+          <Link
+            to="/admin/settings"
+            className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
+              location.pathname === "/admin/settings"
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-muted"
+            }`}
+          >
+            <Settings className="h-4 w-4" />
+            <span>Settings</span>
+          </Link>
+        </nav>
+      </aside>
 
       {/* Main Content */}
       <div
