@@ -6,7 +6,7 @@ import { ConvexAuthProvider } from "@convex-dev/auth/react";
 import { ConvexReactClient } from "convex/react";
 import { StrictMode, useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import { createBrowserRouter, RouterProvider, useLocation, Navigate } from "react-router";
+import { BrowserRouter, Route, Routes, useLocation, Navigate } from "react-router";
 import "./index.css";
 import Landing from "./pages/Landing.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -30,7 +30,6 @@ import AdminRooms from "@/pages/admin/AdminRooms.tsx";
 import AdminStaff from "@/pages/admin/AdminStaff.tsx";
 import AdminReports from "@/pages/admin/AdminReports.tsx";
 import AdminSettings from "@/pages/admin/AdminSettings.tsx";
-import AdminTech from "@/pages/admin/AdminTech.tsx";
 
 import FrontDeskReservations from "@/pages/frontdesk/FrontDeskReservations.tsx";
 import FrontDeskCheckIn from "@/pages/frontdesk/FrontDeskCheckIn.tsx";
@@ -118,435 +117,440 @@ function DashboardRedirect() {
   return <Navigate to={target} replace />;
 }
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Landing />,
-  },
-  {
-    path: "/auth",
-    element: <AuthPage />,
-  },
-  {
-    path: "/admin",
-    element: (
-      <ProtectedRoute requiredRole="admin">
-        <AdminDashboard />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/reservations",
-    element: (
-      <ProtectedRoute requiredRole="admin">
-        <AdminReservations />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/guests",
-    element: (
-      <ProtectedRoute requiredRole="admin">
-        <AdminGuests />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/staff",
-    element: (
-      <ProtectedRoute requiredRole="admin">
-        <AdminStaff />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/reports",
-    element: (
-      <ProtectedRoute requiredRole="admin">
-        <AdminReports />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/settings",
-    element: (
-      <ProtectedRoute requiredRole="admin">
-        <AdminSettings />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/rooms",
-    element: (
-      <ProtectedRoute requiredRole="admin">
-        <AdminRooms />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/tech",
-    element: (
-      <ProtectedRoute requiredRole="admin">
-        <AdminTech />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/admin/profile",
-    element: (
-      <ProtectedRoute requiredRole="admin">
-        <UserProfile />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/front-desk",
-    element: (
-      <ProtectedRoute requiredRole="front_desk">
-        <FrontDeskDashboard />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/housekeeping",
-    element: (
-      <ProtectedRoute requiredRole="housekeeping">
-        <HousekeepingDashboard />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/restaurant",
-    element: (
-      <ProtectedRoute requiredRole="restaurant">
-        <RestaurantDashboard />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/security",
-    element: (
-      <ProtectedRoute requiredRole="security">
-        <SecurityDashboard />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/maintenance",
-    element: (
-      <ProtectedRoute requiredRole="maintenance">
-        <MaintenanceDashboard />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/transport",
-    element: (
-      <ProtectedRoute requiredRole="transport">
-        <TransportDashboard />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/inventory",
-    element: (
-      <ProtectedRoute requiredRole="inventory">
-        <InventoryDashboard />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/guest",
-    element: (
-      <ProtectedRoute requiredRole="guest">
-        <GuestDashboard />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/front-desk/reservations",
-    element: (
-      <ProtectedRoute requiredRole="front_desk">
-        <FrontDeskReservations />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/front-desk/checkin",
-    element: (
-      <ProtectedRoute requiredRole="front_desk">
-        <FrontDeskCheckIn />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/front-desk/guests",
-    element: (
-      <ProtectedRoute requiredRole="front_desk">
-        <FrontDeskGuests />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/front-desk/rooms",
-    element: (
-      <ProtectedRoute requiredRole="front_desk">
-        <FrontDeskRooms />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/maintenance/tickets",
-    element: (
-      <ProtectedRoute requiredRole="maintenance">
-        <MaintenanceTickets />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/maintenance/assets",
-    element: (
-      <ProtectedRoute requiredRole="maintenance">
-        <MaintenanceAssets />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/maintenance/schedule",
-    element: (
-      <ProtectedRoute requiredRole="maintenance">
-        <MaintenanceSchedule />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/maintenance/user",
-    element: (
-      <ProtectedRoute requiredRole="maintenance">
-        <MaintenanceUser />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/housekeeping/tasks",
-    element: (
-      <ProtectedRoute requiredRole="housekeeping">
-        <HousekeepingTasks />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/housekeeping/rooms",
-    element: (
-      <ProtectedRoute requiredRole="housekeeping">
-        <HousekeepingRooms />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/housekeeping/inventory",
-    element: (
-      <ProtectedRoute requiredRole="housekeeping">
-        <HousekeepingInventory />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/restaurant/orders",
-    element: (
-      <ProtectedRoute requiredRole="restaurant">
-        <RestaurantOrders />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/restaurant/menu",
-    element: (
-      <ProtectedRoute requiredRole="restaurant">
-        <RestaurantMenu />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/restaurant/tables",
-    element: (
-      <ProtectedRoute requiredRole="restaurant">
-        <RestaurantTables />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/security/incidents",
-    element: (
-      <ProtectedRoute requiredRole="security">
-        <SecurityIncidents />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/security/badges",
-    element: (
-      <ProtectedRoute requiredRole="security">
-        <SecurityBadges />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/security/reports",
-    element: (
-      <ProtectedRoute requiredRole="security">
-        <SecurityReports />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/transport/trips",
-    element: (
-      <ProtectedRoute requiredRole="transport">
-        <TransportTrips />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/transport/vehicles",
-    element: (
-      <ProtectedRoute requiredRole="transport">
-        <TransportVehicles />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/transport/schedule",
-    element: (
-      <ProtectedRoute requiredRole="transport">
-        <TransportSchedule />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/inventory/items",
-    element: (
-      <ProtectedRoute requiredRole="inventory">
-        <InventoryItems />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/inventory/suppliers",
-    element: (
-      <ProtectedRoute requiredRole="inventory">
-        <InventorySuppliers />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/inventory/orders",
-    element: (
-      <ProtectedRoute requiredRole="inventory">
-        <InventoryOrders />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/guest/services",
-    element: (
-      <ProtectedRoute requiredRole="guest">
-        <GuestServices />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/guest/dining",
-    element: (
-      <ProtectedRoute requiredRole="guest">
-        <GuestDining />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/guest/bills",
-    element: (
-      <ProtectedRoute requiredRole="guest">
-        <GuestBills />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/front-desk/profile",
-    element: (
-      <ProtectedRoute requiredRole="front_desk">
-        <UserProfile />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/housekeeping/profile",
-    element: (
-      <ProtectedRoute requiredRole="housekeeping">
-        <UserProfile />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/restaurant/profile",
-    element: (
-      <ProtectedRoute requiredRole="restaurant">
-        <UserProfile />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/security/profile",
-    element: (
-      <ProtectedRoute requiredRole="security">
-        <UserProfile />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/maintenance/profile",
-    element: (
-      <ProtectedRoute requiredRole="maintenance">
-        <UserProfile />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/transport/profile",
-    element: (
-      <ProtectedRoute requiredRole="transport">
-        <UserProfile />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/inventory/profile",
-    element: (
-      <ProtectedRoute requiredRole="inventory">
-        <UserProfile />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/guest/profile",
-    element: (
-      <ProtectedRoute requiredRole="guest">
-        <UserProfile />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "*",
-    element: <NotFound />,
-  },
-]);
-
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     {/* VlyToolbar removed */}
     <InstrumentationProvider>
       <ConvexAuthProvider client={convex}>
-        <RouterProvider router={router} />
+        <BrowserRouter>
+          <RouteSyncer />
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/auth" element={<AuthPage redirectAfterAuth="/dashboard" />} />
+            <Route path="/dashboard" element={<DashboardRedirect />} />
+            <Route path="/unauthorized" element={<Unauthorized />} />
+            
+            {/* Admin Route */}
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Admin sub-routes */}
+            <Route 
+              path="/admin/reservations" 
+              element={
+                <ProtectedRoute>
+                  <AdminReservations />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/guests" 
+              element={
+                <ProtectedRoute>
+                  <AdminGuests />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/rooms" 
+              element={
+                <ProtectedRoute>
+                  <AdminRooms />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/staff" 
+              element={
+                <ProtectedRoute>
+                  <AdminStaff />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/reports" 
+              element={
+                <ProtectedRoute>
+                  <AdminReports />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/settings" 
+              element={
+                <ProtectedRoute>
+                  <AdminSettings />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Additional role dashboards (reuse AdminDashboard for demo) */}
+            <Route 
+              path="/front-desk" 
+              element={
+                <ProtectedRoute>
+                  <FrontDeskDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/housekeeping" 
+              element={
+                <ProtectedRoute>
+                  <HousekeepingDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/restaurant" 
+              element={
+                <ProtectedRoute>
+                  <RestaurantDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/security" 
+              element={
+                <ProtectedRoute>
+                  <SecurityDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/maintenance" 
+              element={
+                <ProtectedRoute>
+                  <MaintenanceDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/transport" 
+              element={
+                <ProtectedRoute>
+                  <TransportDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/inventory" 
+              element={
+                <ProtectedRoute>
+                  <InventoryDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/guest" 
+              element={
+                <ProtectedRoute>
+                  <GuestDashboard />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Front Desk sub-routes */}
+            <Route 
+              path="/front-desk/reservations" 
+              element={
+                <ProtectedRoute>
+                  <FrontDeskReservations />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/front-desk/checkin" 
+              element={
+                <ProtectedRoute>
+                  <FrontDeskCheckIn />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/front-desk/guests" 
+              element={
+                <ProtectedRoute>
+                  <FrontDeskGuests />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/front-desk/rooms" 
+              element={
+                <ProtectedRoute>
+                  <FrontDeskRooms />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Maintenance sub-routes */}
+            <Route 
+              path="/maintenance/tickets" 
+              element={
+                <ProtectedRoute>
+                  <MaintenanceTickets />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/maintenance/assets" 
+              element={
+                <ProtectedRoute>
+                  <MaintenanceAssets />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/maintenance/schedule" 
+              element={
+                <ProtectedRoute>
+                  <MaintenanceSchedule />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/maintenance/user" 
+              element={
+                <ProtectedRoute>
+                  <MaintenanceUser />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/housekeeping/tasks" 
+              element={
+                <ProtectedRoute>
+                  <HousekeepingTasks />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/housekeeping/rooms" 
+              element={
+                <ProtectedRoute>
+                  <HousekeepingRooms />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/housekeeping/inventory" 
+              element={
+                <ProtectedRoute>
+                  <HousekeepingInventory />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/restaurant/orders" 
+              element={
+                <ProtectedRoute>
+                  <RestaurantOrders />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/restaurant/menu" 
+              element={
+                <ProtectedRoute>
+                  <RestaurantMenu />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/restaurant/tables" 
+              element={
+                <ProtectedRoute>
+                  <RestaurantTables />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/security/incidents" 
+              element={
+                <ProtectedRoute>
+                  <SecurityIncidents />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/security/badges" 
+              element={
+                <ProtectedRoute>
+                  <SecurityBadges />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/security/reports" 
+              element={
+                <ProtectedRoute>
+                  <SecurityReports />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/transport/trips" 
+              element={
+                <ProtectedRoute>
+                  <TransportTrips />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/transport/vehicles" 
+              element={
+                <ProtectedRoute>
+                  <TransportVehicles />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/transport/schedule" 
+              element={
+                <ProtectedRoute>
+                  <TransportSchedule />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/inventory/items" 
+              element={
+                <ProtectedRoute>
+                  <InventoryItems />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/inventory/suppliers" 
+              element={
+                <ProtectedRoute>
+                  <InventorySuppliers />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/inventory/orders" 
+              element={
+                <ProtectedRoute>
+                  <InventoryOrders />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/guest/services" 
+              element={
+                <ProtectedRoute>
+                  <GuestServices />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/guest/dining" 
+              element={
+                <ProtectedRoute>
+                  <GuestDining />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/guest/bills" 
+              element={
+                <ProtectedRoute>
+                  <GuestBills />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Profile routes for all roles */}
+            <Route 
+              path="/admin/profile" 
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/front-desk/profile" 
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/housekeeping/profile" 
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/restaurant/profile" 
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/security/profile" 
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/maintenance/profile" 
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/transport/profile" 
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/inventory/profile" 
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/guest/profile" 
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
         <Toaster />
       </ConvexAuthProvider>
     </InstrumentationProvider>
