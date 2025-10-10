@@ -101,6 +101,7 @@ export const ROLE_NAVIGATION = {
     { name: "Staff", path: "/admin/staff", icon: "UserCheck" },
     { name: "Reports", path: "/admin/reports", icon: "BarChart3" },
     { name: "Settings", path: "/admin/settings", icon: "Settings" },
+    { name: "Tech", path: "/admin/tech", icon: "Code" },
     { name: "Profile", path: "/admin/profile", icon: "User" },
   ],
   [ROLES.FRONT_DESK]: [

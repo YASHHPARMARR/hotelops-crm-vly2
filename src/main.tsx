@@ -30,6 +30,7 @@ import AdminRooms from "@/pages/admin/AdminRooms.tsx";
 import AdminStaff from "@/pages/admin/AdminStaff.tsx";
 import AdminReports from "@/pages/admin/AdminReports.tsx";
 import AdminSettings from "@/pages/admin/AdminSettings.tsx";
+import AdminTech from "@/pages/admin/AdminTech.tsx";
 
 import FrontDeskReservations from "@/pages/frontdesk/FrontDeskReservations.tsx";
 import FrontDeskCheckIn from "@/pages/frontdesk/FrontDeskCheckIn.tsx";
@@ -186,6 +187,14 @@ createRoot(document.getElementById("root")!).render(
               element={
                 <ProtectedRoute>
                   <AdminSettings />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/tech" 
+              element={
+                <ProtectedRoute>
+                  <AdminTech />
                 </ProtectedRoute>
               } 
             />
