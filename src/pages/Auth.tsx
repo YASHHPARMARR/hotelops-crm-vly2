@@ -140,15 +140,20 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
             try { localStorage.setItem("DEMO_USER_EMAIL", email); } catch {}
             await upsertGuest(email);
             await upsertUser(email);
-            // Add: ensure an account row exists
             await upsertAccount(email);
           }
-        } catch {}
+        } catch (e) {
+          console.error("Error upserting user data:", e);
+        }
+        
+        // Get the redirect destination
         const dest = await getRoleRedirect();
-        navigate(dest);
+        
+        // Navigate with replace to prevent back button issues
+        navigate(dest, { replace: true });
       })();
     }
-  }, [authLoading, isAuthenticated, navigate, redirectAfterAuth]);
+  }, [authLoading, isAuthenticated, navigate]);
 
   // Add: enter demo handler
   const handleEnterDemo = () => {
@@ -221,11 +226,10 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       try { localStorage.setItem("DEMO_USER_EMAIL", email); } catch {}
       await upsertGuest(email);
       await upsertUser(email);
-      // Add: upsert into accounts with default role guest
       await upsertAccount(email);
 
-      const dest = await getRoleRedirect();
-      navigate(dest);
+      // Don't navigate here - let the useEffect handle it after auth state updates
+      // The useEffect will trigger once isAuthenticated becomes true
     } catch (error) {
       console.error("OTP verification error:", error);
       setError("The verification code you entered is incorrect.");
