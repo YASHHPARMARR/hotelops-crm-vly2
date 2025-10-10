@@ -150,10 +150,12 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
         const dest = await getRoleRedirect();
         
         // Navigate with replace to prevent back button issues
-        navigate(dest, { replace: true });
+        setTimeout(() => {
+          navigate(dest, { replace: true });
+        }, 100);
       })();
     }
-  }, [authLoading, isAuthenticated, navigate]);
+  }, [authLoading, isAuthenticated]);
 
   // Add: enter demo handler
   const handleEnterDemo = () => {
@@ -224,12 +226,9 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
 
       const email = formData.get("email") as string;
       try { localStorage.setItem("DEMO_USER_EMAIL", email); } catch {}
-      await upsertGuest(email);
-      await upsertUser(email);
-      await upsertAccount(email);
-
+      
+      // Upsert operations will be handled by useEffect after auth state updates
       // Don't navigate here - let the useEffect handle it after auth state updates
-      // The useEffect will trigger once isAuthenticated becomes true
     } catch (error) {
       console.error("OTP verification error:", error);
       setError("The verification code you entered is incorrect.");
