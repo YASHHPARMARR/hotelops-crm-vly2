@@ -306,23 +306,20 @@ export function CrudPage({
       const data = await provider.list();
       setItems(data);
     } catch (e: any) {
+      console.error(`[CrudPage] Error loading data for ${title}:`, e);
       const errorMsg = normalizeSupabaseError(e);
       
-      if (errorMsg.includes('Permission denied') || errorMsg.includes('RLS') || errorMsg.includes('not initialized')) {
-        // Seamless fallback to local provider and reload
-        const local = makeLocalProvider();
-        setProvider(local);
-        try {
-          const data = await local.list();
-          setItems(data);
-          setError(null);
-        } catch {
-          setError("Failed to load data");
-          toast.error(`Failed to load ${title.toLowerCase()}`);
-        }
-      } else {
-        setError(errorMsg);
-        toast.error(`Failed to load ${title.toLowerCase()}: ${errorMsg}`);
+      // Always fallback to local provider on any error
+      const local = makeLocalProvider();
+      setProvider(local);
+      try {
+        const data = await local.list();
+        setItems(data);
+        setError(null);
+      } catch (localError) {
+        console.error(`[CrudPage] Local provider also failed for ${title}:`, localError);
+        setError("Failed to load data");
+        setItems([]);
       }
     } finally {
       setLoading(false);
@@ -450,27 +447,23 @@ export function CrudPage({
       
       await loadData();
     } catch (e: any) {
-      const errorMsg = normalizeSupabaseError(e);
-      
-      if (errorMsg.includes('Permission denied') || errorMsg.includes('RLS') || errorMsg.includes('not initialized')) {
-        // Seamless fallback and retry on local
-        const local = makeLocalProvider();
-        setProvider(local);
-        try {
-          if (editingId) {
-            await local.update(editingId, form);
-            toast.success(`${title} updated successfully`);
-            setEditingId(null);
-          } else {
-            await local.create(form);
-            toast.success(`${title} created successfully`);
-          }
-          await loadData();
-        } catch {
-          toast.error(`Failed to save ${title.toLowerCase()}`);
+      console.error(`[CrudPage] Error saving data for ${title}:`, e);
+      // Fallback to local provider and retry
+      const local = makeLocalProvider();
+      setProvider(local);
+      try {
+        if (editingId) {
+          await local.update(editingId, form);
+          toast.success(`${title} updated successfully`);
+          setEditingId(null);
+        } else {
+          await local.create(form);
+          toast.success(`${title} created successfully`);
         }
-      } else {
-        toast.error(`Failed to save: ${errorMsg}`);
+        await loadData();
+      } catch (localError) {
+        console.error(`[CrudPage] Local save also failed for ${title}:`, localError);
+        toast.error(`Failed to save ${title.toLowerCase()}`);
       }
     }
   };
@@ -486,20 +479,17 @@ export function CrudPage({
       toast.success(`${title} deleted successfully`);
       await loadData();
     } catch (e: any) {
-      const errorMsg = normalizeSupabaseError(e);
-      
-      if (errorMsg.includes('Permission denied') || errorMsg.includes('RLS') || errorMsg.includes('not initialized')) {
-        const local = makeLocalProvider();
-        setProvider(local);
-        try {
-          await local.remove(id);
-          toast.success(`${title} deleted successfully`);
-          await loadData();
-        } catch {
-          toast.error(`Failed to delete ${title.toLowerCase()}`);
-        }
-      } else {
-        toast.error(`Failed to delete: ${errorMsg}`);
+      console.error(`[CrudPage] Error deleting data for ${title}:`, e);
+      // Fallback to local provider and retry
+      const local = makeLocalProvider();
+      setProvider(local);
+      try {
+        await local.remove(id);
+        toast.success(`${title} deleted successfully`);
+        await loadData();
+      } catch (localError) {
+        console.error(`[CrudPage] Local delete also failed for ${title}:`, localError);
+        toast.error(`Failed to delete ${title.toLowerCase()}`);
       }
     }
   };
