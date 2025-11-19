@@ -210,7 +210,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       // Store email for fallback
       try { localStorage.setItem("DEMO_USER_EMAIL", email); } catch {}
       
-      // Upsert user data immediately
+      // Upsert user data
       await upsertGuest(email);
       await upsertUser(email);
       await upsertAccount(email);
@@ -218,8 +218,13 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       // Success feedback
       setSessionInfo("Verification successful! Redirecting...");
       
-      // Don't set loading to false - let the useEffect handle the redirect
-      // The loading state will keep the UI in "verifying" mode until redirect completes
+      // Wait a moment for auth state to update, then manually redirect
+      setTimeout(async () => {
+        const dest = await getRoleRedirect();
+        console.log("[Auth] Manual redirect to:", dest);
+        navigate(dest, { replace: true });
+      }, 500);
+      
     } catch (error) {
       console.error("[Auth] OTP verification error:", error);
       const errorMessage = error instanceof Error ? error.message : "The verification code you entered is incorrect.";
@@ -244,20 +249,18 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
             await upsertUser(email);
             await upsertAccount(email);
           }
-          
-          // Get the redirect destination
-          const dest = await getRoleRedirect();
-          console.log("[Auth] Redirecting to:", dest);
-          
-          // Small delay to ensure all state updates are complete
-          setTimeout(() => {
-            navigate(dest, { replace: true });
-          }, 100);
         } catch (e) {
-          console.error("[Auth] Error during redirect:", e);
-          // Fallback to guest dashboard on error
-          navigate("/guest", { replace: true });
+          console.error("[Auth] Error upserting user data:", e);
         }
+        
+        // Get the redirect destination
+        const dest = await getRoleRedirect();
+        console.log("[Auth] Redirecting to:", dest);
+        
+        // Force navigation with a small delay to ensure state is settled
+        setTimeout(() => {
+          navigate(dest, { replace: true });
+        }, 100);
       };
       
       performRedirect();
