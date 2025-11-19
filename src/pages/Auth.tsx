@@ -210,7 +210,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       // Store email for fallback
       try { localStorage.setItem("DEMO_USER_EMAIL", email); } catch {}
       
-      // Upsert user data
+      // Upsert user data immediately
       await upsertGuest(email);
       await upsertUser(email);
       await upsertAccount(email);
@@ -218,8 +218,8 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       // Success feedback
       setSessionInfo("Verification successful! Redirecting...");
       
-      // The useEffect will handle navigation once isAuthenticated becomes true
-      // Keep loading state active until redirect happens
+      // Don't set loading to false - let the useEffect handle the redirect
+      // The loading state will keep the UI in "verifying" mode until redirect completes
     } catch (error) {
       console.error("[Auth] OTP verification error:", error);
       const errorMessage = error instanceof Error ? error.message : "The verification code you entered is incorrect.";
@@ -244,16 +244,20 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
             await upsertUser(email);
             await upsertAccount(email);
           }
+          
+          // Get the redirect destination
+          const dest = await getRoleRedirect();
+          console.log("[Auth] Redirecting to:", dest);
+          
+          // Small delay to ensure all state updates are complete
+          setTimeout(() => {
+            navigate(dest, { replace: true });
+          }, 100);
         } catch (e) {
-          console.error("[Auth] Error upserting user data:", e);
+          console.error("[Auth] Error during redirect:", e);
+          // Fallback to guest dashboard on error
+          navigate("/guest", { replace: true });
         }
-        
-        // Get the redirect destination
-        const dest = await getRoleRedirect();
-        console.log("[Auth] Redirecting to:", dest);
-        
-        // Navigate immediately
-        navigate(dest, { replace: true });
       };
       
       performRedirect();
