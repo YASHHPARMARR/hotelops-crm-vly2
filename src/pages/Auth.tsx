@@ -133,9 +133,13 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
+      console.log("[Auth] User authenticated, preparing redirect...");
+      
       (async () => {
         try {
           const email = await getSupabaseUserEmail();
+          console.log("[Auth] User email:", email);
+          
           if (email) {
             try { localStorage.setItem("DEMO_USER_EMAIL", email); } catch {}
             await upsertGuest(email);
@@ -143,14 +147,17 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
             await upsertAccount(email);
           }
         } catch (e) {
-          console.error("Error upserting user data:", e);
+          console.error("[Auth] Error upserting user data:", e);
         }
         
         // Get the redirect destination
         const dest = await getRoleRedirect();
+        console.log("[Auth] Redirecting to:", dest);
         
-        // Navigate with replace to prevent back button issues
-        navigate(dest, { replace: true });
+        // Small delay to ensure state is fully updated
+        setTimeout(() => {
+          navigate(dest, { replace: true });
+        }, 100);
       })();
     }
   }, [authLoading, isAuthenticated, navigate]);
@@ -218,21 +225,32 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
     event.preventDefault();
     setIsLoading(true);
     setError(null);
+    setSessionInfo(null);
+    
     try {
       const formData = new FormData(event.currentTarget);
+      const email = formData.get("email") as string;
+      
+      // Perform the sign-in with OTP
       await signIn("email-otp", formData);
 
-      const email = formData.get("email") as string;
+      // Store email for fallback
       try { localStorage.setItem("DEMO_USER_EMAIL", email); } catch {}
+      
+      // Upsert user data
       await upsertGuest(email);
       await upsertUser(email);
       await upsertAccount(email);
 
+      // Success feedback
+      setSessionInfo("Verification successful! Redirecting...");
+      
       // Don't navigate here - let the useEffect handle it after auth state updates
       // The useEffect will trigger once isAuthenticated becomes true
     } catch (error) {
       console.error("OTP verification error:", error);
-      setError("The verification code you entered is incorrect.");
+      const errorMessage = error instanceof Error ? error.message : "The verification code you entered is incorrect.";
+      setError(errorMessage);
       setIsLoading(false);
       setOtp("");
     }
@@ -384,6 +402,11 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
                   {error && (
                     <p className="mt-2 text-sm text-red-500 text-center">
                       {error}
+                    </p>
+                  )}
+                  {sessionInfo && (
+                    <p className="mt-2 text-sm text-green-500 text-center">
+                      {sessionInfo}
                     </p>
                   )}
                   <p className="text-sm text-muted-foreground text-center mt-4">
