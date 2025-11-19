@@ -113,21 +113,32 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
     const roleToPath = ROLE_TO_PATH;
     try {
       const email = await getSupabaseUserEmail();
+      console.log("[Auth] getRoleRedirect for email:", email);
+      
       const s = getSupabase();
       if (s && email) {
-        // Change: Check 'accounts' table for role
-        const { data } = await s
+        // Check 'accounts' table for role
+        const { data, error } = await s
           .from("accounts")
           .select("role")
           .eq("email", email)
           .limit(1)
           .maybeSingle();
+        
+        console.log("[Auth] Accounts query result:", { data, error });
+        
         const role = data?.role as string | undefined;
-        if (role && roleToPath[role]) return roleToPath[role];
+        if (role && roleToPath[role]) {
+          console.log("[Auth] Found role:", role, "redirecting to:", roleToPath[role]);
+          return roleToPath[role];
+        }
       }
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.error("[Auth] Error in getRoleRedirect:", err);
+    }
 
-    // If no role, default to guest dashboard
+    // If no role found, default to guest dashboard
+    console.log("[Auth] No role found, defaulting to /guest");
     return "/guest";
   }
 
@@ -199,10 +210,18 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
     try {
       const formData = new FormData(event.currentTarget);
       const email = formData.get("email") as string;
+      const token = formData.get("token") as string;
       
-      console.log("[Auth] Submitting OTP for:", email);
+      console.log("[Auth] Submitting OTP for:", email, "with token:", token);
       
-      // Perform the sign-in with OTP
+      // Verify the OTP is actually entered
+      if (!token || token.length !== 6) {
+        setError("Please enter the 6-digit verification code.");
+        setIsLoading(false);
+        return;
+      }
+      
+      // Perform the sign-in with OTP - this will verify the token
       await signIn("email-otp", formData);
 
       console.log("[Auth] OTP verification successful");
@@ -218,7 +237,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       // Success feedback
       setSessionInfo("Verification successful! Redirecting...");
       
-      // Wait a moment for auth state to update, then manually redirect
+      // Wait for auth state to update, then manually redirect
       setTimeout(async () => {
         const dest = await getRoleRedirect();
         console.log("[Auth] Manual redirect to:", dest);
@@ -234,38 +253,13 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
     }
   };
 
+  // Remove automatic redirect on auth state change - only redirect after OTP verification
   useEffect(() => {
+    // This effect is intentionally minimal to prevent premature redirects
     if (!authLoading && isAuthenticated) {
-      console.log("[Auth] User authenticated, preparing redirect...");
-      
-      const performRedirect = async () => {
-        try {
-          const email = await getSupabaseUserEmail();
-          console.log("[Auth] User email:", email);
-          
-          if (email) {
-            try { localStorage.setItem("DEMO_USER_EMAIL", email); } catch {}
-            await upsertGuest(email);
-            await upsertUser(email);
-            await upsertAccount(email);
-          }
-        } catch (e) {
-          console.error("[Auth] Error upserting user data:", e);
-        }
-        
-        // Get the redirect destination
-        const dest = await getRoleRedirect();
-        console.log("[Auth] Redirecting to:", dest);
-        
-        // Force navigation with a small delay to ensure state is settled
-        setTimeout(() => {
-          navigate(dest, { replace: true });
-        }, 100);
-      };
-      
-      performRedirect();
+      console.log("[Auth] User authenticated via useEffect");
     }
-  }, [authLoading, isAuthenticated, navigate]);
+  }, [authLoading, isAuthenticated]);
 
   return (
     <div className="min-h-screen flex flex-col">
