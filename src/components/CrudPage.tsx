@@ -265,16 +265,19 @@ export function CrudPage({
 
   // Determine provider based on conditions
   const getProvider = useCallback((): StorageProvider => {
-    const isDemoMode = window.location.search.includes('demo=1');
+    // Check if we're in demo mode via localStorage demoRole
+    const demoRole = typeof window !== "undefined" ? localStorage.getItem("demoRole") : null;
+    const isDemoMode = !!demoRole || window.location.search.includes('demo=1');
     const supabaseAvailable = !!getSupabase();
     
-    if (table && !isDemoMode && supabaseAvailable) {
-      return new SupabaseProvider(table, ownerScoped);
-    } else {
-      // Fallback to localStorage
+    // Use localStorage if in demo mode OR if Supabase is not available
+    if (isDemoMode || !supabaseAvailable || !table) {
       const key = storageKey || `crud_${title.toLowerCase().replace(/\s+/g, '_')}`;
       return new LocalProvider(key);
     }
+    
+    // Only use Supabase if explicitly available and not in demo mode
+    return new SupabaseProvider(table, ownerScoped);
   }, [table, ownerScoped, storageKey, title]);
 
   // Helper to create a local provider for seamless fallback
@@ -307,12 +310,12 @@ export function CrudPage({
       setItems(data);
     } catch (e: any) {
       const errorMsg = normalizeSupabaseError(e);
-      setError(errorMsg);
       
-      if (errorMsg.includes('Permission denied') || errorMsg.includes('RLS')) {
-        toast.error("Database permission error", {
-          description: "Falling back to Demo Mode for this page. Apply RLS SQL and sign in to use Supabase here."
-        });
+      // Silently fall back to local provider without showing error toasts in demo mode
+      const demoRole = typeof window !== "undefined" ? localStorage.getItem("demoRole") : null;
+      const isDemoMode = !!demoRole;
+      
+      if (errorMsg.includes('Permission denied') || errorMsg.includes('RLS') || errorMsg.includes('not initialized')) {
         // Seamless fallback to local provider and reload
         const local = makeLocalProvider();
         setProvider(local);
@@ -320,11 +323,21 @@ export function CrudPage({
           const data = await local.list();
           setItems(data);
           setError(null);
+          
+          // Only show toast if not in demo mode
+          if (!isDemoMode) {
+            toast.info("Using Demo Mode", {
+              description: "Connect Supabase in Admin Settings to use live data."
+            });
+          }
         } catch {
-          // ignore
+          setError("Failed to load data");
         }
       } else {
-        toast.error(`Failed to load ${title.toLowerCase()}: ${errorMsg}`);
+        setError(errorMsg);
+        if (!isDemoMode) {
+          toast.error(`Failed to load ${title.toLowerCase()}: ${errorMsg}`);
+        }
       }
     } finally {
       setLoading(false);
@@ -453,26 +466,27 @@ export function CrudPage({
       await loadData();
     } catch (e: any) {
       const errorMsg = normalizeSupabaseError(e);
-      if (errorMsg.includes('Permission denied') || errorMsg.includes('RLS')) {
+      // Check if in demo mode
+      const demoRole = typeof window !== "undefined" ? localStorage.getItem("demoRole") : null;
+      const isDemoMode = !!demoRole;
+      
+      if (errorMsg.includes('Permission denied') || errorMsg.includes('RLS') || errorMsg.includes('not initialized')) {
         // Seamless fallback and retry on local
         const local = makeLocalProvider();
         setProvider(local);
         try {
           if (editingId) {
             await local.update(editingId, form);
-            toast.success(`${title} updated in Demo Mode`);
+            toast.success(`${title} updated`);
             setEditingId(null);
           } else {
             await local.create(form);
-            toast.success(`${title} created in Demo Mode`);
+            toast.success(`${title} created`);
           }
           await loadData();
         } catch {
-          // ignore secondary failure
+          toast.error(`Failed to save ${title.toLowerCase()}`);
         }
-        toast.error("Database permission error", {
-          description: "Switched to Demo Mode for this page. Apply RLS SQL and sign in to use Supabase here."
-        });
       } else {
         toast.error(`Failed to save: ${errorMsg}`);
       }
@@ -491,19 +505,20 @@ export function CrudPage({
       await loadData();
     } catch (e: any) {
       const errorMsg = normalizeSupabaseError(e);
-      if (errorMsg.includes('Permission denied') || errorMsg.includes('RLS')) {
+      // Check if in demo mode
+      const demoRole = typeof window !== "undefined" ? localStorage.getItem("demoRole") : null;
+      const isDemoMode = !!demoRole;
+      
+      if (errorMsg.includes('Permission denied') || errorMsg.includes('RLS') || errorMsg.includes('not initialized')) {
         const local = makeLocalProvider();
         setProvider(local);
         try {
           await local.remove(id);
-          toast.success(`${title} deleted in Demo Mode`);
+          toast.success(`${title} deleted`);
           await loadData();
         } catch {
-          // ignore
+          toast.error(`Failed to delete ${title.toLowerCase()}`);
         }
-        toast.error("Database permission error", {
-          description: "Switched to Demo Mode for this page. Apply RLS SQL and sign in to use Supabase here."
-        });
       } else {
         toast.error(`Failed to delete: ${errorMsg}`);
       }
@@ -618,16 +633,25 @@ export function CrudPage({
           {description && <p className="text-muted-foreground">{description}</p>}
         </div>
         <div className="flex items-center gap-2">
-          {table && getSupabase() && !window.location.search.includes('demo=1') && (
-            <Badge variant="outline" className="text-xs">
-              Realtime
-            </Badge>
-          )}
-          {(!table || !getSupabase() || window.location.search.includes('demo=1')) && (
-            <Badge variant="secondary" className="text-xs">
-              Demo Mode
-            </Badge>
-          )}
+          {(() => {
+            const demoRole = typeof window !== "undefined" ? localStorage.getItem("demoRole") : null;
+            const isDemoMode = !!demoRole || window.location.search.includes('demo=1');
+            const supabaseAvailable = !!getSupabase();
+            
+            if (!isDemoMode && table && supabaseAvailable) {
+              return (
+                <Badge variant="outline" className="text-xs">
+                  Realtime
+                </Badge>
+              );
+            } else {
+              return (
+                <Badge variant="secondary" className="text-xs">
+                  Demo Mode
+                </Badge>
+              );
+            }
+          })()}
         </div>
       </div>
 
