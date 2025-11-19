@@ -311,10 +311,6 @@ export function CrudPage({
     } catch (e: any) {
       const errorMsg = normalizeSupabaseError(e);
       
-      // Silently fall back to local provider without showing error toasts in demo mode
-      const demoRole = typeof window !== "undefined" ? localStorage.getItem("demoRole") : null;
-      const isDemoMode = !!demoRole;
-      
       if (errorMsg.includes('Permission denied') || errorMsg.includes('RLS') || errorMsg.includes('not initialized')) {
         // Seamless fallback to local provider and reload
         const local = makeLocalProvider();
@@ -323,21 +319,13 @@ export function CrudPage({
           const data = await local.list();
           setItems(data);
           setError(null);
-          
-          // Only show toast if not in demo mode
-          if (!isDemoMode) {
-            toast.info("Using Demo Mode", {
-              description: "Connect Supabase in Admin Settings to use live data."
-            });
-          }
         } catch {
           setError("Failed to load data");
+          toast.error(`Failed to load ${title.toLowerCase()}`);
         }
       } else {
         setError(errorMsg);
-        if (!isDemoMode) {
-          toast.error(`Failed to load ${title.toLowerCase()}: ${errorMsg}`);
-        }
+        toast.error(`Failed to load ${title.toLowerCase()}: ${errorMsg}`);
       }
     } finally {
       setLoading(false);
@@ -466,9 +454,6 @@ export function CrudPage({
       await loadData();
     } catch (e: any) {
       const errorMsg = normalizeSupabaseError(e);
-      // Check if in demo mode
-      const demoRole = typeof window !== "undefined" ? localStorage.getItem("demoRole") : null;
-      const isDemoMode = !!demoRole;
       
       if (errorMsg.includes('Permission denied') || errorMsg.includes('RLS') || errorMsg.includes('not initialized')) {
         // Seamless fallback and retry on local
@@ -477,11 +462,11 @@ export function CrudPage({
         try {
           if (editingId) {
             await local.update(editingId, form);
-            toast.success(`${title} updated`);
+            toast.success(`${title} updated successfully`);
             setEditingId(null);
           } else {
             await local.create(form);
-            toast.success(`${title} created`);
+            toast.success(`${title} created successfully`);
           }
           await loadData();
         } catch {
@@ -505,16 +490,13 @@ export function CrudPage({
       await loadData();
     } catch (e: any) {
       const errorMsg = normalizeSupabaseError(e);
-      // Check if in demo mode
-      const demoRole = typeof window !== "undefined" ? localStorage.getItem("demoRole") : null;
-      const isDemoMode = !!demoRole;
       
       if (errorMsg.includes('Permission denied') || errorMsg.includes('RLS') || errorMsg.includes('not initialized')) {
         const local = makeLocalProvider();
         setProvider(local);
         try {
           await local.remove(id);
-          toast.success(`${title} deleted`);
+          toast.success(`${title} deleted successfully`);
           await loadData();
         } catch {
           toast.error(`Failed to delete ${title.toLowerCase()}`);
@@ -634,20 +616,18 @@ export function CrudPage({
         </div>
         <div className="flex items-center gap-2">
           {(() => {
-            const demoRole = typeof window !== "undefined" ? localStorage.getItem("demoRole") : null;
-            const isDemoMode = !!demoRole || window.location.search.includes('demo=1');
             const supabaseAvailable = !!getSupabase();
             
-            if (!isDemoMode && table && supabaseAvailable) {
+            if (table && supabaseAvailable && provider instanceof SupabaseProvider) {
               return (
                 <Badge variant="outline" className="text-xs">
-                  Realtime
+                  Live Data
                 </Badge>
               );
             } else {
               return (
                 <Badge variant="secondary" className="text-xs">
-                  Demo Mode
+                  Local Storage
                 </Badge>
               );
             }
