@@ -265,19 +265,16 @@ export function CrudPage({
 
   // Determine provider based on conditions
   const getProvider = useCallback((): StorageProvider => {
-    // Check if we're in demo mode via localStorage demoRole
-    const demoRole = typeof window !== "undefined" ? localStorage.getItem("demoRole") : null;
-    const isDemoMode = !!demoRole || window.location.search.includes('demo=1');
     const supabaseAvailable = !!getSupabase();
     
-    // Use localStorage if in demo mode OR if Supabase is not available
-    if (isDemoMode || !supabaseAvailable || !table) {
-      const key = storageKey || `crud_${title.toLowerCase().replace(/\s+/g, '_')}`;
-      return new LocalProvider(key);
+    // Always prefer Supabase if available and table is defined (regardless of demo mode)
+    if (supabaseAvailable && table) {
+      return new SupabaseProvider(table, ownerScoped);
     }
     
-    // Only use Supabase if explicitly available and not in demo mode
-    return new SupabaseProvider(table, ownerScoped);
+    // Only fall back to localStorage if Supabase is not available
+    const key = storageKey || `crud_${title.toLowerCase().replace(/\s+/g, '_')}`;
+    return new LocalProvider(key);
   }, [table, ownerScoped, storageKey, title]);
 
   // Helper to create a local provider for seamless fallback
