@@ -131,37 +131,6 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
     return "/guest";
   }
 
-  useEffect(() => {
-    if (!authLoading && isAuthenticated) {
-      console.log("[Auth] User authenticated, preparing redirect...");
-      
-      (async () => {
-        try {
-          const email = await getSupabaseUserEmail();
-          console.log("[Auth] User email:", email);
-          
-          if (email) {
-            try { localStorage.setItem("DEMO_USER_EMAIL", email); } catch {}
-            await upsertGuest(email);
-            await upsertUser(email);
-            await upsertAccount(email);
-          }
-        } catch (e) {
-          console.error("[Auth] Error upserting user data:", e);
-        }
-        
-        // Get the redirect destination
-        const dest = await getRoleRedirect();
-        console.log("[Auth] Redirecting to:", dest);
-        
-        // Small delay to ensure state is fully updated
-        setTimeout(() => {
-          navigate(dest, { replace: true });
-        }, 100);
-      })();
-    }
-  }, [authLoading, isAuthenticated, navigate]);
-
   // Add: enter demo handler
   const handleEnterDemo = () => {
     try {
@@ -231,8 +200,12 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       const formData = new FormData(event.currentTarget);
       const email = formData.get("email") as string;
       
+      console.log("[Auth] Submitting OTP for:", email);
+      
       // Perform the sign-in with OTP
       await signIn("email-otp", formData);
+
+      console.log("[Auth] OTP verification successful");
 
       // Store email for fallback
       try { localStorage.setItem("DEMO_USER_EMAIL", email); } catch {}
@@ -245,16 +218,47 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       // Success feedback
       setSessionInfo("Verification successful! Redirecting...");
       
-      // Don't navigate here - let the useEffect handle it after auth state updates
-      // The useEffect will trigger once isAuthenticated becomes true
+      // The useEffect will handle navigation once isAuthenticated becomes true
+      // Keep loading state active until redirect happens
     } catch (error) {
-      console.error("OTP verification error:", error);
+      console.error("[Auth] OTP verification error:", error);
       const errorMessage = error instanceof Error ? error.message : "The verification code you entered is incorrect.";
       setError(errorMessage);
       setIsLoading(false);
       setOtp("");
     }
   };
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      console.log("[Auth] User authenticated, preparing redirect...");
+      
+      const performRedirect = async () => {
+        try {
+          const email = await getSupabaseUserEmail();
+          console.log("[Auth] User email:", email);
+          
+          if (email) {
+            try { localStorage.setItem("DEMO_USER_EMAIL", email); } catch {}
+            await upsertGuest(email);
+            await upsertUser(email);
+            await upsertAccount(email);
+          }
+        } catch (e) {
+          console.error("[Auth] Error upserting user data:", e);
+        }
+        
+        // Get the redirect destination
+        const dest = await getRoleRedirect();
+        console.log("[Auth] Redirecting to:", dest);
+        
+        // Navigate immediately
+        navigate(dest, { replace: true });
+      };
+      
+      performRedirect();
+    }
+  }, [authLoading, isAuthenticated, navigate]);
 
   return (
     <div className="min-h-screen flex flex-col">
