@@ -228,217 +228,21 @@ export default function AdminSettings() {
 
   const setupSql = `
 -- =========================================
--- REPAIR-FIRST: Ensure all used columns exist (no renames, no drops)
--- This block only adds missing columns. It won't change table names.
--- IMPORTANT: Quote camelCase identifiers to preserve exact casing
+-- HOTELOPS CRM - COMPLETE DATABASE SCHEMA
+-- All tables for Admin, Front Desk, Housekeeping, Inventory, 
+-- Maintenance, Restaurant, Security, Transport, and Guest modules
 -- =========================================
 
--- ROOMS: unify fields used across Admin, Front Desk, Housekeeping
-alter table if exists rooms add column if not exists id text primary key;
-alter table if exists rooms add column if not exists number text;
-alter table if exists rooms add column if not exists type text;
-alter table if exists rooms add column if not exists status text;
-alter table if exists rooms add column if not exists guest text;
-alter table if exists rooms add column if not exists rate numeric;
-alter table if exists rooms add column if not exists "lastCleaned" date;
-alter table if exists rooms add column if not exists "roomType" text;
-alter table if exists rooms add column if not exists "bedType" text;
-alter table if exists rooms add column if not exists "pricePerNight" numeric;
-alter table if exists rooms add column if not exists "maxOccupancy" numeric;
-alter table if exists rooms add column if not exists "viewBalcony" text;
-alter table if exists rooms add column if not exists "floorWing" text;
-alter table if exists rooms add column if not exists amenities text;
-alter table if exists rooms add column if not exists notes text;
-alter table if exists rooms add column if not exists created_at timestamptz default now();
-
--- RESERVATIONS: fields used in FrontDeskReservations + owner scope + ID proof
-alter table if exists reservations add column if not exists id text primary key;
-alter table if exists reservations add column if not exists guestName text;
-alter table if exists reservations add column if not exists confirmation text;
-alter table if exists reservations add column if not exists "roomType" text;
-alter table if exists reservations add column if not exists "roomNumber" text;
-alter table if exists reservations add column if not exists arrival date;
-alter table if exists reservations add column if not exists departure date;
-alter table if exists reservations add column if not exists status text;
-alter table if exists reservations add column if not exists balance numeric;
-alter table if exists reservations add column if not exists source text;
-alter table if exists reservations add column if not exists notes text;
-alter table if exists reservations add column if not exists owner text;
-alter table if exists reservations add column if not exists "idProofType" text;
-alter table if exists reservations add column if not exists "idProofNumber" text;
-alter table if exists reservations add column if not exists created_at timestamptz default now();
-
--- GUESTS: add profile management fields
-alter table if exists guests add column if not exists id text primary key;
-alter table if exists guests add column if not exists name text;
-alter table if exists guests add column if not exists email text;
-alter table if exists guests add column if not exists phone text;
-alter table if exists guests add column if not exists address text;
-alter table if exists guests add column if not exists loyalty text;
-alter table if exists guests add column if not exists vip text;
-alter table if exists guests add column if not exists notes text;
-alter table if exists guests add column if not exists full_name text;
-alter table if exists guests add column if not exists "quickAccessCode" text;
-alter table if exists guests add column if not exists membership text;
-alter table if exists guests add column if not exists loyalty_points numeric default 0;
-alter table if exists guests add column if not exists created_at timestamptz default now();
-
--- HK_TASKS: fields used in HousekeepingTasks
-alter table if exists hk_tasks add column if not exists id text primary key;
-alter table if exists hk_tasks add column if not exists task text;
-alter table if exists hk_tasks add column if not exists room text;
-alter table if exists hk_tasks add column if not exists priority text;
-alter table if exists hk_tasks add column if not exists status text;
-alter table if exists hk_tasks add column if not exists assignedTo text;
-alter table if exists hk_tasks add column if not exists created_at timestamptz default now();
-
--- HK_INVENTORY
-alter table if exists hk_inventory add column if not exists id text primary key;
-alter table if exists hk_inventory add column if not exists item text;
-alter table if exists hk_inventory add column if not exists stock numeric;
-alter table if exists hk_inventory add column if not exists min numeric;
-alter table if exists hk_inventory add column if not exists created_at timestamptz default now();
-
--- RESTAURANT_MENU
-alter table if exists restaurant_menu add column if not exists id text primary key;
-alter table if exists restaurant_menu add column if not exists name text;
-alter table if exists restaurant_menu add column if not exists category text;
-alter table if exists restaurant_menu add column if not exists price numeric;
-alter table if exists restaurant_menu add column if not exists available text;
-alter table if exists restaurant_menu add column if not exists created_at timestamptz default now();
-
--- RESTAURANT_ORDERS
-alter table if exists restaurant_orders add column if not exists id text primary key;
-alter table if exists restaurant_orders add column if not exists "table" text;
-alter table if exists restaurant_orders add column if not exists items text;
-alter table if exists restaurant_orders add column if not exists total numeric;
-alter table if exists restaurant_orders add column if not exists status text;
-alter table if exists restaurant_orders add column if not exists created_at timestamptz default now();
-
--- RESTAURANT_TABLES
-alter table if exists restaurant_tables add column if not exists id text primary key;
-alter table if exists restaurant_tables add column if not exists "tableNo" text;
-alter table if exists restaurant_tables add column if not exists seats numeric;
-alter table if exists restaurant_tables add column if not exists status text;
-alter table if exists restaurant_tables add column if not exists created_at timestamptz default now();
-
--- DINING_ORDERS
-alter table if exists dining_orders add column if not exists id text primary key;
-alter table if exists dining_orders add column if not exists "order" text;
-alter table if exists dining_orders add column if not exists total numeric;
-alter table if exists dining_orders add column if not exists status text;
-alter table if exists dining_orders add column if not exists created_at timestamptz default now();
-
--- CHARGES
-alter table if exists charges add column if not exists id text primary key;
-alter table if exists charges add column if not exists date date;
-alter table if exists charges add column if not exists item text;
-alter table if exists charges add column if not exists room text;
-alter table if exists charges add column if not exists category text;
-alter table if exists charges add column if not exists amount numeric;
-alter table if exists charges add column if not exists created_at timestamptz default now();
-
--- PAYMENTS
-alter table if exists payments add column if not exists id text primary key;
-alter table if exists payments add column if not exists date date;
-alter table if exists payments add column if not exists method text;
-alter table if exists payments add column if not exists ref text;
-alter table if exists payments add column if not exists amount numeric;
-alter table if exists payments add column if not exists created_at timestamptz default now();
-
--- TRANSPORT_TRIPS
-alter table if exists transport_trips add column if not exists id text primary key;
-alter table if exists transport_trips add column if not exists tripNo text;
-alter table if exists transport_trips add column if not exists guest text;
-alter table if exists transport_trips add column if not exists "pickupTime" text;
-alter table if exists transport_trips add column if not exists status text;
-alter table if exists transport_trips add column if not exists created_at timestamptz default now();
-
--- TRANSPORT_VEHICLES
-alter table if exists transport_vehicles add column if not exists id text primary key;
-alter table if exists transport_vehicles add column if not exists plate text;
-alter table if exists transport_vehicles add column if not exists model text;
-alter table if exists transport_vehicles add column if not exists capacity numeric;
-alter table if exists transport_vehicles add column if not exists status text;
-alter table if exists transport_vehicles add column if not exists created_at timestamptz default now();
-
--- STAFF
-alter table if exists staff add column if not exists id text primary key;
-alter table if exists staff add column if not exists email text;
-alter table if exists staff add column if not exists role text;
-alter table if exists staff add column if not exists created_at timestamptz default now();
-
--- ADMIN_STAFF
-alter table if exists admin_staff add column if not exists id text primary key;
-alter table if exists admin_staff add column if not exists name text;
-alter table if exists admin_staff add column if not exists "staffId" text;
-alter table if exists admin_staff add column if not exists gender text;
-alter table if exists admin_staff add column if not exists dob date;
-alter table if exists admin_staff add column if not exists address text;
-alter table if exists admin_staff add column if not exists "emergencyContact" text;
-alter table if exists admin_staff add column if not exists email text;
-alter table if exists admin_staff add column if not exists phone text;
-alter table if exists admin_staff add column if not exists "altPhone" text;
-alter table if exists admin_staff add column if not exists role text;
-alter table if exists admin_staff add column if not exists department text;
-alter table if exists admin_staff add column if not exists "shiftTimings" text;
-alter table if exists admin_staff add column if not exists supervisor text;
-alter table if exists admin_staff add column if not exists salary numeric;
-alter table if exists admin_staff add column if not exists "joiningDate" date;
-alter table if exists admin_staff add column if not exists "contractType" text;
-alter table if exists admin_staff add column if not exists username text;
-alter table if exists admin_staff add column if not exists password text;
-alter table if exists admin_staff add column if not exists "roleAccess" text;
-alter table if exists admin_staff add column if not exists skills text;
-alter table if exists admin_staff add column if not exists documents text;
-alter table if exists admin_staff add column if not exists "assignedRoomsDepts" text;
-alter table if exists admin_staff add column if not exists status text;
-alter table if exists admin_staff add column if not exists "lastLogin" text;
-alter table if exists admin_staff add column if not exists created_at timestamptz default now();
-
 -- =========================================
--- CREATE TABLES IF MISSING (names unchanged; quote camelCase)
+-- CORE OPERATIONS TABLES
 -- =========================================
 
-create table if not exists reservations (
-  id text primary key,
-  guestName text,
-  confirmation text,
-  "roomType" text,
-  "roomNumber" text,
-  arrival date,
-  departure date,
-  status text,
-  balance numeric,
-  source text,
-  notes text,
-  owner text,
-  "idProofType" text,
-  "idProofNumber" text,
-  created_at timestamptz default now()
-);
-
-create table if not exists guests (
-  id text primary key,
-  name text,
-  email text unique,
-  phone text,
-  address text,
-  loyalty text,
-  vip text,
-  notes text,
-  full_name text,
-  "quickAccessCode" text unique,
-  membership text default 'None',
-  loyalty_points numeric default 0,
-  created_at timestamptz default now()
-);
-
+-- ROOMS: Core room management
 create table if not exists rooms (
-  id text primary key,
-  number text,
+  id text primary key default gen_random_uuid()::text,
+  number text not null unique,
   type text,
-  status text,
+  status text default 'Vacant',
   guest text,
   rate numeric,
   "lastCleaned" date,
@@ -450,109 +254,62 @@ create table if not exists rooms (
   "floorWing" text,
   amenities text,
   notes text,
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
 );
 
-create table if not exists hk_tasks (
-  id text primary key,
-  task text,
-  room text,
-  priority text,
-  status text,
-  assignedTo text,
-  created_at timestamptz default now()
+-- RESERVATIONS: Booking management with owner scope
+create table if not exists reservations (
+  id text primary key default gen_random_uuid()::text,
+  guestName text not null,
+  confirmation text unique,
+  "roomType" text,
+  "roomNumber" text,
+  arrival date not null,
+  departure date not null,
+  status text default 'Booked',
+  balance numeric default 0,
+  source text,
+  notes text,
+  owner text,
+  "idProofType" text,
+  "idProofNumber" text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
 );
 
-create table if not exists hk_inventory (
-  id text primary key,
-  item text,
-  stock numeric,
-  min numeric,
-  created_at timestamptz default now()
-);
-
-create table if not exists restaurant_menu (
-  id text primary key,
-  name text,
-  category text,
-  price numeric,
-  available text,
-  created_at timestamptz default now()
-);
-
-create table if not exists restaurant_orders (
-  id text primary key,
-  "table" text,
-  items text,
-  total numeric,
-  status text,
-  created_at timestamptz default now()
-);
-
-create table if not exists restaurant_tables (
-  id text primary key,
-  "tableNo" text,
-  seats numeric,
-  status text,
-  created_at timestamptz default now()
-);
-
-create table if not exists dining_orders (
-  id text primary key,
-  "order" text,
-  total numeric,
-  status text,
-  created_at timestamptz default now()
-);
-
-create table if not exists charges (
-  id text primary key,
-  date date,
-  item text,
-  room text,
-  category text,
-  amount numeric,
-  created_at timestamptz default now()
-);
-
-create table if not exists payments (
-  id text primary key,
-  date date,
-  method text,
-  ref text,
-  amount numeric,
-  created_at timestamptz default now()
-);
-
-create table if not exists transport_trips (
-  id text primary key,
-  tripNo text,
-  guest text,
-  "pickupTime" text,
-  status text,
-  created_at timestamptz default now()
-);
-
-create table if not exists transport_vehicles (
-  id text primary key,
-  plate text,
-  model text,
-  capacity numeric,
-  status text,
-  created_at timestamptz default now()
-);
-
-create table if not exists staff (
-  id text primary key,
+-- GUESTS: Guest profile management
+create table if not exists guests (
+  id text primary key default gen_random_uuid()::text,
+  name text not null,
   email text unique,
-  role text,
-  created_at timestamptz default now()
+  phone text,
+  address text,
+  loyalty text,
+  vip text,
+  notes text,
+  full_name text,
+  "quickAccessCode" text unique,
+  membership text default 'None',
+  loyalty_points numeric default 0,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
 );
 
+-- STAFF: User role management (auth-protected)
+create table if not exists staff (
+  id text primary key default gen_random_uuid()::text,
+  email text unique not null,
+  role text not null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- ADMIN_STAFF: Detailed staff records
 create table if not exists admin_staff (
-  id text primary key,
-  name text,
-  "staffId" text,
+  id text primary key default gen_random_uuid()::text,
+  name text not null,
+  "staffId" text unique,
   gender text,
   dob date,
   address text,
@@ -573,10 +330,380 @@ create table if not exists admin_staff (
   skills text,
   documents text,
   "assignedRoomsDepts" text,
-  status text,
+  status text default 'Active',
   "lastLogin" text,
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
 );
+
+-- ADMIN_REPORTS: System reports
+create table if not exists admin_reports (
+  id text primary key default gen_random_uuid()::text,
+  title text not null,
+  type text,
+  period text,
+  generated timestamptz default now(),
+  data text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- =========================================
+-- HOUSEKEEPING MODULE
+-- =========================================
+
+-- HK_TASKS: Housekeeping task management
+create table if not exists hk_tasks (
+  id text primary key default gen_random_uuid()::text,
+  task text not null,
+  room text,
+  priority text default 'Medium',
+  status text default 'Pending',
+  assignedTo text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- HK_INVENTORY: Housekeeping supplies
+create table if not exists hk_inventory (
+  id text primary key default gen_random_uuid()::text,
+  item text not null,
+  stock numeric default 0,
+  min numeric default 0,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- =========================================
+-- INVENTORY MODULE
+-- =========================================
+
+-- INVENTORY_ITEMS: General inventory
+create table if not exists inventory_items (
+  id text primary key default gen_random_uuid()::text,
+  name text not null,
+  category text,
+  quantity numeric default 0,
+  unit text,
+  "minStock" numeric default 0,
+  supplier text,
+  "lastOrdered" date,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- INVENTORY_ORDERS: Purchase orders
+create table if not exists inventory_orders (
+  id text primary key default gen_random_uuid()::text,
+  "orderNo" text unique,
+  supplier text,
+  items text,
+  total numeric,
+  status text default 'Pending',
+  "orderDate" date,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- INVENTORY_SUPPLIERS: Supplier management
+create table if not exists inventory_suppliers (
+  id text primary key default gen_random_uuid()::text,
+  name text not null,
+  contact text,
+  email text,
+  phone text,
+  address text,
+  category text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- =========================================
+-- MAINTENANCE MODULE
+-- =========================================
+
+-- MAINTENANCE_TICKETS: Maintenance requests
+create table if not exists maintenance_tickets (
+  id text primary key default gen_random_uuid()::text,
+  "ticketNo" text unique,
+  title text not null,
+  location text,
+  priority text default 'Medium',
+  status text default 'Open',
+  assignedTo text,
+  description text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- MAINTENANCE_ASSETS: Asset tracking
+create table if not exists maintenance_assets (
+  id text primary key default gen_random_uuid()::text,
+  name text not null,
+  "assetId" text unique,
+  category text,
+  location text,
+  status text default 'Operational',
+  "lastMaintenance" date,
+  "nextMaintenance" date,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- MAINTENANCE_SCHEDULE: Preventive maintenance
+create table if not exists maintenance_schedule (
+  id text primary key default gen_random_uuid()::text,
+  asset text,
+  task text,
+  frequency text,
+  "lastDone" date,
+  "nextDue" date,
+  assignedTo text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- =========================================
+-- RESTAURANT MODULE
+-- =========================================
+
+-- RESTAURANT_MENU: Menu items
+create table if not exists restaurant_menu (
+  id text primary key default gen_random_uuid()::text,
+  name text not null,
+  category text,
+  price numeric,
+  available text default 'Yes',
+  description text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- RESTAURANT_ORDERS: Restaurant orders
+create table if not exists restaurant_orders (
+  id text primary key default gen_random_uuid()::text,
+  "table" text,
+  items text,
+  total numeric,
+  status text default 'Pending',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- RESTAURANT_TABLES: Table management
+create table if not exists restaurant_tables (
+  id text primary key default gen_random_uuid()::text,
+  "tableNo" text unique not null,
+  seats numeric,
+  status text default 'Available',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- =========================================
+-- SECURITY MODULE
+-- =========================================
+
+-- SECURITY_INCIDENTS: Incident reports
+create table if not exists security_incidents (
+  id text primary key default gen_random_uuid()::text,
+  "incidentNo" text unique,
+  type text,
+  location text,
+  severity text default 'Low',
+  status text default 'Open',
+  description text,
+  "reportedBy" text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- SECURITY_BADGES: Access badges
+create table if not exists security_badges (
+  id text primary key default gen_random_uuid()::text,
+  "badgeNo" text unique not null,
+  holder text,
+  type text,
+  status text default 'Active',
+  issued date,
+  expires date,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- SECURITY_REPORTS: Security reports
+create table if not exists security_reports (
+  id text primary key default gen_random_uuid()::text,
+  title text not null,
+  type text,
+  date date,
+  summary text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- =========================================
+-- TRANSPORT MODULE
+-- =========================================
+
+-- TRANSPORT_VEHICLES: Vehicle fleet
+create table if not exists transport_vehicles (
+  id text primary key default gen_random_uuid()::text,
+  plate text unique not null,
+  model text,
+  capacity numeric,
+  status text default 'Available',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- TRANSPORT_TRIPS: Trip management
+create table if not exists transport_trips (
+  id text primary key default gen_random_uuid()::text,
+  tripNo text unique,
+  guest text,
+  "pickupTime" text,
+  destination text,
+  vehicle text,
+  driver text,
+  status text default 'Scheduled',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- TRANSPORT_SCHEDULE: Driver schedules
+create table if not exists transport_schedule (
+  id text primary key default gen_random_uuid()::text,
+  driver text,
+  vehicle text,
+  shift text,
+  date date,
+  status text default 'Scheduled',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- =========================================
+-- GUEST SELF-SERVICE TABLES (User-scoped)
+-- =========================================
+
+-- GUEST_BOOKINGS: Guest booking records
+create table if not exists guest_bookings (
+  id text primary key default gen_random_uuid()::text,
+  user_email text not null,
+  room_type text,
+  check_in_date date,
+  check_out_date date,
+  guests numeric,
+  status text default 'Pending',
+  total_amount numeric,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- GUEST_SERVICE_REQUESTS: Guest service requests
+create table if not exists guest_service_requests (
+  id text primary key default gen_random_uuid()::text,
+  user_email text not null,
+  service_type text not null,
+  room_number text,
+  description text,
+  priority text default 'Normal',
+  status text default 'Pending',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- GUEST_DINING_ORDERS: Guest dining orders
+create table if not exists guest_dining_orders (
+  id text primary key default gen_random_uuid()::text,
+  user_email text not null,
+  room_number text,
+  method text,
+  order_text text,
+  total numeric,
+  status text default 'Placed',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- GUEST_CHARGES: Guest billing charges
+create table if not exists guest_charges (
+  id text primary key default gen_random_uuid()::text,
+  user_email text not null,
+  date date,
+  item text,
+  room text,
+  category text,
+  amount numeric,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- GUEST_PAYMENTS: Guest payment records
+create table if not exists guest_payments (
+  id text primary key default gen_random_uuid()::text,
+  user_email text not null,
+  date date,
+  method text,
+  ref text,
+  amount numeric,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- =========================================
+-- INDEXES FOR PERFORMANCE
+-- =========================================
+
+create index if not exists idx_rooms_status on rooms(status);
+create index if not exists idx_rooms_number on rooms(number);
+create index if not exists idx_reservations_status on reservations(status);
+create index if not exists idx_reservations_owner on reservations(owner);
+create index if not exists idx_reservations_arrival on reservations(arrival);
+create index if not exists idx_guests_email on guests(email);
+create index if not exists idx_staff_email on staff(email);
+create index if not exists idx_hk_tasks_status on hk_tasks(status);
+create index if not exists idx_maintenance_tickets_status on maintenance_tickets(status);
+create index if not exists idx_security_incidents_status on security_incidents(status);
+create index if not exists idx_guest_bookings_user on guest_bookings(user_email);
+create index if not exists idx_guest_service_requests_user on guest_service_requests(user_email);
+create index if not exists idx_guest_dining_orders_user on guest_dining_orders(user_email);
+create index if not exists idx_guest_charges_user on guest_charges(user_email);
+create index if not exists idx_guest_payments_user on guest_payments(user_email);
+
+-- =========================================
+-- TRIGGERS FOR UPDATED_AT
+-- =========================================
+
+create or replace function update_updated_at_column()
+returns trigger as $
+begin
+  new.updated_at = now();
+  return new;
+end;
+$ language plpgsql;
+
+do $
+declare
+  t text;
+begin
+  for t in 
+    select table_name 
+    from information_schema.columns 
+    where column_name = 'updated_at' 
+    and table_schema = 'public'
+  loop
+    execute format('
+      drop trigger if exists update_%I_updated_at on %I;
+      create trigger update_%I_updated_at
+        before update on %I
+        for each row
+        execute function update_updated_at_column();
+    ', t, t, t, t);
+  end loop;
+end;
+$;
 `.trim();
 
   const copySql = async () => {
