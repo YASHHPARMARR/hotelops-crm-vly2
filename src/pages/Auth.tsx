@@ -8,11 +8,20 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { ROLES } from "@/convex/schema";
 
 interface AuthProps {
   redirectAfterAuth?: string;
@@ -23,10 +32,14 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
   const { signIn } = useAuthActions();
   const { isAuthenticated, user } = useAuth();
   
-  const [step, setStep] = useState<"signIn" | "signUp" | { email: string }>("signIn");
+  // OTP flow state
+  const [step, setStep] = useState<"signIn" | { email: string }>("signIn");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Demo mode state
+  const [demoRole, setDemoRole] = useState<string>("guest");
 
   // Redirect authenticated users to guest dashboard
   if (isAuthenticated && user) {
@@ -34,6 +47,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
     return null;
   }
 
+  // OTP handlers
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
@@ -68,7 +82,6 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       
       toast.success("Verified! Redirecting to your dashboard...");
       
-      // Small delay to ensure auth state updates
       setTimeout(() => {
         navigate("/guest");
       }, 500);
@@ -84,11 +97,36 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
     setCode("");
   };
 
+  // Demo mode handler
+  const handleDemoLogin = () => {
+    if (!demoRole) {
+      toast.error("Please select a role");
+      return;
+    }
+
+    localStorage.setItem("demoRole", demoRole);
+    toast.success(`Entering as ${demoRole.replace("_", " ")} (Demo Mode)`);
+    
+    const rolePathMap: Record<string, string> = {
+      admin: "/admin",
+      front_desk: "/front-desk",
+      housekeeping: "/housekeeping",
+      restaurant: "/restaurant",
+      security: "/security",
+      maintenance: "/maintenance",
+      transport: "/transport",
+      inventory: "/inventory",
+      guest: "/guest",
+    };
+
+    navigate(rolePathMap[demoRole] || "/guest");
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <div className="flex-1 flex items-center justify-center">
         <div className="flex items-center justify-center h-full flex-col">
-          <Card className="min-w-[350px] pb-0 border shadow-md">
+          <Card className="min-w-[400px] pb-0 border shadow-md">
             <CardHeader className="text-center">
               <div className="flex justify-center">
                 <img
@@ -102,75 +140,115 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
               </div>
               <CardTitle className="text-xl">Welcome to HotelOps CRM</CardTitle>
               <CardDescription>
-                {typeof step === "object"
-                  ? "Enter the verification code sent to your email"
-                  : "Sign in with your email to access your guest dashboard"}
+                Sign in with OTP or use demo mode
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {typeof step === "object" ? (
-                <form onSubmit={handleVerifyCode} className="space-y-4">
+              <Tabs defaultValue="otp" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="otp">OTP Login</TabsTrigger>
+                  <TabsTrigger value="demo">Demo Mode</TabsTrigger>
+                </TabsList>
+
+                {/* OTP Login Tab */}
+                <TabsContent value="otp" className="space-y-4">
+                  {typeof step === "object" ? (
+                    <form onSubmit={handleVerifyCode} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="code">Verification Code</Label>
+                        <Input
+                          id="code"
+                          type="text"
+                          placeholder="Enter 6-digit code"
+                          value={code}
+                          onChange={(e) => setCode(e.target.value)}
+                          maxLength={6}
+                          autoComplete="off"
+                          disabled={isLoading}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Code sent to {step.email}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleBack}
+                          disabled={isLoading}
+                          className="flex-1"
+                        >
+                          Back
+                        </Button>
+                        <Button
+                          type="submit"
+                          disabled={isLoading}
+                          className="flex-1 neon-glow"
+                        >
+                          {isLoading ? "Verifying..." : "Verify"}
+                        </Button>
+                      </div>
+                    </form>
+                  ) : (
+                    <form onSubmit={handleSendCode} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="Enter your email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          autoComplete="email"
+                          disabled={isLoading}
+                        />
+                      </div>
+                      <Button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full neon-glow"
+                      >
+                        {isLoading ? "Sending..." : "Send Verification Code"}
+                      </Button>
+                      <p className="text-xs text-muted-foreground text-center">
+                        A verification code will be sent to your email
+                      </p>
+                    </form>
+                  )}
+                </TabsContent>
+
+                {/* Demo Mode Tab */}
+                <TabsContent value="demo" className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="code">Verification Code</Label>
-                    <Input
-                      id="code"
-                      type="text"
-                      placeholder="Enter 6-digit code"
-                      value={code}
-                      onChange={(e) => setCode(e.target.value)}
-                      maxLength={6}
-                      autoComplete="off"
-                      disabled={isLoading}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Code sent to {step.email}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleBack}
-                      disabled={isLoading}
-                      className="flex-1"
-                    >
-                      Back
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={isLoading}
-                      className="flex-1 neon-glow"
-                    >
-                      {isLoading ? "Verifying..." : "Verify"}
-                    </Button>
-                  </div>
-                </form>
-              ) : (
-                <form onSubmit={handleSendCode} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="Enter your email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      autoComplete="email"
-                      disabled={isLoading}
-                    />
+                    <Label htmlFor="demo-role">Select Role</Label>
+                    <Select value={demoRole} onValueChange={setDemoRole}>
+                      <SelectTrigger id="demo-role">
+                        <SelectValue placeholder="Choose a role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={ROLES.ADMIN}>Admin</SelectItem>
+                        <SelectItem value={ROLES.FRONT_DESK}>Front Desk</SelectItem>
+                        <SelectItem value={ROLES.HOUSEKEEPING}>Housekeeping</SelectItem>
+                        <SelectItem value={ROLES.RESTAURANT}>Restaurant</SelectItem>
+                        <SelectItem value={ROLES.SECURITY}>Security</SelectItem>
+                        <SelectItem value={ROLES.MAINTENANCE}>Maintenance</SelectItem>
+                        <SelectItem value={ROLES.TRANSPORT}>Transport</SelectItem>
+                        <SelectItem value={ROLES.INVENTORY}>Inventory</SelectItem>
+                        <SelectItem value={ROLES.GUEST}>Guest</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <Button
-                    type="submit"
-                    disabled={isLoading}
+                    onClick={handleDemoLogin}
                     className="w-full neon-glow"
                   >
-                    {isLoading ? "Sending..." : "Send Verification Code"}
+                    Enter Dashboard (Demo)
                   </Button>
                   <p className="text-xs text-muted-foreground text-center">
-                    A verification code will be sent to your email
+                    Demo mode allows quick access without authentication
                   </p>
-                </form>
-              )}
+                </TabsContent>
+              </Tabs>
             </CardContent>
 
             <div className="py-4 px-6 text-xs text-center text-muted-foreground bg-muted border-t rounded-b-lg">

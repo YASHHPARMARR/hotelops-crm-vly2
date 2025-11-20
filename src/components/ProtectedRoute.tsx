@@ -20,16 +20,19 @@ export function ProtectedRoute({
   const location = useLocation();
   const { isLoading, isAuthenticated } = useAuth();
 
+  // Check for demo mode
+  const demoRole = typeof window !== "undefined" ? localStorage.getItem("demoRole") : null;
+
   // Show nothing while loading
   if (isLoading) {
     return null;
   }
 
-  // Redirect to auth if not authenticated
-  if (!isAuthenticated) {
+  // Allow access if authenticated OR in demo mode
+  if (!isAuthenticated && !demoRole) {
     return <Navigate to={fallbackPath} state={{ from: location }} replace />;
   }
 
-  // Allow access if authenticated
+  // Allow access
   return <>{children}</>;
 }
