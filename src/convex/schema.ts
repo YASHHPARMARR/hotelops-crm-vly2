@@ -433,6 +433,15 @@ const schema = defineSchema(
     })
       .index("by_user", ["userId"])
       .index("by_method", ["method"]),
+
+    // Add: Team chat messages (Convex-backed for real-time sync)
+    teamChatMessages: defineTable({
+      role: v.string(),
+      text: v.string(),
+      userId: v.optional(v.string()),
+      userName: v.optional(v.string()),
+    })
+      .index("by_role", ["role"]),
   },
   {
     schemaValidation: false,

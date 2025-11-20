@@ -42,16 +42,22 @@ export default function UserProfile() {
       const email = await getSupabaseUserEmail();
       
       if (!supabase || !email) {
+        console.log("Supabase not configured or no email, using defaults");
+        setProfile({ email: email || user?.email || "" });
         setLoading(false);
         return;
       }
 
       // Try to fetch from guests table first
-      const { data: guestData } = await supabase
+      const { data: guestData, error: guestError } = await supabase
         .from("guests")
         .select("*")
         .eq("email", email)
         .maybeSingle();
+
+      if (guestError) {
+        console.error("Error fetching guest profile:", guestError);
+      }
 
       if (guestData) {
         setProfile({
@@ -66,11 +72,15 @@ export default function UserProfile() {
         });
       } else {
         // Try accounts table
-        const { data: accountData } = await supabase
+        const { data: accountData, error: accountError } = await supabase
           .from("accounts")
           .select("*")
           .eq("email", email)
           .maybeSingle();
+
+        if (accountError) {
+          console.error("Error fetching account profile:", accountError);
+        }
 
         if (accountData) {
           setProfile({
@@ -78,12 +88,16 @@ export default function UserProfile() {
             email: accountData.email || email,
             role: accountData.role,
           });
+        } else {
+          // No profile found, use email only
+          setProfile({ email });
         }
       }
 
       setLoading(false);
     } catch (err) {
       console.error("Error fetching profile:", err);
+      toast.error("Failed to load profile");
       setLoading(false);
     }
   }
@@ -95,7 +109,7 @@ export default function UserProfile() {
       const email = await getSupabaseUserEmail();
       
       if (!supabase || !email) {
-        toast.error("Database not configured");
+        toast.error("Database not configured. Please connect Supabase in Admin Settings.");
         setSaving(false);
         return;
       }
@@ -106,29 +120,37 @@ export default function UserProfile() {
         quickAccessCode = `QA-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
       }
 
-      // Update guests table
-      const { error } = await supabase
+      // Update guests table with proper error handling
+      const { data, error } = await supabase
         .from("guests")
         .upsert({
           email: email,
-          full_name: profile.full_name,
-          phone: profile.phone,
-          address: profile.address,
+          full_name: profile.full_name || null,
+          phone: profile.phone || null,
+          address: profile.address || null,
           quickAccessCode: quickAccessCode,
           membership: profile.membership || "None",
           loyalty_points: profile.loyalty_points || 0,
+          updated_at: new Date().toISOString(),
         }, {
           onConflict: "email",
-        });
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase update error:", error);
+        throw new Error(error.message || "Failed to update profile");
+      }
 
       setProfile({ ...profile, quickAccessCode });
-      toast.success("Profile updated successfully");
-      fetchProfile();
-    } catch (err) {
+      toast.success("Profile updated successfully!");
+      
+      // Refresh profile data
+      await fetchProfile();
+    } catch (err: any) {
       console.error("Error saving profile:", err);
-      toast.error("Failed to update profile");
+      toast.error(err?.message || "Failed to update profile. Please check your database connection.");
     } finally {
       setSaving(false);
     }

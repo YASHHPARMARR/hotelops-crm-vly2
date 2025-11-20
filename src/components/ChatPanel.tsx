@@ -9,39 +9,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-type Message = {
-  id: string;
-  role: string;
-  text: string;
-  at: number;
-};
-
-const STORAGE_KEY = "team_chat";
-
-function load(): Message[] {
-  try {
-    const v = localStorage.getItem(STORAGE_KEY);
-    if (!v) return [];
-    const parsed = JSON.parse(v);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-function save(v: Message[]) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(v));
-  } catch {
-    // ignore
-  }
-}
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 export function ChatPanel() {
+  const { user } = useAuth();
   const [role, setRole] = useState<string>("Front Desk");
   const [text, setText] = useState<string>("");
-  const [messages, setMessages] = useState<Message[]>(() => load());
   const endRef = useRef<HTMLDivElement | null>(null);
+
+  const messages = useQuery(api.chat.listMessages);
+  const sendMessage = useMutation(api.chat.sendMessage);
 
   const roles = useMemo(
     () => [
@@ -60,24 +41,25 @@ export function ChatPanel() {
   );
 
   useEffect(() => {
-    save(messages);
-  }, [messages]);
-
-  useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length]);
+  }, [messages?.length]);
 
-  function send() {
+  async function send() {
     const t = text.trim();
     if (!t) return;
-    const msg: Message = {
-      id: crypto.randomUUID(),
-      role: role,
-      text: t,
-      at: Date.now(),
-    };
-    setMessages((prev) => [...prev, msg]);
-    setText("");
+    
+    try {
+      await sendMessage({
+        role: role,
+        text: t,
+        userId: user?.email || undefined,
+        userName: (user as any)?.full_name || user?.email || "Anonymous",
+      });
+      setText("");
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      toast.error("Failed to send message");
+    }
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -108,25 +90,34 @@ export function ChatPanel() {
               </SelectContent>
             </Select>
             <div className="text-xs text-muted-foreground">
-              Messages are shared across all departments (local demo).
+              Real-time team communication across all departments.
             </div>
           </div>
 
           <div className="flex-1 border rounded-md p-3 overflow-y-auto bg-background/50">
-            {messages.length === 0 ? (
+            {!messages ? (
+              <div className="h-full flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : messages.length === 0 ? (
               <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
                 No messages yet. Start the conversation!
               </div>
             ) : (
               <div className="space-y-2">
                 {messages.map((m) => (
-                  <div key={m.id} className="flex flex-col">
+                  <div key={m._id} className="flex flex-col">
                     <div className="flex items-center gap-2">
                       <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
                         {m.role}
                       </span>
+                      {m.userName && (
+                        <span className="text-xs text-muted-foreground">
+                          {m.userName}
+                        </span>
+                      )}
                       <span className="text-[10px] text-muted-foreground">
-                        {new Date(m.at).toLocaleString()}
+                        {new Date(m._creationTime).toLocaleString()}
                       </span>
                     </div>
                     <div className="mt-1 rounded-md bg-muted px-3 py-2 text-sm">
