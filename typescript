@@ -1,0 +1,13 @@
+{
+  key: "roomNumber",
+  label: "Room Number",
+  type: "select",
+  required: true,
+  dynamicOptions: {
+    table: "rooms",
+    valueField: "number",
+    labelField: "number",
+    filters: [{ column: "status", op: "ilike", value: "available" }],
+    orderBy: { column: "number", ascending: true },
+  },
+}

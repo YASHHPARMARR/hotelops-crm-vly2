@@ -49,7 +49,7 @@ export default function AdminReservations() {
                     table: "rooms",
                     valueField: "number",
                     labelField: "number",
-                    filters: [{ column: "status", op: "ilike", value: "available" }],
+                    filters: [{ column: "status", op: "eq", value: "available" }],
                     orderBy: { column: "number", ascending: true },
                   },
                 },
