@@ -40,12 +40,7 @@ export function ChatPanel() {
     return roleMap[effectiveRole] || "Staff";
   };
   
-  const [role, setRole] = useState<string>(getUserRole());
-  
-  // Update role when user changes
-  useEffect(() => {
-    setRole(getUserRole());
-  }, [user]);
+  const role = getUserRole(); // Auto-detect role, no state needed
   const [text, setText] = useState<string>("");
   const endRef = useRef<HTMLDivElement | null>(null);
 
@@ -105,18 +100,10 @@ export function ChatPanel() {
       <CardContent>
         <div className="flex flex-col h-[420px]">
           <div className="flex items-center gap-2 mb-3">
-            <Select value={role} onValueChange={setRole}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Select role" />
-              </SelectTrigger>
-              <SelectContent>
-                {roles.map((r) => (
-                  <SelectItem key={r} value={r}>
-                    {r}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-primary/10 border border-primary/20">
+              <span className="text-xs font-medium text-primary">Your Role:</span>
+              <span className="text-sm font-semibold text-foreground">{role}</span>
+            </div>
             <div className="text-xs text-muted-foreground">
               Real-time team communication across all departments.
             </div>
