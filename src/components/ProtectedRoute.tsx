@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Role } from "@/convex/schema";
 import { Navigate, useLocation } from "react-router";
+import { useAuth } from "@/hooks/use-auth";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -17,15 +18,18 @@ export function ProtectedRoute({
   fallbackPath = "/auth" 
 }: ProtectedRouteProps) {
   const location = useLocation();
+  const { isLoading, isAuthenticated } = useAuth();
 
-  // Check for demo role in localStorage
-  const demoRole = typeof window !== "undefined" ? localStorage.getItem("demoRole") : null;
+  // Show nothing while loading
+  if (isLoading) {
+    return null;
+  }
 
-  // If no demo role is set, redirect to auth page
-  if (!demoRole) {
+  // Redirect to auth if not authenticated
+  if (!isAuthenticated) {
     return <Navigate to={fallbackPath} state={{ from: location }} replace />;
   }
 
-  // Allow access if demo role exists
+  // Allow access if authenticated
   return <>{children}</>;
 }
