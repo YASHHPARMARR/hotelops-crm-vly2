@@ -220,7 +220,7 @@ export default function GuestServices() {
         .from("guest_service_requests")
         .select("*")
         .eq("user_email", email)
-        .order("requested_at", { ascending: false });
+        .order("created_at", { ascending: false });
       if (error) throw error;
       const mapped = (data || []).map((r: any) => ({
         _id: r.id,
@@ -228,7 +228,7 @@ export default function GuestServices() {
         description: r.description,
         eta: r.eta,
         status: r.status,
-        requestedAt: r.requested_at,
+        requestedAt: r.created_at,
       }));
       setRequests(mapped);
     } catch (e: any) {
@@ -298,7 +298,6 @@ export default function GuestServices() {
       description: args.description ?? "",
       eta: args.eta,
       status,
-      requested_at: new Date().toISOString(),
     });
     if (error) throw error;
     await loadRequests();
@@ -370,7 +369,6 @@ export default function GuestServices() {
             description: "2 shirts, 1 trouser",
             eta: "6 pm",
             status: "Requested",
-            requested_at: new Date(now - 90 * 60 * 1000).toISOString(),
           },
           {
             user_email: email,
@@ -378,7 +376,6 @@ export default function GuestServices() {
             description: "",
             eta: "15 min",
             status: "In Progress",
-            requested_at: new Date(now - 30 * 60 * 1000).toISOString(),
           },
         ]);
         await loadBookings();
