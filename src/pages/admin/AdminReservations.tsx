@@ -17,7 +17,7 @@ export default function AdminReservations() {
           <CardContent>
             <CrudPage
               title="Reservations"
-              description="Manage hotel reservations and bookings."
+              description="Manage hotel reservations and bookings. Room status updates automatically."
               table="reservations"
               columns={[
                 {

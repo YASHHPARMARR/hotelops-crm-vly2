@@ -217,6 +217,96 @@ class SupabaseProvider implements StorageProvider {
   }
 }
 
+// Add helper functions for reservation cascading updates
+async function handleReservationRoomCreate(reservationData: Record<string, any>) {
+  const supabase = getSupabase();
+  if (!supabase || !reservationData.roomNumber) return;
+
+  try {
+    const newRoomStatus = reservationData.status === "CheckedIn" ? "Occupied" : "Reserved";
+    await supabase
+      .from("rooms")
+      .update({ status: newRoomStatus })
+      .eq("number", reservationData.roomNumber);
+  } catch (error) {
+    console.error("Failed to update room status:", error);
+  }
+}
+
+async function handleReservationRoomUpdate(reservationId: string, updatedData: Record<string, any>) {
+  const supabase = getSupabase();
+  if (!supabase) return;
+
+  try {
+    // Get existing reservation
+    const { data: existingReservation } = await supabase
+      .from("reservations")
+      .select("*")
+      .eq("id", reservationId)
+      .single();
+
+    if (!existingReservation) return;
+
+    // If room number changed, free old room and reserve new one
+    if (updatedData.roomNumber && updatedData.roomNumber !== existingReservation.roomNumber) {
+      await supabase
+        .from("rooms")
+        .update({ status: "Vacant" })
+        .eq("number", existingReservation.roomNumber);
+
+      const newRoomStatus = updatedData.status === "CheckedIn" ? "Occupied" : "Reserved";
+      await supabase
+        .from("rooms")
+        .update({ status: newRoomStatus })
+        .eq("number", updatedData.roomNumber);
+    } 
+    // If status changed, update room accordingly
+    else if (updatedData.status && updatedData.status !== existingReservation.status) {
+      let roomStatus = "Vacant";
+      if (updatedData.status === "CheckedIn") roomStatus = "Occupied";
+      else if (updatedData.status === "Booked") roomStatus = "Reserved";
+
+      await supabase
+        .from("rooms")
+        .update({ status: roomStatus })
+        .eq("number", existingReservation.roomNumber);
+    }
+
+    // If checked out or cancelled, free the room
+    if (updatedData.status === "CheckedOut" || updatedData.status === "Cancelled") {
+      await supabase
+        .from("rooms")
+        .update({ status: "Vacant" })
+        .eq("number", existingReservation.roomNumber);
+    }
+  } catch (error) {
+    console.error("Failed to update room status:", error);
+  }
+}
+
+async function handleReservationDelete(reservationId: string) {
+  const supabase = getSupabase();
+  if (!supabase) return;
+
+  try {
+    // Get reservation to free up the room
+    const { data: reservation } = await supabase
+      .from("reservations")
+      .select("*")
+      .eq("id", reservationId)
+      .single();
+
+    if (reservation?.roomNumber) {
+      await supabase
+        .from("rooms")
+        .update({ status: "Vacant" })
+        .eq("number", reservation.roomNumber);
+    }
+  } catch (error) {
+    console.error("Failed to free room on reservation delete:", error);
+  }
+}
+
 export interface CrudPageProps {
   title: string;
   description?: string;
@@ -435,10 +525,22 @@ export function CrudPage({
 
       if (editingId) {
         await provider.update(editingId, form);
+        
+        // Handle cascading updates for reservations
+        if (table === "reservations" && form.roomNumber) {
+          await handleReservationRoomUpdate(editingId, form);
+        }
+        
         toast.success(`${title} updated successfully`);
         setEditingId(null);
       } else {
         await provider.create(form);
+        
+        // Handle cascading updates for reservations
+        if (table === "reservations" && form.roomNumber) {
+          await handleReservationRoomCreate(form);
+        }
+        
         toast.success(`${title} created successfully`);
       }
       
@@ -486,6 +588,11 @@ export function CrudPage({
 
   const handleDelete = async (id: string) => {
     try {
+      // Handle cascading deletes for reservations
+      if (table === "reservations") {
+        await handleReservationDelete(id);
+      }
+      
       await provider.remove(id);
       toast.success(`${title} deleted successfully`);
       await loadData();

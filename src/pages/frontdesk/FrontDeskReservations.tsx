@@ -6,7 +6,7 @@ export default function FrontDeskReservations() {
     <AdminShell>
       <CrudPage
         title="Reservations"
-        description="Manage hotel reservations and bookings."
+        description="Manage hotel reservations and bookings. Room status updates automatically."
         table="reservations"
         columns={[
           {
@@ -38,7 +38,7 @@ export default function FrontDeskReservations() {
               table: "rooms",
               valueField: "number",
               labelField: "number",
-                    filters: [{ column: "status", op: "eq", value: "Vacant" }],
+              filters: [{ column: "status", op: "eq", value: "Vacant" }],
               orderBy: { column: "number", ascending: true },
               limit: 1000,
               debug: true,
