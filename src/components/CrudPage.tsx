@@ -107,7 +107,6 @@ class SupabaseProvider implements StorageProvider {
     if (!this.supabase) throw new Error("Supabase not initialized");
     
     try {
-      // Do NOT force client-side id for Supabase; let DB defaults handle it
       const newRow: Record<string, any> = { ...row };
       
       if (this.ownerScoped) {
@@ -122,9 +121,10 @@ class SupabaseProvider implements StorageProvider {
         newRow.id = crypto.randomUUID();
       }
 
-      // Drop only empty-string fields; do not strip columns reported missing
+      // Only drop undefined values; keep empty strings and null as they are valid data
+      // This prevents the database from inserting null when we want empty strings
       const cleaned: Record<string, any> = Object.fromEntries(
-        Object.entries(newRow).filter(([_, v]) => v !== "" && v !== undefined)
+        Object.entries(newRow).filter(([_, v]) => v !== undefined)
       );
 
       const { data, error } = await this.supabase!
