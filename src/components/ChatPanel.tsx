@@ -17,7 +17,35 @@ import { Loader2 } from "lucide-react";
 
 export function ChatPanel() {
   const { user } = useAuth();
-  const [role, setRole] = useState<string>("Front Desk");
+  
+  // Get user's actual role from auth or demo mode
+  const getUserRole = (): string => {
+    const userRole = (user as any)?.role as string | undefined;
+    const demoRole = typeof window !== "undefined" ? localStorage.getItem("demoRole") : null;
+    const effectiveRole = userRole || demoRole || "guest";
+    
+    // Map role to display name
+    const roleMap: Record<string, string> = {
+      admin: "Admin",
+      front_desk: "Front Desk",
+      housekeeping: "Housekeeping",
+      restaurant: "Restaurant",
+      security: "Security",
+      maintenance: "Maintenance",
+      transport: "Transport",
+      inventory: "Inventory",
+      guest: "Staff",
+    };
+    
+    return roleMap[effectiveRole] || "Staff";
+  };
+  
+  const [role, setRole] = useState<string>(getUserRole());
+  
+  // Update role when user changes
+  useEffect(() => {
+    setRole(getUserRole());
+  }, [user]);
   const [text, setText] = useState<string>("");
   const endRef = useRef<HTMLDivElement | null>(null);
 
