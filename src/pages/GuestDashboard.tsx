@@ -28,7 +28,7 @@ export default function GuestDashboard() {
         const { count, error } = await s
           .from("rooms")
           .select("id", { count: "exact", head: true })
-          .eq("status", "Available");
+          .eq("status", "Vacant");
         if (error) throw error;
         if (!cancelled) setAvailableRooms(count ?? 0);
       } catch {
