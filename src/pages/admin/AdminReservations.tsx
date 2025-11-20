@@ -51,6 +51,8 @@ export default function AdminReservations() {
                     labelField: "number",
                     filters: [{ column: "status", op: "eq", value: "available" }],
                     orderBy: { column: "number", ascending: true },
+                    limit: 1000,
+                    debug: true,
                   },
                 },
                 { key: "arrival", label: "Arrival", type: "date", required: true },

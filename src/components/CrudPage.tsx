@@ -238,6 +238,7 @@ export interface CrudPageProps {
       filters?: Array<{ column: string; op: "eq" | "neq" | "gte" | "lte" | "in" | "ilike"; value: any }>;
       orderBy?: { column: string; ascending?: boolean };
       limit?: number;
+      debug?: boolean; // Add debug flag to log results
     };
   }>;
   table?: string; // Supabase table name
@@ -367,7 +368,12 @@ export function CrudPage({
       if (cfg.orderBy) {
         q = q.order(cfg.orderBy.column, { ascending: cfg.orderBy.ascending ?? true });
       }
-      if (cfg.limit) q = q.limit(cfg.limit);
+      // Remove default limit or increase it significantly
+      if (cfg.limit) {
+        q = q.limit(cfg.limit);
+      } else {
+        q = q.limit(1000); // Default to 1000 if no limit specified
+      }
 
       const { data, error } = await q;
       if (error) throw error;
@@ -378,9 +384,14 @@ export function CrudPage({
         return { value, label };
       }).filter(opt => opt.value !== "");
 
+      // Debug logging if enabled
+      if (cfg.debug) {
+        console.log(`[CrudPage] Loaded ${opts.length} options for ${columnKey}:`, opts);
+      }
+
       setDynamicOptionsMap(prev => ({ ...prev, [columnKey]: opts }));
-    } catch {
-      // fail silently
+    } catch (e) {
+      console.error(`[CrudPage] Error loading dynamic options for ${columnKey}:`, e);
     }
   }, [columns]);
 
