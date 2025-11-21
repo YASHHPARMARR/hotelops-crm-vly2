@@ -42,7 +42,6 @@ type Booking = {
   id: string;
   checkIn: string; // yyyy-mm-dd
   checkOut: string; // yyyy-mm-dd
-  nights: number;
   roomType: "Single" | "Double" | "Deluxe" | "Suite";
   guests: number;
   amount: number;
@@ -196,7 +195,6 @@ export default function GuestServices() {
         checkOutDate: r.check_out_date,
         roomType: r.room_type,
         guests: r.guests,
-        nights: r.nights,
         amount: r.total_amount,
         status: r.status,
         createdAt: r.created_at,
@@ -248,7 +246,6 @@ export default function GuestServices() {
     checkOutDate: string;
     roomType: string;
     guests: number;
-    nights: number;
     amount: number;
   }) => {
     const s = getSupabase();
@@ -260,7 +257,6 @@ export default function GuestServices() {
       check_out_date: args.checkOutDate,
       room_type: args.roomType,
       guests: args.guests,
-      nights: args.nights,
       total_amount: args.amount,
       status: "Confirmed",
       created_at: new Date().toISOString(),
@@ -345,7 +341,6 @@ export default function GuestServices() {
             check_out_date: new Date(now + 3 * 24 * 3600 * 1000).toISOString().slice(0, 10),
             room_type: "Deluxe",
             guests: 2,
-            nights: 2,
             total_amount: 320,
             status: "Confirmed",
             created_at: new Date(now - 60 * 60 * 1000).toISOString(),
@@ -356,7 +351,6 @@ export default function GuestServices() {
             check_out_date: new Date(now + 9 * 24 * 3600 * 1000).toISOString().slice(0, 10),
             room_type: "Suite",
             guests: 3,
-            nights: 3,
             total_amount: 720,
             status: "Pending",
             created_at: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
@@ -444,7 +438,6 @@ export default function GuestServices() {
         checkOutDate: bookingForm.checkOut,
         roomType: bookingForm.roomType,
         guests: bookingForm.guests,
-        nights,
         amount,
       });
       toast.success("Stay booked successfully");
@@ -690,37 +683,40 @@ export default function GuestServices() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {bookings.map((b: any) => (
-                    <motion.div
-                      key={b._id}
-                      initial={{ opacity: 0, y: 8 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.2 }}
-                      className="flex flex-col md:flex-row md:items-center gap-3 rounded-lg border border-border/60 bg-card/60 p-3"
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <div className="font-medium text-foreground">
-                            {b.roomType} • {b.guests} {b.guests > 1 ? "guests" : "guest"}
+                  {bookings.map((b: any) => {
+                    const nights = diffNights(b.checkInDate, b.checkOutDate);
+                    return (
+                      <motion.div
+                        key={b._id}
+                        initial={{ opacity: 0, y: 8 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.2 }}
+                        className="flex flex-col md:flex-row md:items-center gap-3 rounded-lg border border-border/60 bg-card/60 p-3"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <div className="font-medium text-foreground">
+                              {b.roomType} • {b.guests} {b.guests > 1 ? "guests" : "guest"}
+                            </div>
+                            <Badge className={bookingStatusBadgeClass(b.status)}>{b.status}</Badge>
                           </div>
-                          <Badge className={bookingStatusBadgeClass(b.status)}>{b.status}</Badge>
+                          <div className="text-xs text-muted-foreground">
+                            {b.checkInDate} → {b.checkOutDate} • {nights} night{nights !== 1 ? "s" : ""} • Booked{" "}
+                            {new Date(b.createdAt).toLocaleString()}
+                          </div>
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {b.checkInDate} → {b.checkOutDate} • {b.nights} night{b.nights !== 1 ? "s" : ""} • Booked{" "}
-                          {new Date(b.createdAt).toLocaleString()}
+                        <div className="flex items-center gap-2 md:justify-end">
+                          <Badge variant="secondary">Total: ${b.amount}</Badge>
+                          {b.status !== "Cancelled" && (
+                            <Button size="sm" variant="destructive" onClick={() => cancelBooking(b._id)}>
+                              Cancel
+                            </Button>
+                          )}
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2 md:justify-end">
-                        <Badge variant="secondary">Total: ${b.amount}</Badge>
-                        {b.status !== "Cancelled" && (
-                          <Button size="sm" variant="destructive" onClick={() => cancelBooking(b._id)}>
-                            Cancel
-                          </Button>
-                        )}
-                      </div>
-                    </motion.div>
-                  ))}
+                      </motion.div>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
