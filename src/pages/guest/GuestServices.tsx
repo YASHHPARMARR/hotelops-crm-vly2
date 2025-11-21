@@ -21,6 +21,15 @@ import { useMemo, useState, type ComponentType, useEffect } from "react";
 import { getSupabase, getSupabaseUserEmail } from "@/lib/supabaseClient";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 type ServiceItem = {
   id: string;
@@ -143,6 +152,7 @@ export default function GuestServices() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [requests, setRequests] = useState<any[]>([]);
   const [availableRooms, setAvailableRooms] = useState<number>(0);
+  const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
 
   async function loadAvailableRooms(roomType?: string) {
     try {
@@ -440,7 +450,8 @@ export default function GuestServices() {
         guests: bookingForm.guests,
         amount,
       });
-      toast.success("Stay booked successfully");
+      toast.success("Booking request submitted for confirmation");
+      setBookingDialogOpen(false);
     } catch (e: any) {
       toast.error(e?.message ?? "Failed to book");
     }
@@ -574,8 +585,8 @@ export default function GuestServices() {
             <div className="absolute -top-24 -right-16 w-72 h-72 bg-primary/10 blur-3xl rounded-full" />
             <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-accent/10 blur-3xl rounded-full" />
           </div>
-          <div className="relative p-6 md:p-8 grid lg:grid-cols-2 gap-6 items-stretch">
-            <div className="space-y-3">
+          <div className="relative p-6 md:p-8 grid lg:grid-cols-2 gap-6 items-center">
+            <div className="space-y-4">
               <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
                 <Sparkles className="h-4 w-4 text-primary" />
                 Book Your Stay
@@ -584,79 +595,106 @@ export default function GuestServices() {
                 Reserve a beautiful room with ease
               </h1>
               <p className="text-muted-foreground">
-                Select your dates, room type, and guests. Your reservation is saved instantly.
+                Select your dates, room type, and guests. Submit your booking request for confirmation from our team.
               </p>
-              <div className="grid sm:grid-cols-2 gap-3 pt-2">
-                <div className="grid gap-1">
-                  <div className="text-xs text-muted-foreground">Check-in</div>
-                  <input
-                    type="date"
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    value={bookingForm.checkIn}
-                    onChange={(e) =>
-                      setBookingForm((f) => ({ ...f, checkIn: e.target.value }))
-                    }
-                  />
-                </div>
-                <div className="grid gap-1">
-                  <div className="text-xs text-muted-foreground">Check-out</div>
-                  <input
-                    type="date"
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    value={bookingForm.checkOut}
-                    onChange={(e) =>
-                      setBookingForm((f) => ({ ...f, checkOut: e.target.value }))
-                    }
-                  />
-                </div>
-                <div className="grid gap-1">
-                  <div className="text-xs text-muted-foreground">Room Type</div>
-                  <select
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    value={bookingForm.roomType}
-                    onChange={(e) =>
-                      setBookingForm((f) => ({
-                        ...f,
-                        roomType: e.target.value as Booking["roomType"],
-                      }))
-                    }
-                  >
-                    <option value="Single">Single</option>
-                    <option value="Double">Double</option>
-                    <option value="Deluxe">Deluxe</option>
-                    <option value="Suite">Suite</option>
-                  </select>
-                </div>
-                <div className="grid gap-1">
-                  <div className="text-xs text-muted-foreground">Guests</div>
-                  <input
-                    type="number"
-                    min={1}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    value={bookingForm.guests}
-                    onChange={(e) =>
-                      setBookingForm((f) => ({
-                        ...f,
-                        guests: Number(e.target.value || 1),
-                      }))
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                <Badge variant="secondary">Available {bookingForm.roomType} Rooms: {availableRooms}</Badge>
-                <Badge variant="secondary">Nights: {formNights}</Badge>
-                <Badge variant="secondary">
-                  Rate: ${PRICE_PER_NIGHT[bookingForm.roomType]}/night
-                </Badge>
-                <Badge className="bg-primary/15 text-primary">Total: ${formAmount}</Badge>
-              </div>
-
               <div className="pt-2">
-                <Button className="neon-glow" onClick={addBooking}>
-                  Reserve Now
-                </Button>
+                <Dialog open={bookingDialogOpen} onOpenChange={setBookingDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="neon-glow" size="lg">
+                      Request Booking
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                      <DialogTitle>Book Your Stay</DialogTitle>
+                      <DialogDescription>
+                        Fill in your booking details. Our team will review and confirm your reservation.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="grid gap-2">
+                          <label className="text-sm font-medium">Check-in Date</label>
+                          <input
+                            type="date"
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            value={bookingForm.checkIn}
+                            onChange={(e) =>
+                              setBookingForm((f) => ({ ...f, checkIn: e.target.value }))
+                            }
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <label className="text-sm font-medium">Check-out Date</label>
+                          <input
+                            type="date"
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            value={bookingForm.checkOut}
+                            onChange={(e) =>
+                              setBookingForm((f) => ({ ...f, checkOut: e.target.value }))
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className="grid gap-2">
+                        <label className="text-sm font-medium">Room Type</label>
+                        <select
+                          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          value={bookingForm.roomType}
+                          onChange={(e) =>
+                            setBookingForm((f) => ({
+                              ...f,
+                              roomType: e.target.value as Booking["roomType"],
+                            }))
+                          }
+                        >
+                          <option value="Single">Single - $80/night</option>
+                          <option value="Double">Double - $110/night</option>
+                          <option value="Deluxe">Deluxe - $160/night</option>
+                          <option value="Suite">Suite - $240/night</option>
+                        </select>
+                      </div>
+                      <div className="grid gap-2">
+                        <label className="text-sm font-medium">Number of Guests</label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={6}
+                          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          value={bookingForm.guests}
+                          onChange={(e) =>
+                            setBookingForm((f) => ({
+                              ...f,
+                              guests: Number(e.target.value || 1),
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className="rounded-lg bg-muted/50 p-4 space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Duration:</span>
+                          <span className="font-medium">{formNights} night{formNights !== 1 ? "s" : ""}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Rate per night:</span>
+                          <span className="font-medium">${PRICE_PER_NIGHT[bookingForm.roomType]}</span>
+                        </div>
+                        <div className="flex justify-between text-base font-semibold pt-2 border-t border-border">
+                          <span>Estimated Total:</span>
+                          <span className="text-primary">${formAmount}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setBookingDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button className="neon-glow" onClick={addBooking}>
+                        Submit Request
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
             <img
