@@ -595,8 +595,13 @@ create table if not exists guest_bookings (
   check_in_date date,
   check_out_date date,
   guests numeric,
+  nights numeric,
   status text default 'Pending',
   total_amount numeric,
+  eta text,
+  label text,
+  requested text,
+  description text,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
