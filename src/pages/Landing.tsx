@@ -639,7 +639,7 @@ export default function Landing() {
                             <div className="mt-2 aspect-video rounded-lg overflow-hidden border border-indigo-500/20">
                               <iframe
                                 className="w-full h-full"
-                                src="https://sketchfab.com/models/11fa3ac64ef64cc0a6208e54d792f2d3/embed"
+                                src="https://sketchfab.com/models/eacbfbcbd4574d3fa4e2e7abcef6880d/embed"
                                 title="Room 360 preview"
                                 allow="autoplay; fullscreen; xr-spatial-tracking"
                                 allowFullScreen
@@ -920,7 +920,7 @@ export default function Landing() {
               <iframe
                 title="Grand Horizon Lobby Tour"
                 className="w-full h-full transition-transform duration-500 group-hover:scale-[1.02]"
-                src="https://sketchfab.com/models/11fa3ac64ef64cc0a6208e54d792f2d3/embed"
+                src="https://sketchfab.com/models/eacbfbcbd4574d3fa4e2e7abcef6880d/embed"
                 allow="autoplay; fullscreen; xr-spatial-tracking"
                 allowFullScreen
                 frameBorder={0}
@@ -942,7 +942,7 @@ export default function Landing() {
               <iframe
                 title="Presidential Suite Tour"
                 className="w-full h-full transition-transform duration-500 group-hover:scale-[1.02]"
-                src="https://sketchfab.com/models/11fa3ac64ef64cc0a6208e54d792f2d3/embed"
+                src="https://sketchfab.com/models/eacbfbcbd4574d3fa4e2e7abcef6880d/embed"
                 allow="autoplay; fullscreen; xr-spatial-tracking"
                 allowFullScreen
                 frameBorder={0}
