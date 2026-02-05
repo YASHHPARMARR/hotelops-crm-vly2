@@ -49,7 +49,9 @@ export default function AdminReservations() {
                     table: "rooms",
                     valueField: "number",
                     labelField: "number",
-                    filters: [{ column: "status", op: "eq", value: "Vacant" }],
+                    filters: [
+                      { column: "status", op: "in", value: "(Vacant,Available)" }
+                    ],
                     orderBy: { column: "number", ascending: true },
                     limit: 1000,
                     debug: true,

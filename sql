@@ -1,218 +1,174 @@
--- =========================================
--- GUEST DASHBOARD - COMPLETE SQL SCHEMA
--- Run this in Supabase SQL Editor
--- =========================================
+-- Complete Supabase Schema for HotelOps CRM
+-- Run this in your Supabase SQL Editor
 
--- Drop existing tables if you want a fresh start (CAUTION: deletes data)
--- drop table if exists guest_bookings cascade;
--- drop table if exists guest_service_requests cascade;
--- drop table if exists guest_dining_orders cascade;
--- drop table if exists guest_charges cascade;
--- drop table if exists guest_payments cascade;
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- GUEST_BOOKINGS: Guest booking records
-create table if not exists guest_bookings (
-  id text primary key default gen_random_uuid()::text,
-  user_email text not null,
-  room_type text,
-  check_in_date date,
-  check_out_date date,
-  guests numeric,
-  nights numeric,
-  status text default 'Pending',
-  total_amount numeric,
-  eta text,
-  label text,
-  requested text,
-  description text,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
+-- Core Tables
+CREATE TABLE IF NOT EXISTS rooms (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  number TEXT NOT NULL UNIQUE,
+  roomType TEXT NOT NULL,
+  bedType TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Available',
+  pricePerNight NUMERIC NOT NULL,
+  maxOccupancy INTEGER NOT NULL,
+  viewBalcony TEXT,
+  floorWing TEXT,
+  amenities TEXT,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- GUEST_SERVICE_REQUESTS: Guest service requests
-create table if not exists guest_service_requests (
-  id text primary key default gen_random_uuid()::text,
-  user_email text not null,
-  service_type text not null,
-  room_number text,
-  description text,
-  priority text default 'Normal',
-  status text default 'Pending',
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
+CREATE TABLE IF NOT EXISTS reservations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  guestName TEXT NOT NULL,
+  idProofType TEXT NOT NULL,
+  idProofNumber TEXT NOT NULL,
+  roomType TEXT NOT NULL,
+  roomNumber TEXT NOT NULL,
+  arrival DATE NOT NULL,
+  departure DATE NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Booked',
+  balance NUMERIC DEFAULT 0,
+  source TEXT,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- GUEST_DINING_ORDERS: Guest dining orders
-create table if not exists guest_dining_orders (
-  id text primary key default gen_random_uuid()::text,
-  user_email text not null,
-  room_number text,
-  method text,
-  order_text text,
-  total numeric,
-  status text default 'Placed',
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
+-- Guest Self-Service Tables
+CREATE TABLE IF NOT EXISTS guest_bookings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_email TEXT NOT NULL,
+  check_in_date DATE NOT NULL,
+  check_out_date DATE NOT NULL,
+  room_type TEXT NOT NULL,
+  guests INTEGER NOT NULL,
+  total_amount NUMERIC NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Pending',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- GUEST_CHARGES: Guest billing charges
-create table if not exists guest_charges (
-  id text primary key default gen_random_uuid()::text,
-  user_email text not null,
-  date date,
-  item text,
-  room text,
-  category text,
-  amount numeric,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
+CREATE TABLE IF NOT EXISTS guest_service_requests (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_email TEXT NOT NULL,
+  label TEXT NOT NULL,
+  description TEXT,
+  eta TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Requested',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- GUEST_PAYMENTS: Guest payment records
-create table if not exists guest_payments (
-  id text primary key default gen_random_uuid()::text,
-  user_email text not null,
-  date date,
-  method text,
-  ref text,
-  amount numeric,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
+CREATE TABLE IF NOT EXISTS guest_dining_orders (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_email TEXT NOT NULL,
+  order_text TEXT NOT NULL,
+  room_number TEXT,
+  total NUMERIC NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Pending',
+  method TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- =========================================
--- INDEXES FOR PERFORMANCE
--- =========================================
-create index if not exists idx_guest_bookings_user on guest_bookings(user_email);
-create index if not exists idx_guest_service_requests_user on guest_service_requests(user_email);
-create index if not exists idx_guest_dining_orders_user on guest_dining_orders(user_email);
-create index if not exists idx_guest_charges_user on guest_charges(user_email);
-create index if not exists idx_guest_payments_user on guest_payments(user_email);
+CREATE TABLE IF NOT EXISTS guest_charges (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_email TEXT NOT NULL,
+  item TEXT NOT NULL,
+  amount NUMERIC NOT NULL,
+  category TEXT NOT NULL,
+  date DATE NOT NULL,
+  room TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
 
--- =========================================
--- ROW LEVEL SECURITY (RLS) POLICIES
--- =========================================
+CREATE TABLE IF NOT EXISTS guest_payments (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_email TEXT NOT NULL,
+  amount NUMERIC NOT NULL,
+  method TEXT NOT NULL,
+  ref TEXT,
+  date DATE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
 
--- Enable RLS
-alter table guest_bookings enable row level security;
-alter table guest_service_requests enable row level security;
-alter table guest_dining_orders enable row level security;
-alter table guest_charges enable row level security;
-alter table guest_payments enable row level security;
+-- Enable RLS on all tables
+ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reservations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE guest_bookings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE guest_service_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE guest_dining_orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE guest_charges ENABLE ROW LEVEL SECURITY;
+ALTER TABLE guest_payments ENABLE ROW LEVEL SECURITY;
 
--- Guest Bookings: Users can only access their own bookings
-drop policy if exists "Users can access own bookings" on guest_bookings;
-create policy "Users can access own bookings" on guest_bookings
-for all
-to authenticated
-using ( user_email = auth.email() )
-with check ( user_email = auth.email() );
+-- RLS Policies for rooms (public read, authenticated write)
+DROP POLICY IF EXISTS "Allow all for rooms" ON rooms;
+CREATE POLICY "Public can view rooms" ON rooms FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY "Authenticated can manage rooms" ON rooms FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
-drop policy if exists "Anon can access own bookings" on guest_bookings;
-create policy "Anon can access own bookings" on guest_bookings
-for all
-to anon
-using (true)
-with check (true);
+-- RLS Policies for reservations (public read, authenticated write)
+DROP POLICY IF EXISTS "Allow all for reservations" ON reservations;
+CREATE POLICY "Public can view reservations" ON reservations FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY "Authenticated can manage reservations" ON reservations FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
--- Guest Service Requests
-drop policy if exists "Users can access own service requests" on guest_service_requests;
-create policy "Users can access own service requests" on guest_service_requests
-for all
-to authenticated
-using ( user_email = auth.email() )
-with check ( user_email = auth.email() );
+-- RLS Policies for guest_bookings (users can only see their own)
+CREATE POLICY "Users can view own bookings" ON guest_bookings FOR SELECT TO authenticated, anon USING (user_email = current_setting('request.jwt.claims', true)::json->>'email');
+CREATE POLICY "Users can insert own bookings" ON guest_bookings FOR INSERT TO authenticated, anon WITH CHECK (user_email = current_setting('request.jwt.claims', true)::json->>'email');
+CREATE POLICY "Users can update own bookings" ON guest_bookings FOR UPDATE TO authenticated, anon USING (user_email = current_setting('request.jwt.claims', true)::json->>'email');
 
-drop policy if exists "Anon can access own service requests" on guest_service_requests;
-create policy "Anon can access own service requests" on guest_service_requests
-for all
-to anon
-using (true)
-with check (true);
+-- RLS Policies for guest_service_requests
+CREATE POLICY "Users can view own requests" ON guest_service_requests FOR SELECT TO authenticated, anon USING (user_email = current_setting('request.jwt.claims', true)::json->>'email');
+CREATE POLICY "Users can insert own requests" ON guest_service_requests FOR INSERT TO authenticated, anon WITH CHECK (user_email = current_setting('request.jwt.claims', true)::json->>'email');
+CREATE POLICY "Users can update own requests" ON guest_service_requests FOR UPDATE TO authenticated, anon USING (user_email = current_setting('request.jwt.claims', true)::json->>'email');
 
--- Guest Dining Orders
-drop policy if exists "Users can access own dining orders" on guest_dining_orders;
-create policy "Users can access own dining orders" on guest_dining_orders
-for all
-to authenticated
-using ( user_email = auth.email() )
-with check ( user_email = auth.email() );
+-- RLS Policies for guest_dining_orders
+CREATE POLICY "Users can view own orders" ON guest_dining_orders FOR SELECT TO authenticated, anon USING (user_email = current_setting('request.jwt.claims', true)::json->>'email');
+CREATE POLICY "Users can insert own orders" ON guest_dining_orders FOR INSERT TO authenticated, anon WITH CHECK (user_email = current_setting('request.jwt.claims', true)::json->>'email');
+CREATE POLICY "Users can update own orders" ON guest_dining_orders FOR UPDATE TO authenticated, anon USING (user_email = current_setting('request.jwt.claims', true)::json->>'email');
 
-drop policy if exists "Anon can access own dining orders" on guest_dining_orders;
-create policy "Anon can access own dining orders" on guest_dining_orders
-for all
-to anon
-using (true)
-with check (true);
+-- RLS Policies for guest_charges
+CREATE POLICY "Users can view own charges" ON guest_charges FOR SELECT TO authenticated, anon USING (user_email = current_setting('request.jwt.claims', true)::json->>'email');
+CREATE POLICY "Authenticated can manage charges" ON guest_charges FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
--- Guest Charges
-drop policy if exists "Users can access own charges" on guest_charges;
-create policy "Users can access own charges" on guest_charges
-for all
-to authenticated
-using ( user_email = auth.email() )
-with check ( user_email = auth.email() );
+-- RLS Policies for guest_payments
+CREATE POLICY "Users can view own payments" ON guest_payments FOR SELECT TO authenticated, anon USING (user_email = current_setting('request.jwt.claims', true)::json->>'email');
+CREATE POLICY "Authenticated can manage payments" ON guest_payments FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
-drop policy if exists "Anon can access own charges" on guest_charges;
-create policy "Anon can access own charges" on guest_charges
-for all
-to anon
-using (true)
-with check (true);
+-- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_rooms_status ON rooms(status);
+CREATE INDEX IF NOT EXISTS idx_rooms_number ON rooms(number);
+CREATE INDEX IF NOT EXISTS idx_reservations_room ON reservations(roomNumber);
+CREATE INDEX IF NOT EXISTS idx_reservations_dates ON reservations(arrival, departure);
+CREATE INDEX IF NOT EXISTS idx_guest_bookings_email ON guest_bookings(user_email);
+CREATE INDEX IF NOT EXISTS idx_guest_requests_email ON guest_service_requests(user_email);
+CREATE INDEX IF NOT EXISTS idx_guest_orders_email ON guest_dining_orders(user_email);
+CREATE INDEX IF NOT EXISTS idx_guest_charges_email ON guest_charges(user_email);
+CREATE INDEX IF NOT EXISTS idx_guest_payments_email ON guest_payments(user_email);
 
--- Guest Payments
-drop policy if exists "Users can access own payments" on guest_payments;
-create policy "Users can access own payments" on guest_payments
-for all
-to authenticated
-using ( user_email = auth.email() )
-with check ( user_email = auth.email() );
+-- Triggers for updated_at
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
 
-drop policy if exists "Anon can access own payments" on guest_payments;
-create policy "Anon can access own payments" on guest_payments
-for all
-to anon
-using (true)
-with check (true);
+DROP TRIGGER IF EXISTS update_rooms_updated_at ON rooms;
+CREATE TRIGGER update_rooms_updated_at BEFORE UPDATE ON rooms FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- =========================================
--- TRIGGERS FOR UPDATED_AT
--- =========================================
+DROP TRIGGER IF EXISTS update_reservations_updated_at ON reservations;
+CREATE TRIGGER update_reservations_updated_at BEFORE UPDATE ON reservations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-create or replace function update_updated_at_column()
-returns trigger as $$
-begin
-  new.updated_at = now();
-  return new;
-end;
-$$ language plpgsql;
+DROP TRIGGER IF EXISTS update_guest_bookings_updated_at ON guest_bookings;
+CREATE TRIGGER update_guest_bookings_updated_at BEFORE UPDATE ON guest_bookings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-drop trigger if exists update_guest_bookings_updated_at on guest_bookings;
-create trigger update_guest_bookings_updated_at
-  before update on guest_bookings
-  for each row
-  execute function update_updated_at_column();
+DROP TRIGGER IF EXISTS update_guest_requests_updated_at ON guest_service_requests;
+CREATE TRIGGER update_guest_requests_updated_at BEFORE UPDATE ON guest_service_requests FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-drop trigger if exists update_guest_service_requests_updated_at on guest_service_requests;
-create trigger update_guest_service_requests_updated_at
-  before update on guest_service_requests
-  for each row
-  execute function update_updated_at_column();
-
-drop trigger if exists update_guest_dining_orders_updated_at on guest_dining_orders;
-create trigger update_guest_dining_orders_updated_at
-  before update on guest_dining_orders
-  for each row
-  execute function update_updated_at_column();
-
-drop trigger if exists update_guest_charges_updated_at on guest_charges;
-create trigger update_guest_charges_updated_at
-  before update on guest_charges
-  for each row
-  execute function update_updated_at_column();
-
-drop trigger if exists update_guest_payments_updated_at on guest_payments;
-create trigger update_guest_payments_updated_at
-  before update on guest_payments
-  for each row
-  execute function update_updated_at_column();
+DROP TRIGGER IF EXISTS update_guest_orders_updated_at ON guest_dining_orders;
+CREATE TRIGGER update_guest_orders_updated_at BEFORE UPDATE ON guest_dining_orders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

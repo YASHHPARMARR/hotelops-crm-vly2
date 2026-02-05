@@ -1,9 +1,10 @@
-// VLY Integrations Configuration
-// See /integrations.md for usage documentation
+// VLY Integrations - Package not installed
+// This file is a placeholder and should not be used
 
-import { createVlyIntegrations } from '@vly-ai/integrations';
-
-export const vly = createVlyIntegrations({
-  deploymentToken: process.env.VLY_INTEGRATION_KEY!,
-  debug: process.env.NODE_ENV === 'development'
-});
+export const vly = {
+  ai: {
+    completion: async () => {
+      throw new Error('@vly-ai/integrations package is not installed');
+    }
+  }
+};
