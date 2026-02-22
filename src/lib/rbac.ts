@@ -156,8 +156,8 @@ export const ROLE_NAVIGATION = {
     { name: "Profile", path: "/inventory/profile", icon: "User" },
   ],
   [ROLES.GUEST]: [
-    { name: "Dashboard", path: "/guest" },
-    { name: "Services", path: "/guest/services" },
-    { name: "Bookings", path: "/guest/bookings" },
+    { name: "Dashboard", path: "/guest", icon: "LayoutDashboard" },
+    { name: "Services", path: "/guest/services", icon: "Bell" },
+    { name: "Bookings", path: "/guest/bookings", icon: "Calendar" },
   ],
 } as const;

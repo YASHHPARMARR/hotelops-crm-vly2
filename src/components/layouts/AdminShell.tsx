@@ -161,11 +161,11 @@ export function AdminShell({ children }: AdminShellProps) {
   }, [user?.email]);
 
   // Compute effectiveRole priority:
-  // - If authenticated: use staffRole only (once loaded). Do NOT use demoRole to avoid flips.
+  // - If authenticated: use staffRole. If staffRole is undefined, default to "guest".
   // - If not authenticated and demoRole is set: use demoRole for demo navigation.
   const isDemo = !user && !!demoRoleString;
   const effectiveRole: Role | undefined = user
-    ? (staffRole as Role | undefined)
+    ? ((staffRole || "guest") as Role)
     : (isDemo ? (demoRoleString as Role | undefined) : undefined);
 
   const navigationItems = effectiveRole ? ROLE_NAVIGATION[effectiveRole] || [] : [];
@@ -266,7 +266,8 @@ export function AdminShell({ children }: AdminShellProps) {
                       : "text-muted-foreground hover:text-foreground hover:bg-accent"
                   )}
                 >
-                  <div className="w-5 h-5" />
+                  {/* Render icon if available */}
+                  {item.icon && <div className="w-5 h-5 flex items-center justify-center" />}
                   {sidebarOpen && (
                     <motion.span
                       initial={{ opacity: 0 }}
