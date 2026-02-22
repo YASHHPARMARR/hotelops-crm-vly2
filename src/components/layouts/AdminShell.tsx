@@ -281,7 +281,8 @@ export function AdminShell({ children }: AdminShellProps) {
             })}
           </nav>
 
-          {/* Sidebar Chat access */}
+          {/* Sidebar Chat access - hidden for guests */}
+          {effectiveRole !== "guest" && (
           <div className="px-4 pb-3">
             <Sheet>
               <SheetTrigger asChild>
@@ -301,6 +302,7 @@ export function AdminShell({ children }: AdminShellProps) {
               </SheetContent>
             </Sheet>
           </div>
+          )}
 
           {/* User Profile */}
           <div className="p-4 border-t border-border">
