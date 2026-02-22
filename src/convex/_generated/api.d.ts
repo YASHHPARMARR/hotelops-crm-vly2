@@ -10,9 +10,11 @@
 
 import type * as auth from "../auth.js";
 import type * as auth_emailOtp from "../auth/emailOtp.js";
+import type * as bookingRequests from "../bookingRequests.js";
 import type * as chat from "../chat.js";
 import type * as guest from "../guest.js";
 import type * as http from "../http.js";
+import type * as reportRequests from "../reportRequests.js";
 import type * as users from "../users.js";
 
 import type {
@@ -24,9 +26,11 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   "auth/emailOtp": typeof auth_emailOtp;
+  bookingRequests: typeof bookingRequests;
   chat: typeof chat;
   guest: typeof guest;
   http: typeof http;
+  reportRequests: typeof reportRequests;
   users: typeof users;
 }>;
 

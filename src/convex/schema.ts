@@ -376,7 +376,6 @@ const schema = defineSchema(
       checkOutDate: v.string(),
       roomType: v.string(),
       guests: v.number(),
-      nights: v.number(),
       amount: v.number(),
       status: v.string(), // Pending | Confirmed | Cancelled
       createdAt: v.number(),
@@ -440,8 +439,43 @@ const schema = defineSchema(
       text: v.string(),
       userId: v.optional(v.string()),
       userName: v.optional(v.string()),
+      targetRole: v.optional(v.string()), // "all" | specific role | department
     })
-      .index("by_role", ["role"]),
+      .index("by_role", ["role"])
+      .index("by_target_role", ["targetRole"]),
+
+    // Add: Guest booking requests sent to frontdesk
+    bookingRequests: defineTable({
+      guestUserId: v.string(),
+      guestName: v.optional(v.string()),
+      guestEmail: v.optional(v.string()),
+      checkInDate: v.string(),
+      checkOutDate: v.string(),
+      roomPreference: v.optional(v.string()),
+      adults: v.number(),
+      children: v.optional(v.number()),
+      specialRequests: v.optional(v.string()),
+      status: v.string(), // Pending | Approved | Rejected
+      reviewedBy: v.optional(v.string()),
+      reviewedAt: v.optional(v.number()),
+      assignedRoom: v.optional(v.string()),
+      createdAt: v.number(),
+    })
+      .index("by_guest", ["guestUserId"])
+      .index("by_status", ["status"]),
+
+    // Add: Admin report requests sent to roles
+    reportRequests: defineTable({
+      fromUserId: v.string(),
+      fromUserName: v.optional(v.string()),
+      targetRole: v.string(), // frontdesk | housekeeping | maintenance | restaurant
+      subject: v.string(),
+      message: v.string(),
+      status: v.string(), // Sent | Acknowledged | Completed
+      createdAt: v.number(),
+    })
+      .index("by_target_role", ["targetRole"])
+      .index("by_status", ["status"]),
   },
   {
     schemaValidation: false,

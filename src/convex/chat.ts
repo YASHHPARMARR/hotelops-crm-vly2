@@ -1,15 +1,33 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
-// List all team chat messages (real-time)
+// List all team chat messages (real-time) - optionally filtered by target role
 export const listMessages = query({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    targetRole: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    if (args.targetRole && args.targetRole !== "all") {
+      // Get messages targeted to this role OR broadcast messages
+      const targeted = await ctx.db
+        .query("teamChatMessages")
+        .withIndex("by_target_role", (q) => q.eq("targetRole", args.targetRole!))
+        .order("desc")
+        .take(100);
+      const broadcast = await ctx.db
+        .query("teamChatMessages")
+        .withIndex("by_target_role", (q) => q.eq("targetRole", "all"))
+        .order("desc")
+        .take(100);
+      // Merge and sort by creation time
+      const all = [...targeted, ...broadcast].sort((a, b) => a._creationTime - b._creationTime);
+      return all.slice(-100);
+    }
     const messages = await ctx.db
       .query("teamChatMessages")
       .order("desc")
-      .take(100); // Last 100 messages
-    return messages.reverse(); // Show oldest first
+      .take(100);
+    return messages.reverse();
   },
 });
 
@@ -20,6 +38,7 @@ export const sendMessage = mutation({
     text: v.string(),
     userId: v.optional(v.string()),
     userName: v.optional(v.string()),
+    targetRole: v.optional(v.string()), // "all" | specific role
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("teamChatMessages", {
@@ -27,6 +46,7 @@ export const sendMessage = mutation({
       text: args.text,
       userId: args.userId,
       userName: args.userName,
+      targetRole: args.targetRole || "all",
     });
   },
 });
@@ -35,7 +55,7 @@ export const sendMessage = mutation({
 export const clearMessages = mutation({
   args: {},
   handler: async (ctx) => {
-    const messages = await ctx.db.query("teamChatMessages").collect();
+    const messages = await ctx.db.query("teamChatMessages").take(500);
     for (const msg of messages) {
       await ctx.db.delete(msg._id);
     }

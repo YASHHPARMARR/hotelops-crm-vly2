@@ -32,11 +32,9 @@ export const createBooking = mutation({
     checkOutDate: v.string(),
     roomType: v.string(),
     guests: v.number(),
-    nights: v.number(),
     amount: v.number(),
   },
   handler: async (ctx, args) => {
-    // Replace direct getAuthUserId call with the safe helper to avoid server errors
     const uid = await uidOrDemo(ctx);
 
     return await ctx.db.insert("guestBookings", {
@@ -45,7 +43,6 @@ export const createBooking = mutation({
       checkOutDate: args.checkOutDate,
       roomType: args.roomType,
       guests: args.guests,
-      nights: args.nights,
       amount: args.amount,
       status: "Confirmed",
       createdAt: Date.now(),
@@ -126,7 +123,6 @@ export const seedGuestDemo = mutation({
   args: {},
   handler: async (ctx) => {
     const uid = await uidOrDemo(ctx);
-    // Only seed if empty for this user
     const existing = await ctx.db
       .query("guestBookings")
       .withIndex("by_user", (q) => q.eq("userId", uid))
@@ -140,7 +136,6 @@ export const seedGuestDemo = mutation({
       checkOutDate: new Date(now + 3 * 24 * 3600 * 1000).toISOString().slice(0, 10),
       roomType: "Deluxe",
       guests: 2,
-      nights: 2,
       amount: 320,
       status: "Confirmed",
       createdAt: now - 60 * 60 * 1000,
@@ -151,7 +146,6 @@ export const seedGuestDemo = mutation({
       checkOutDate: new Date(now + 9 * 24 * 3600 * 1000).toISOString().slice(0, 10),
       roomType: "Suite",
       guests: 3,
-      nights: 3,
       amount: 720,
       status: "Pending",
       createdAt: now - 2 * 60 * 60 * 1000,

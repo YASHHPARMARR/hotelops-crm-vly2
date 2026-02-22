@@ -2,13 +2,20 @@ import { AdminShell } from "@/components/layouts/AdminShell";
 import { KPICard } from "@/components/ui/kpi-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, CheckCircle, Clock, Download, Filter, LogIn, Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, CheckCircle, Clock, Download, Filter, LogIn, Users, BedDouble, Check, X } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, LineChart, Line } from "recharts";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { MessageSquare } from "lucide-react";
 import { ChatPanel } from "@/components/ChatPanel";
 import { useEffect, useState } from "react";
 import { getSupabase } from "@/lib/supabaseClient";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { toast } from "sonner";
+import { motion } from "framer-motion";
+import { Id } from "@/convex/_generated/dataModel";
+import { Input } from "@/components/ui/input";
 
 const arrivalsDepartures = [
   { hour: "08:00", arrivals: 8, departures: 3 },
@@ -28,6 +35,15 @@ const queueData = [
 
 export default function FrontDeskDashboard() {
   const [availableRooms, setAvailableRooms] = useState<number>(0);
+  const [totalRooms, setTotalRooms] = useState<number>(0);
+  const [activeBookings, setActiveBookings] = useState<number>(0);
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
+  const [assignRoom, setAssignRoom] = useState<string>("");
+
+  const bookingRequests = useQuery(api.bookingRequests.listAll);
+  const reviewRequest = useMutation(api.bookingRequests.reviewRequest);
+
+  const pendingRequests = bookingRequests?.filter(r => r.status === "Pending") || [];
 
   useEffect(() => {
     let cancelled = false;
@@ -35,24 +51,42 @@ export default function FrontDeskDashboard() {
       try {
         const s = getSupabase();
         if (!s) return;
-        const { count, error } = await s
-          .from("rooms")
-          .select("id", { count: "exact", head: true })
-          .eq("status", "Available");
-        if (error) throw error;
-        if (!cancelled) setAvailableRooms(count ?? 0);
+        const [availRes, totalRes, bookRes] = await Promise.all([
+          s.from("rooms").select("id", { count: "exact", head: true }).in("status", ["Available", "Vacant"]),
+          s.from("rooms").select("id", { count: "exact", head: true }),
+          s.from("reservations").select("id", { count: "exact", head: true }).eq("status", "CheckedIn"),
+        ]);
+        if (!cancelled) {
+          setAvailableRooms(availRes.count ?? 0);
+          setTotalRooms(totalRes.count ?? 0);
+          setActiveBookings(bookRes.count ?? 0);
+        }
       } catch {
-        if (!cancelled) setAvailableRooms(0);
+        if (!cancelled) { setAvailableRooms(0); setTotalRooms(0); setActiveBookings(0); }
       }
     }
     load();
-    // Refresh periodically (lightweight)
-    const t = setInterval(load, 5000);
-    return () => {
-      cancelled = true;
-      clearInterval(t);
-    };
+    const t = setInterval(load, 10000);
+    return () => { cancelled = true; clearInterval(t); };
   }, []);
+
+  const occupancyRate = totalRooms > 0 ? Math.round(((totalRooms - availableRooms) / totalRooms) * 100) : 0;
+
+  async function handleReview(requestId: Id<"bookingRequests">, status: "Approved" | "Rejected") {
+    try {
+      await reviewRequest({
+        requestId,
+        status,
+        reviewedBy: "Front Desk",
+        assignedRoom: status === "Approved" ? assignRoom || undefined : undefined,
+      });
+      toast.success(`Request ${status.toLowerCase()} successfully`);
+      setReviewingId(null);
+      setAssignRoom("");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to update request");
+    }
+  }
 
   return (
     <AdminShell>
@@ -75,11 +109,80 @@ export default function FrontDeskDashboard() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <KPICard title="Available Rooms" value={String(availableRooms)} change={undefined} trend="neutral" icon={<Users className="h-4 w-4" />} />
-          <KPICard title="Today's Arrivals" value="82" change={{ value: 6.4, period: "yesterday" }} trend="up" icon={<LogIn className="h-4 w-4" />} />
-          <KPICard title="Today's Departures" value="76" change={{ value: -3.1, period: "yesterday" }} trend="down" icon={<Calendar className="h-4 w-4" />} />
-          <KPICard title="Avg Check-in Time" value="4m 30s" change={{ value: -8.3, period: "last week" }} trend="up" icon={<Clock className="h-4 w-4" />} />
+          <KPICard title="Available Rooms" value={String(availableRooms)} trend="neutral" icon={<BedDouble className="h-4 w-4" />} />
+          <KPICard title="Occupancy Rate" value={`${occupancyRate}%`} trend={occupancyRate > 70 ? "up" : "neutral"} icon={<Users className="h-4 w-4" />} />
+          <KPICard title="Active Bookings" value={String(activeBookings)} trend="neutral" icon={<LogIn className="h-4 w-4" />} />
+          <KPICard title="Pending Requests" value={String(pendingRequests.length)} trend={pendingRequests.length > 0 ? "up" : "neutral"} icon={<Calendar className="h-4 w-4" />} />
         </div>
+
+        {/* Booking Requests Panel */}
+        {pendingRequests.length > 0 && (
+          <Card className="gradient-card border-yellow-400/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BedDouble className="h-5 w-5 text-yellow-400" />
+                Guest Booking Requests
+                <Badge variant="outline" className="text-yellow-400 border-yellow-400/30 ml-2">
+                  {pendingRequests.length} Pending
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {pendingRequests.map(req => (
+                  <motion.div
+                    key={req._id}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="rounded-lg border border-border bg-background/50 p-4"
+                  >
+                    <div className="flex items-start justify-between gap-4 flex-wrap">
+                      <div className="space-y-1">
+                        <div className="font-semibold text-foreground">
+                          {req.guestEmail || req.guestUserId}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {req.checkInDate} → {req.checkOutDate}
+                          {req.roomPreference ? ` · ${req.roomPreference}` : ""}
+                          {" "}· {req.adults} adult{req.adults !== 1 ? "s" : ""}
+                          {req.children ? `, ${req.children} child${req.children !== 1 ? "ren" : ""}` : ""}
+                        </div>
+                        {req.specialRequests && (
+                          <div className="text-xs text-muted-foreground italic">"{req.specialRequests}"</div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {reviewingId === req._id ? (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              placeholder="Assign room #"
+                              value={assignRoom}
+                              onChange={e => setAssignRoom(e.target.value)}
+                              className="w-28 h-8 text-sm"
+                            />
+                            <Button size="sm" className="h-8 bg-green-600 hover:bg-green-700" onClick={() => handleReview(req._id, "Approved")}>
+                              <Check className="h-3 w-3 mr-1" /> Approve
+                            </Button>
+                            <Button size="sm" variant="destructive" className="h-8" onClick={() => handleReview(req._id, "Rejected")}>
+                              <X className="h-3 w-3 mr-1" /> Reject
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-8" onClick={() => setReviewingId(null)}>
+                              Cancel
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button size="sm" variant="outline" onClick={() => setReviewingId(req._id)}>
+                            Review
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="gradient-card">
