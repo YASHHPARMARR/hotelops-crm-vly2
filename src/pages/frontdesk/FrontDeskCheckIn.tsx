@@ -85,23 +85,21 @@ export default function FrontDeskCheckIn() {
         return;
       }
 
-      // Fetch today's reservations
-      const today = new Date().toISOString().split('T')[0];
+      // Fetch all reservations (not just today's)
       const { data: resData, error: resError } = await supabase
         .from("reservations")
         .select("*")
-        .gte("arrival", today)
         .order("arrival", { ascending: true });
 
       if (!resError && resData) {
         setReservations(resData.map((r: any) => ({
           id: r.id,
-          guestName: r.guestName || "",
-          roomType: r.roomType || "",
-          roomNumber: r.roomNumber || undefined,
+          guestName: r.guest_name || r.guestName || "",
+          roomType: r.room_type || r.roomType || "",
+          roomNumber: r.room_number || r.roomNumber || undefined,
           status: r.status || "Booked",
-          checkInDate: r.arrival || "",
-          checkOutDate: r.departure || "",
+          checkInDate: r.arrival || r.checkInDate || "",
+          checkOutDate: r.departure || r.checkOutDate || "",
           balance: Number(r.balance) || 0,
           notes: r.notes || "",
         })));

@@ -156,10 +156,8 @@ export const ROLE_NAVIGATION = {
     { name: "Profile", path: "/inventory/profile", icon: "User" },
   ],
   [ROLES.GUEST]: [
-    { name: "My Stay", path: "/guest", icon: "Home" },
-    { name: "Services", path: "/guest/services", icon: "Concierge" },
-    { name: "Dining", path: "/guest/dining", icon: "UtensilsCrossed" },
-    { name: "Bills", path: "/guest/bills", icon: "Receipt" },
-    { name: "Profile", path: "/guest/profile", icon: "User" },
+    { name: "Dashboard", path: "/guest" },
+    { name: "Services", path: "/guest/services" },
+    { name: "Bookings", path: "/guest/bookings" },
   ],
 } as const;
