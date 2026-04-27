@@ -57,7 +57,7 @@ export const reviewRequest = mutation({
   handler: async (ctx, args) => {
     const request = await ctx.db.get(args.requestId);
     if (!request) throw new Error("Request not found");
-    
+
     // Update Convex document
     await ctx.db.patch(args.requestId, {
       status: args.status,
@@ -65,28 +65,5 @@ export const reviewRequest = mutation({
       reviewedAt: Date.now(),
       assignedRoom: args.assignedRoom,
     });
-
-    // Sync to Supabase if approved
-    if (args.status === "Approved" && request) {
-      const supabase = getSupabase();
-      if (supabase) {
-        try {
-          await supabase.from("reservations").insert({
-            guest_name: request.guestName || "Guest",
-            guest_email: request.guestEmail,
-            room_type: request.roomPreference || "Standard",
-            arrival: request.checkInDate,
-            departure: request.checkOutDate,
-            status: "Booked",
-            balance: 0,
-            room_number: args.assignedRoom,
-            notes: request.specialRequests || "",
-          });
-        } catch (err) {
-          console.error("Failed to sync to Supabase:", err);
-          // Don't throw - we still want to approve the booking
-        }
-      }
-    }
   },
 });
