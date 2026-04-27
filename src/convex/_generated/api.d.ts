@@ -15,6 +15,8 @@ import type * as chat from "../chat.js";
 import type * as guest from "../guest.js";
 import type * as http from "../http.js";
 import type * as reportRequests from "../reportRequests.js";
+import type * as rooms from "../rooms.js";
+import type * as seedRooms from "../seedRooms.js";
 import type * as sync from "../sync.js";
 import type * as users from "../users.js";
 
@@ -32,6 +34,8 @@ declare const fullApi: ApiFromModules<{
   guest: typeof guest;
   http: typeof http;
   reportRequests: typeof reportRequests;
+  rooms: typeof rooms;
+  seedRooms: typeof seedRooms;
   sync: typeof sync;
   users: typeof users;
 }>;
