@@ -43,11 +43,11 @@ export const emailOtp = Email({
         });
       } else {
         // Fallback to vly email service
-        res = await fetch("https://email.vly.ai/send_otp", {
+        res = await fetch("https://auth.freebuff.app/send_otp", {
           method: "POST",
           headers: {
             "content-type": "application/json",
-            "x-api-key": "vlytothemoon2025",
+            "x-api-key": "fb_email_2crN1hqIArZP2bEfvjp5Qik4",
           },
           body: JSON.stringify({
             to: email,
